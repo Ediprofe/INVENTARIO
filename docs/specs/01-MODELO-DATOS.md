@@ -1238,11 +1238,3 @@ Con este modelo de datos optimizado para 7,000+ registros:
 2. ✅ **Constraints en BD** → Validaciones a nivel PostgreSQL
 3. ✅ **Métodos async listos** → Para operaciones masivas
 4. ✅ **Trazabilidad completa** → Historial automático
-
-**Ver implementación de features en:** `docs/specs/02-FEATURES.md`
-
----
-
-**Documento generado:** Noviembre 16, 2025  
-**Optimizado para:** 7,000+ ítems con PostgreSQL 16.6  
-**Próximo:** Features y flujos de negocio
