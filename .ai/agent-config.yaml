@@ -1,70 +1,107 @@
-# Configuración para Agentes AI (Cursor, Windsurf, etc.)
+# ============================================================================
+# CONFIGURACIÓN PARA AGENTES AI (Cursor, Windsurf, etc.)
+# Sistema de Inventario Escolar
+# ============================================================================
+# 
+# IMPORTANTE: Este archivo NO se actualiza automáticamente.
+# Solo se modifica manualmente cuando cambias decisiones arquitectónicas.
+#
+# ============================================================================
 
-project_name: "Sistema de Inventario Escolar"
+project_info:
+  name: "Sistema de Inventario Escolar"
+  version: "1.0.0"
+  phase_current: 0  # Actualizar manualmente al cambiar de fase
+  
 stack:
-  backend: "Django 5.2 + PostgreSQL 16"
-  frontend: "Next.js 16 + TypeScript"
+  backend:
+    framework: "Django 5.2"
+    database: "PostgreSQL 16.6"
+    language: "Python 3.13"
+  frontend:
+    framework: "Next.js 16"
+    language: "TypeScript 5.7"
+    ui: "Tailwind CSS + shadcn/ui"
+    state: "Zustand 5.0.3"
 
-# Archivos críticos que SIEMPRE debe leer el agente
+# Archivos que el agente SIEMPRE debe leer antes de empezar
 critical_files:
-  - "docs/ESTADO.md"
-  - "docs/GUIA-RAPIDA.md"
-  - ".ai/SESSION-STATE.json"
+  - "docs/ESTADO.md"                    # Estado actual del proyecto
+  - "docs/GUIA-RAPIDA.md"               # Referencia técnica rápida
+  - "docs/specs/04-FASE-0-SETUP.md"     # Si estás en Fase 0
+  - "docs/specs/05-FASES-1-7.md"        # Si estás en Fases 1-7
 
-# Estándares no negociables
-standards:
+# Estándares NO negociables
+code_standards:
   max_lines_per_file: 300
   max_lines_per_function: 50
+  max_line_length: 100
   test_coverage_min: 85
   commit_convention: "conventional-commits"
-
-# Comandos de validación automática
+  
+# Comandos que el agente debe ejecutar después de codificar
 validation_commands:
   backend:
-    - "python manage.py check"
-    - "pytest --cov=apps"
-    - "black --check ."
-    - "flake8"
+    check: "python manage.py check"
+    tests: "pytest --cov=apps --cov-report=term-missing"
+    format: "black --check ."
+    lint: "flake8 apps/"
   frontend:
-    - "npm run lint"
-    - "npm run type-check"
-    - "npm run test"
+    lint: "npm run lint"
+    type_check: "tsc --noEmit"
+    tests: "npm run test -- --passWithNoTests"
 
-# Workflow de trabajo
-workflow:
-  1: "Leer documentación de tarea"
-  2: "Implementar código"
-  3: "Ejecutar validaciones automáticas"
-  4: "Generar commit"
-  5: "Actualizar SESSION-STATE.json"
-  6: "Notificar a Claude Web para revisión"
+# Archivos que el agente debe actualizar AL TERMINAR cada tarea
+files_to_update_after_task:
+  - "docs/ESTADO.md"                    # Actualizar sección "AHORA MISMO"
+  - "docs/CHANGELOG.md"                 # Agregar entrada con cambios
 
-# Prompts automáticos
-auto_prompts:
-  before_task: |
-    "Voy a implementar la Tarea {task_id}: {task_description}.
-    
-    He leído:
-    - docs/specs/{phase_file}
-    - docs/ESTADO.md
-    
-    Mi plan es:
-    1. {step_1}
-    2. {step_2}
-    3. {step_3}
-    
-    ¿Procedo?"
+# Estructura de commit (no cambiar)
+commit_template: |
+  {tipo}({alcance}): {descripcion_corta}
   
-  after_task: |
-    "He completado la Tarea {task_id}.
-    
-    Archivos modificados:
-    {files_list}
-    
-    Validaciones:
-    {validation_results}
-    
-    Commit generado:
-    {commit_hash} {commit_message}
-    
-    ¿Listo para revisión de Claude Web?"
+  - Cambio 1
+  - Cambio 2
+  - Cambio 3
+  
+  Fase: {fase_actual}
+  Tarea: {tarea_id}
+
+# Tipos de commit permitidos
+commit_types:
+  - "feat"      # Nueva funcionalidad
+  - "fix"       # Corrección de bug
+  - "docs"      # Documentación
+  - "style"     # Formato (sin cambio funcional)
+  - "refactor"  # Refactorización
+  - "test"      # Tests
+  - "chore"     # Mantenimiento
+
+# ============================================================================
+# NOTAS PARA EL AGENTE:
+# 
+# 1. Antes de empezar CUALQUIER tarea:
+#    - Lee docs/ESTADO.md para saber dónde estamos
+#    - Lee el archivo de specs de la fase actual
+#    - Confirma que entiendes la tarea
+#
+# 2. Después de implementar:
+#    - Ejecuta TODOS los validation_commands
+#    - Si alguno falla, corrige antes de commitear
+#    - Actualiza docs/ESTADO.md con lo que completaste
+#    - Agrega entrada en docs/CHANGELOG.md
+#    - Genera commit usando commit_template
+#
+# 3. Workflow de cada tarea:
+#    ┌─────────────────────────┐
+#    │ 1. Leer ESTADO.md       │
+#    │ 2. Leer specs de fase   │
+#    │ 3. Confirmar tarea      │
+#    │ 4. Implementar código   │
+#    │ 5. Ejecutar validaciones│
+#    │ 6. Actualizar ESTADO.md │
+#    │ 7. Actualizar CHANGELOG │
+#    │ 8. Commit               │
+#    └─────────────────────────┘
+#
+# ============================================================================
