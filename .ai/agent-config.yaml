@@ -1,0 +1,70 @@
+# Configuración para Agentes AI (Cursor, Windsurf, etc.)
+
+project_name: "Sistema de Inventario Escolar"
+stack:
+  backend: "Django 5.2 + PostgreSQL 16"
+  frontend: "Next.js 16 + TypeScript"
+
+# Archivos críticos que SIEMPRE debe leer el agente
+critical_files:
+  - "docs/ESTADO.md"
+  - "docs/GUIA-RAPIDA.md"
+  - ".ai/SESSION-STATE.json"
+
+# Estándares no negociables
+standards:
+  max_lines_per_file: 300
+  max_lines_per_function: 50
+  test_coverage_min: 85
+  commit_convention: "conventional-commits"
+
+# Comandos de validación automática
+validation_commands:
+  backend:
+    - "python manage.py check"
+    - "pytest --cov=apps"
+    - "black --check ."
+    - "flake8"
+  frontend:
+    - "npm run lint"
+    - "npm run type-check"
+    - "npm run test"
+
+# Workflow de trabajo
+workflow:
+  1: "Leer documentación de tarea"
+  2: "Implementar código"
+  3: "Ejecutar validaciones automáticas"
+  4: "Generar commit"
+  5: "Actualizar SESSION-STATE.json"
+  6: "Notificar a Claude Web para revisión"
+
+# Prompts automáticos
+auto_prompts:
+  before_task: |
+    "Voy a implementar la Tarea {task_id}: {task_description}.
+    
+    He leído:
+    - docs/specs/{phase_file}
+    - docs/ESTADO.md
+    
+    Mi plan es:
+    1. {step_1}
+    2. {step_2}
+    3. {step_3}
+    
+    ¿Procedo?"
+  
+  after_task: |
+    "He completado la Tarea {task_id}.
+    
+    Archivos modificados:
+    {files_list}
+    
+    Validaciones:
+    {validation_results}
+    
+    Commit generado:
+    {commit_hash} {commit_message}
+    
+    ¿Listo para revisión de Claude Web?"
