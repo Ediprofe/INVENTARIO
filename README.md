@@ -49,14 +49,19 @@ inventario-escolar/
 │   ├── types/                  # TypeScript types
 │   └── package.json
 │
-├── docs/                       # Documentación técnica detallada
-│   └── specs/
-│       ├── 00-VISION-PROYECTO.md      # Explicación general
-│       ├── 01-MODELO-DATOS.md         # Estructura de base de datos
-│       ├── 02-FEATURES.md             # Especificación funcional
-│       ├── 03-ESTANDARES.md           # Convenciones de código
-│       ├── 04-FASE-0-SETUP.md         # Guía de instalación detallada
-│       └── 05-FASES-1-7.md            # Plan de implementación
+├── docs/                       # Documentación técnica (modular)
+│   ├── vision/                 # 🎯 Visión del proyecto
+│   │   ├── README.md           # Índice
+│   │   ├── stack.md            # ⭐ Stack (fuente única de verdad)
+│   │   ├── objetivos.md        # Qué y por qué
+│   │   └── alcance.md          # Qué incluye el MVP
+│   ├── features/               # 🎨 Especificación por feature
+│   │   ├── README.md           # Índice de features
+│   │   └── batch-edit.md       # ⭐ Edición masiva (prioridad)
+│   ├── modelo/                 # 🗄️ Modelo de datos
+│   ├── standards/              # 📏 Estándares de código
+│   ├── fases/                  # 🚀 Plan de implementación
+│   └── specs/                  # 📚 Docs originales (legacy)
 │
 ├── .claude/                    # Contexto para IA
 │   └── CONTEXTO.md             # Instrucciones para Claude
@@ -96,6 +101,8 @@ inventario-escolar/
 | **Data Fetching** | TanStack Query | 5.61 |
 | **Testing Backend** | pytest | 8.3.4 |
 | **Testing Frontend** | Jest + RTL | Latest |
+
+> ⭐ **Versiones completas y actualizadas:** Ver [`docs/vision/stack.md`](docs/vision/stack.md) - Fuente única de verdad
 
 ---
 
@@ -170,19 +177,32 @@ Frontend disponible en: `http://localhost:3000`
 
 ## 📚 Documentación Completa
 
-### Para empezar
+### 🚀 Para empezar
 
 1. **Este archivo (README.md)** - Setup rápido y visión general
-2. **PROYECTO.md** - Estado actual del proyecto, guía de archivos y próximos pasos
-3. **docs/specs/00-VISION-PROYECTO.md** - Explicación detallada en lenguaje natural
+2. **PROYECTO.md** - Estado actual del proyecto, progreso y próximos pasos
+3. **[docs/vision/](docs/vision/)** - Visión, objetivos y alcance del proyecto
 
-### Para desarrolladores
+### 👨‍💻 Para desarrolladores
 
-- **01-MODELO-DATOS.md** - Estructura completa de base de datos con validaciones
-- **02-FEATURES.md** - Especificación funcional de todas las features (RF-001 a RF-008)
-- **03-ESTANDARES.md** - Convenciones de código, límites y buenas prácticas
-- **04-FASE-0-SETUP.md** - Guía paso a paso del setup inicial
-- **05-FASES-1-7.md** - Plan de implementación completo (7 fases, ~22-30 días)
+#### Por Tema (Estructura Modular)
+
+- **🎯 Visión:** [`docs/vision/`](docs/vision/)
+  - [`stack.md`](docs/vision/stack.md) ⭐ Fuente única para versiones
+  - [`objetivos.md`](docs/vision/objetivos.md) - Qué y por qué
+  - [`alcance.md`](docs/vision/alcance.md) - Qué incluye el MVP
+
+- **🎨 Features:** [`docs/features/`](docs/features/)
+  - [`batch-edit.md`](docs/features/batch-edit.md) ⭐ Edición masiva (prioridad)
+  - Ver [`README.md`](docs/features/README.md) para lista completa
+
+- **🗄️ Modelo:** [`docs/specs/01-MODELO-DATOS.md`](docs/specs/01-MODELO-DATOS.md)
+
+- **📏 Estándares:** [`docs/specs/03-ESTANDARES.md`](docs/specs/03-ESTANDARES.md)
+
+- **🚀 Fases:**
+  - [`docs/specs/04-FASE-0-SETUP.md`](docs/specs/04-FASE-0-SETUP.md) - Setup detallado
+  - [`docs/specs/05-FASES-1-7.md`](docs/specs/05-FASES-1-7.md) - Plan completo (7 fases)
 
 ---
 

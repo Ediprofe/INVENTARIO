@@ -16,14 +16,17 @@ Gestión de +7,000 ítems físicos con importación Excel y edición masiva.
 ## 📁 LEER PRIMERO (en orden)
 1. `PROYECTO.md` - Estado actual y guía de archivos
 2. `README.md` - Setup e intro técnica
-3. `docs/specs/00-VISION-PROYECTO.md` - Contexto general
+3. `docs/vision/README.md` - Visión del proyecto
 4. `.claude/CONTEXTO.md` - Este archivo
 
 ---
 
 ## 💡 DECISIONES CLAVE
 
-### Stack (NO NEGOCIABLE)Backend:  Django 5.2 + DRF + PostgreSQL 16.6
+### Stack (NO NEGOCIABLE)
+Ver versiones exactas en: `docs/vision/stack.md` ⭐ **Fuente única de verdad**
+
+Backend:  Django 5.2 + DRF + PostgreSQL 16.6
 Frontend: Next.js 16 + React 19 + TypeScript 5.7
 UI:       Tailwind CSS + shadcn/ui
 Estado:   Zustand 5.0.3
@@ -63,14 +66,26 @@ docs/specs/00-VISION-PROYECTO.md
 
 ---
 
-## 📚 SPECS TÉCNICAS
+## 📚 DOCUMENTACIÓN TÉCNICA (Estructura Modular)
 
-Según necesidad:
-- `01-MODELO-DATOS.md` - Base de datos
-- `02-FEATURES.md` - RF-001 a RF-008
-- `03-ESTANDARES.md` - Convenciones
-- `04-FASE-0-SETUP.md` - Setup paso a paso
-- `05-FASES-1-7.md` - Plan implementación
-- `06-PERMISOS.md` - Sistema permisos
+### Por Tema
+- **Visión:** `docs/vision/` - Objetivos, alcance, stack
+  - `stack.md` ⭐ Fuente única para versiones
+  - `objetivos.md` - Qué y por qué construimos
+  - `alcance.md` - Qué incluye el MVP
+
+- **Modelo:** `docs/modelo/README.md` → `docs/specs/01-MODELO-DATOS.md`
+
+- **Features:** `docs/features/`
+  - `batch-edit.md` ⭐ **Prioridad alta** - Edición masiva
+  - Ver `docs/features/README.md` para lista completa
+
+- **Estándares:** `docs/standards/README.md` → `docs/specs/03-ESTANDARES.md`
+
+- **Fases:** `docs/fases/README.md`
+  - Fase 0: `docs/specs/04-FASE-0-SETUP.md`
+  - Fases 1-7: `docs/specs/05-FASES-1-7.md`
+
+- **Permisos:** `docs/specs/06-PERMISOS.md` (Implementar en Fase 2)
 
 ---
