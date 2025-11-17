@@ -7,16 +7,25 @@
 
 ## 🎯 Fase Actual
 
-### Fase 0: Setup del Proyecto - 0%
+### Fase 0: Setup del Proyecto - 70%
 
-**Estado:** Documentación completada, listo para ejecutar setup
+**Estado:** Backend completado, frontend base instalado
 
-### Próximos Pasos Inmediatos
-1. Crear estructura backend/frontend
-2. Configurar entorno virtual Python 3.13
-3. Instalar Django 5.2 y dependencias
-4. Configurar PostgreSQL 16
-5. Inicializar Next.js 16
+### ✅ Completado
+1. ✅ Estructura backend completa
+2. ✅ Entorno virtual Python 3.13 creado
+3. ✅ Django 5.2 + todas las dependencias instaladas
+4. ✅ PostgreSQL 16 configurado y migraciones ejecutadas
+5. ✅ Settings modulares (base, dev, prod)
+6. ✅ CustomUser model implementado
+7. ✅ Next.js 16 + React 19 base instalado
+
+### ⏳ Pendiente para Fase 0
+1. Configurar shadcn/ui en frontend
+2. Crear estructura de directorios frontend (app/, components/, lib/)
+3. Variables de entorno frontend (.env.local)
+4. Configurar Tailwind CSS completo
+5. Verificar que ambos servidores arranquen correctamente
 
 **Guía completa:** [`docs/fases/fase-0-setup.md`](docs/fases/fase-0-setup.md)
 
@@ -26,7 +35,7 @@
 
 | Fase | Nombre | Duración | Estado | Progreso |
 |------|--------|----------|--------|----------|
-| **0** | Setup | 1-2 días | ⏳ En curso | 0% |
+| **0** | Setup | 1-2 días | ⏳ En curso | 70% |
 | **1** | Modelos + Auth | 3-4 días | ⏹️ Pendiente | 0% |
 | **2** | API + Serializers | 3-4 días | ⏹️ Pendiente | 0% |
 | **3** | Frontend MVP | 5-6 días | ⏹️ Pendiente | 0% |
@@ -41,6 +50,16 @@
 
 ## ✅ Completado Recientemente
 
+### Fase 0 - Backend (2025-11-17)
+- ✅ Django 5.2 + PostgreSQL 16 completamente configurado
+- ✅ Settings modulares (base, development, production)
+- ✅ CustomUser model implementado y migrado
+- ✅ REST Framework + JWT configurado
+- ✅ CORS habilitado para localhost:3000
+- ✅ Apps creadas: core, authentication, inventario
+- ✅ Next.js 16 + React 19 base instalado
+- ✅ Variables de entorno backend (.env/.env.example)
+
 ### Documentación (2025-11-17)
 - ✅ Estructura modular de documentación implementada
 - ✅ GUIA-INICIAL.md creada (contexto para usuario/IA)
@@ -52,22 +71,26 @@
 
 ## 🚀 Siguiente Tarea
 
-**Ejecutar Fase 0 - Setup del Proyecto:**
+**Completar Fase 0 - Configuración Frontend:**
 
 ```bash
-# 1. Crear estructura
-mkdir -p backend frontend
+# 1. Navegar a frontend
+cd frontend
 
-# 2. Backend
-cd backend
-python3.13 -m venv venv
-source venv/bin/activate
-pip install django==5.2
-django-admin startproject config .
+# 2. Instalar dependencias adicionales
+npm install zustand @tanstack/react-query zod react-hook-form @hookform/resolvers axios date-fns xlsx react-data-grid
 
-# 3. Frontend
-cd ../frontend
-npx create-next-app@latest .
+# 3. Instalar shadcn/ui
+npx shadcn@latest init
+npx shadcn@latest add button input label card table select alert dialog form
+
+# 4. Crear estructura de directorios
+mkdir -p components/{layout,items,catalogos,auth,common}
+mkdir -p lib/{api,stores,hooks,schemas,utils}
+mkdir -p types
+
+# 5. Configurar variables de entorno
+echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1" > .env.local
 ```
 
 **Ver guía paso a paso:** [`docs/fases/fase-0-setup.md`](docs/fases/fase-0-setup.md)
