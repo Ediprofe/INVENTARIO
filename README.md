@@ -49,25 +49,35 @@ inventario-escolar/
 │   ├── types/                  # TypeScript types
 │   └── package.json
 │
-├── docs/                       # Documentación técnica (modular)
+├── docs/                       # 📚 Documentación técnica (fuente única)
+│   ├── NAVIGATION.md           # 📍 Mapa de toda la documentación
 │   ├── vision/                 # 🎯 Visión del proyecto
 │   │   ├── README.md           # Índice
 │   │   ├── stack.md            # ⭐ Stack (fuente única de verdad)
 │   │   ├── objetivos.md        # Qué y por qué
 │   │   └── alcance.md          # Qué incluye el MVP
+│   ├── modelo/                 # 🗄️ Modelo de datos
+│   │   ├── README.md           # Índice
+│   │   └── entidades.md        # Todas las entidades Django
 │   ├── features/               # 🎨 Especificación por feature
 │   │   ├── README.md           # Índice de features
 │   │   └── batch-edit.md       # ⭐ Edición masiva (prioridad)
-│   ├── modelo/                 # 🗄️ Modelo de datos
 │   ├── standards/              # 📏 Estándares de código
+│   │   ├── README.md           # Índice + referencia rápida
+│   │   └── codigo.md           # Todos los estándares
 │   ├── fases/                  # 🚀 Plan de implementación
-│   └── specs/                  # 📚 Docs originales (legacy)
+│   │   ├── README.md           # Índice
+│   │   ├── fase-0-setup.md     # Setup inicial paso a paso
+│   │   └── fases-1-7.md        # Fases 1 a 7 completas
+│   ├── permisos.md             # Sistema de permisos (Fase 2)
+│   └── specs/                  # 📦 Backup legacy (no usar)
 │
 ├── .claude/                    # Contexto para IA
-│   └── CONTEXTO.md             # Instrucciones para Claude
+│   └── context.md              # Instrucciones para Claude
 │
-├── README.md                   # Este archivo
-└── PROYECTO.md                 # Estado vivo del proyecto
+├── GUIA-INICIAL.md             # 🚀 Entender proyecto en 5 min
+├── ESTADO.md                   # 📊 Estado y progreso vivo
+└── README.md                   # Este archivo
 ```
 
 ---
@@ -181,7 +191,8 @@ Frontend disponible en: `http://localhost:3000`
 
 | Necesito... | Ir a... |
 |-------------|---------|
-| **Setup inicial** | [`docs/specs/04-FASE-0-SETUP.md`](docs/specs/04-FASE-0-SETUP.md) |
+| **Entender el proyecto** | [`GUIA-INICIAL.md`](GUIA-INICIAL.md) 🚀 |
+| **Setup inicial** | [`docs/fases/fase-0-setup.md`](docs/fases/fase-0-setup.md) |
 | **Ver progreso** | [`ESTADO.md`](ESTADO.md) |
 | **Mapa de docs** | [`docs/NAVIGATION.md`](docs/NAVIGATION.md) 📍 |
 | **Versiones exactas** | [`docs/vision/stack.md`](docs/vision/stack.md) ⭐ |
@@ -192,8 +203,8 @@ Frontend disponible en: `http://localhost:3000`
 - **🗄️ Modelo:** [`docs/modelo/entidades.md`](docs/modelo/entidades.md) - Base de datos
 - **🎨 Features:** [`docs/features/`](docs/features/) - Funcionalidades
   - [`batch-edit.md`](docs/features/batch-edit.md) ⭐ Edición masiva
-- **📏 Estándares:** [`docs/specs/03-ESTANDARES.md`](docs/specs/03-ESTANDARES.md)
-- **🚀 Fases:** [`docs/specs/04-FASE-0-SETUP.md`](docs/specs/04-FASE-0-SETUP.md) + [`05-FASES-1-7.md`](docs/specs/05-FASES-1-7.md)
+- **📏 Estándares:** [`docs/standards/codigo.md`](docs/standards/codigo.md)
+- **🚀 Fases:** [`docs/fases/fase-0-setup.md`](docs/fases/fase-0-setup.md) + [`fases-1-7.md`](docs/fases/fases-1-7.md)
 
 **Mapa completo:** [`docs/NAVIGATION.md`](docs/NAVIGATION.md)
 
@@ -297,7 +308,7 @@ npm run format
 - Variables de entorno para producción
 - Guía de deployment
 
-Ver: `docs/specs/05-FASES-1-7.md` para detalles.
+Ver: [`docs/fases/fases-1-7.md`](docs/fases/fases-1-7.md) para detalles.
 
 ---
 
@@ -306,7 +317,7 @@ Ver: `docs/specs/05-FASES-1-7.md` para detalles.
 ### Workflow
 
 1. Crear branch desde `develop`: `git checkout -b feature/nombre-feature`
-2. Implementar cambios siguiendo `docs/specs/03-ESTANDARES.md`
+2. Implementar cambios siguiendo [`docs/standards/codigo.md`](docs/standards/codigo.md)
 3. Ejecutar tests y linters
 4. Commit con Conventional Commits: `feat(alcance): descripción`
 5. Push y crear Pull Request
@@ -321,7 +332,7 @@ Ver: `docs/specs/05-FASES-1-7.md` para detalles.
 - **Test coverage:** mín 85%
 - **Commits:** Conventional Commits
 
-Ver: `docs/specs/03-ESTANDARES.md` para detalles completos.
+Ver: [`docs/standards/codigo.md`](docs/standards/codigo.md) para detalles completos.
 
 ---
 
@@ -359,8 +370,9 @@ Ver: `docs/specs/03-ESTANDARES.md` para detalles completos.
 ## 📞 Soporte
 
 Para preguntas sobre el proyecto, consultar:
-- Documentación técnica en `/docs/specs/`
-- Estado actual en `PROYECTO.md`
+- **Guía inicial:** [`GUIA-INICIAL.md`](GUIA-INICIAL.md)
+- **Mapa de documentación:** [`docs/NAVIGATION.md`](docs/NAVIGATION.md)
+- **Estado actual:** [`ESTADO.md`](ESTADO.md)
 - Issues en GitHub
 
 ---

@@ -27,7 +27,8 @@ Ver: [`../ESTADO.md`](../ESTADO.md)
 - **Stack:** [`docs/vision/stack.md`](../docs/vision/stack.md) ⭐
 - **Modelo:** [`docs/modelo/entidades.md`](../docs/modelo/entidades.md)
 - **Batch Edit:** [`docs/features/batch-edit.md`](../docs/features/batch-edit.md) ⭐
-- **Setup:** [`docs/specs/04-FASE-0-SETUP.md`](../docs/specs/04-FASE-0-SETUP.md)
+- **Setup:** [`docs/fases/fase-0-setup.md`](../docs/fases/fase-0-setup.md)
+- **Estándares:** [`docs/standards/codigo.md`](../docs/standards/codigo.md)
 
 ---
 

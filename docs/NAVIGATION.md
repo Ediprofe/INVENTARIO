@@ -46,11 +46,9 @@
 
 | Documento | Estado | Prioridad |
 |-----------|--------|-----------|
-| [`batch-edit.md`](features/batch-edit.md) | ✅ Completo | ⭐⭐⭐ Muy Alta |
-| [`autenticacion.md`](features/autenticacion.md) | Por migrar | Alta |
-| [`crud-items.md`](features/crud-items.md) | Por migrar | Alta |
-| [`import-excel.md`](features/import-excel.md) | Por migrar | Media |
-| [`export-excel.md`](features/export-excel.md) | Por migrar | Media |
+| [`batch-edit.md`](features/batch-edit.md) | ✅ Especificado | ⭐⭐⭐ Muy Alta |
+
+**Nota:** Otras features (autenticación, CRUD, import/export) se especificarán según se necesiten.
 
 **Regla:** Cada feature en su propio archivo. Si cambias batch-edit → Solo editar `batch-edit.md`
 
@@ -61,10 +59,9 @@
 
 | Documento | Contenido |
 |-----------|-----------|
-| [`python.md`](standards/python.md) | Convenciones Python/Django (por migrar) |
-| [`typescript.md`](standards/typescript.md) | Convenciones TypeScript/React (por migrar) |
+| [`codigo.md`](standards/codigo.md) | ⭐ **Todos los estándares** - Python, TypeScript, Git, Testing |
 
-**Estado actual:** Ver [`../docs/specs/03-ESTANDARES.md`](specs/03-ESTANDARES.md) (legacy)
+**Regla:** Si cambias un estándar de código → Solo editar `codigo.md`
 
 ---
 
@@ -73,10 +70,10 @@
 
 | Documento | Contenido |
 |-----------|-----------|
-| [`fase-0-setup.md`](fases/fase-0-setup.md) | Setup inicial detallado (por migrar) |
-| [`fases-1-7.md`](fases/fases-1-7.md) | Fases 1-7 completas (por migrar) |
+| [`fase-0-setup.md`](fases/fase-0-setup.md) | Setup inicial detallado paso a paso |
+| [`fases-1-7.md`](fases/fases-1-7.md) | Fases 1-7 completas (22-30 días) |
 
-**Estado actual:** Ver [`specs/04-FASE-0-SETUP.md`](specs/04-FASE-0-SETUP.md) y [`specs/05-FASES-1-7.md`](specs/05-FASES-1-7.md) (legacy)
+**Regla:** Si cambias el plan de una fase → Solo editar archivos en `fases/`
 
 ---
 
@@ -87,15 +84,15 @@
 
 **NO EDITAR.** Solo como backup y referencia histórica.
 
-| Archivo | Migrado a... |
-|---------|-------------|
-| `00-VISION-PROYECTO.md` | [`vision/`](vision/) |
-| `01-MODELO-DATOS.md` | [`modelo/entidades.md`](modelo/entidades.md) (por migrar) |
-| `02-FEATURES.md` | [`features/`](features/) (parcial) |
-| `03-ESTANDARES.md` | [`standards/`](standards/) (por migrar) |
-| `04-FASE-0-SETUP.md` | [`fases/fase-0-setup.md`](fases/fase-0-setup.md) (por migrar) |
-| `05-FASES-1-7.md` | [`fases/fases-1-7.md`](fases/fases-1-7.md) (por migrar) |
-| `06-PERMISOS.md` | Quedará aquí (implementar Fase 2) |
+| Archivo | Migrado a... | Estado |
+|---------|--------------|--------|
+| `00-VISION-PROYECTO.md` | [`vision/`](vision/) | ✅ Completo |
+| `01-MODELO-DATOS.md` | [`modelo/entidades.md`](modelo/entidades.md) | ✅ Completo |
+| `02-FEATURES.md` | [`features/batch-edit.md`](features/batch-edit.md) | ✅ Completo |
+| `03-ESTANDARES.md` | [`standards/codigo.md`](standards/codigo.md) | ✅ Completo |
+| `04-FASE-0-SETUP.md` | [`fases/fase-0-setup.md`](fases/fase-0-setup.md) | ✅ Completo |
+| `05-FASES-1-7.md` | [`fases/fases-1-7.md`](fases/fases-1-7.md) | ✅ Completo |
+| `06-PERMISOS.md` | [`permisos.md`](permisos.md) | ✅ Completo |
 
 ---
 
@@ -111,15 +108,13 @@
 → [`vision/alcance.md`](vision/alcance.md)
 
 ### "¿Dónde están los estándares de código?"
-→ Temporalmente: [`specs/03-ESTANDARES.md`](specs/03-ESTANDARES.md)
-→ Futuro: [`standards/`](standards/)
+→ [`standards/codigo.md`](standards/codigo.md)
 
 ### "¿Cómo hago el setup inicial?"
-→ Temporalmente: [`specs/04-FASE-0-SETUP.md`](specs/04-FASE-0-SETUP.md)
-→ Futuro: [`fases/fase-0-setup.md`](fases/fase-0-setup.md)
+→ [`fases/fase-0-setup.md`](fases/fase-0-setup.md)
 
 ### "¿Cuál es el progreso actual?"
-→ [`../ESTADO.md`](../ESTADO.md) (antes PROYECTO.md)
+→ [`../ESTADO.md`](../ESTADO.md)
 
 ---
 
@@ -183,27 +178,29 @@ docs/
 ├── NAVIGATION.md           # 📍 Este archivo - Mapa único
 │
 ├── vision/                 # 🎯 Qué y por qué
+│   ├── README.md          # Índice
 │   ├── stack.md           # ⭐ FUENTE ÚNICA de versiones
-│   ├── objetivos.md
-│   └── alcance.md
+│   ├── objetivos.md       # Qué construimos y por qué
+│   └── alcance.md         # Qué incluye el MVP
 │
 ├── modelo/                 # 🗄️ Base de datos
-│   └── entidades.md       # Modelos Django
+│   ├── README.md          # Índice
+│   └── entidades.md       # Modelos Django completos
 │
 ├── features/               # 🎨 Funcionalidades
-│   ├── batch-edit.md      # ⭐ Edición masiva (completo)
-│   ├── autenticacion.md
-│   ├── crud-items.md
-│   ├── import-excel.md
-│   └── export-excel.md
+│   ├── README.md          # Índice de features
+│   └── batch-edit.md      # ⭐ Edición masiva (completo)
 │
 ├── standards/              # 📏 Convenciones
-│   ├── python.md
-│   └── typescript.md
+│   ├── README.md          # Índice + referencia rápida
+│   └── codigo.md          # ⭐ Todos los estándares
 │
 ├── fases/                  # 🚀 Plan de implementación
-│   ├── fase-0-setup.md
-│   └── fases-1-7.md
+│   ├── README.md          # Índice
+│   ├── fase-0-setup.md    # Setup inicial paso a paso
+│   └── fases-1-7.md       # Fases 1-7 completas
+│
+├── permisos.md             # Sistema de permisos (Fase 2)
 │
 └── specs/                  # 📦 Legacy (backup, no editar)
     ├── 00-VISION-PROYECTO.md
@@ -219,4 +216,4 @@ docs/
 
 **Última actualización:** 2025-11-17
 **Mantenido por:** Edilberto
-**Siguiente revisión:** Al completar migración completa de specs/
+**Estado:** ✅ Migración completa de specs/ a estructura de 2 niveles
