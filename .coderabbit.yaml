@@ -1,5 +1,6 @@
 # Configuración de CodeRabbit para Sistema de Inventario Escolar
 # Última actualización: 2025-11-17
+# Ver documentación: docs/NAVIGATION.md
 
 language: "es"  # Comentarios en español
 
@@ -183,14 +184,17 @@ exclude:
   - "frontend/tailwind.config.ts"
   - "frontend/next.config.js"
   - "backend/manage.py"
-  
+
   # Migraciones de Django
   - "apps/**/migrations/**"
-  
+
   # Archivos estáticos
   - "frontend/public/**"
   - "backend/static/**"
   - "backend/media/**"
+
+  # Documentación legacy (backup, no editar)
+  - "docs/specs/**"
 
 # Configuración de revisiones
 review_settings:

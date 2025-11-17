@@ -1,13 +1,15 @@
-# Configuración para Agentes IA (Windsurf/Cursor)
+# Configuración para Agentes IA (Windsurf/Cursor/etc)
 # Sistema de Inventario Escolar
+# Última actualización: 2025-11-17
 
 agent_info:
   name: "Code Assistant"
   role: "Developer"
   context_files:
-    - "PROYECTO.md"
-    - ".claude/CONTEXTO.md"
-    - "docs/specs/00-VISION-PROYECTO.md"
+    - "GUIA-INICIAL.md"        # 🚀 Entender proyecto en 5 min
+    - "ESTADO.md"              # 📊 Progreso y estado actual
+    - ".claude/context.md"     # Contexto para IA
+    - "docs/NAVIGATION.md"     # 📍 Mapa de documentación
 
 project:
   name: "Sistema de Inventario Escolar"
@@ -15,22 +17,44 @@ project:
     backend: "Django 5.2 + DRF + PostgreSQL 16.6"
     frontend: "Next.js 16 + React 19 + TypeScript 5.7"
     ui: "Tailwind CSS + shadcn/ui"
-  
+    state: "Zustand 5.0.3"
+
   phase: 0
   status: "Setup - 0%"
+
+  # Fuente única de verdad para versiones
+  stack_source: "docs/vision/stack.md"
+
+documentation:
+  # Documentación de 2 niveles
+  root:
+    - "GUIA-INICIAL.md"       # Contexto inicial
+    - "ESTADO.md"             # Tracking vivo
+    - "README.md"             # Quick start
+
+  technical:
+    navigation: "docs/NAVIGATION.md"  # Mapa único
+    vision: "docs/vision/"
+    model: "docs/modelo/entidades.md"
+    features: "docs/features/"
+    standards: "docs/standards/codigo.md"
+    phases: "docs/fases/"
+
+  legacy:
+    - "docs/specs/"  # Backup, no editar
 
 standards:
   file_limits:
     max_lines: 300
     max_function_lines: 50
     max_line_length: 100
-  
+
   testing:
     min_coverage: 85
     frameworks:
       backend: "pytest"
-      frontend: "jest"
-  
+      frontend: "jest + RTL"
+
   validation:
     - "Doble (cliente + servidor)"
     - "Type hints en Python"
@@ -49,28 +73,42 @@ git:
 
 validation_commands:
   backend:
-    - "cd backend && pytest --cov=apps"
+    - "cd backend && pytest --cov=apps --cov-report=term-missing"
     - "ruff check ."
     - "black --check ."
+    - "mypy apps/"
+
   frontend:
     - "cd frontend && npm run lint"
     - "npm run type-check"
     - "npm test"
 
 prohibitions:
-  - "NO cambiar stack"
+  - "NO cambiar stack sin consultar"
   - "NO exceder 300 líneas/archivo"
   - "NO usar localStorage en artifacts"
-  - "NO commitear sin actualizar PROYECTO.md"
+  - "NO editar docs/specs/ (legacy)"
+  - "NO duplicar información (usar links)"
 
 workflow:
-  - "Leer PROYECTO.md"
-  - "Confirmar con Edilberto"
-  - "Implementar + tests"
-  - "Validar"
-  - "Actualizar PROYECTO.md"
-  - "Commit"
-  - "Notificar"
-```
+  - "Leer GUIA-INICIAL.md + ESTADO.md"
+  - "Revisar docs/NAVIGATION.md si necesitas docs técnicas"
+  - "Confirmar con usuario antes de cambios grandes"
+  - "Implementar + tests (>85% coverage)"
+  - "Validar con comandos de validation_commands"
+  - "Actualizar ESTADO.md con progreso"
+  - "Commit con Conventional Commits"
+  - "Notificar completado"
 
----
+features_priority:
+  1: "⭐⭐⭐ Edición Masiva (batch-edit)"
+  2: "🔴 Importación Excel (auto-crear artículos)"
+  3: "🔴 CRUD Ítems (validación doble)"
+  4: "🔴 Autenticación JWT"
+
+key_principles:
+  - "Fuente única de verdad (Single Source of Truth)"
+  - "Modularidad (archivos < 300 líneas)"
+  - "Testing riguroso (coverage > 85%)"
+  - "Validación doble (cliente + servidor)"
+  - "Documentación actualizada siempre"
