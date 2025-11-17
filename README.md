@@ -4,6 +4,69 @@ Sistema integral de gestión de inventario físico para instituciones educativas
 
 ---
 
+## 📁 Estructura del Proyecto
+
+```
+inventario-escolar/
+├── backend/                    # Aplicación Django
+│   ├── config/                 # Configuración del proyecto
+│   │   ├── settings/
+│   │   │   ├── base.py         # Settings base
+│   │   │   ├── development.py  # Settings desarrollo
+│   │   │   └── production.py   # Settings producción
+│   │   ├── urls.py             # URLs raíz
+│   │   └── wsgi.py
+│   ├── apps/                   # Aplicaciones Django
+│   │   ├── core/               # App core (mixins, utils)
+│   │   ├── authentication/     # App de autenticación JWT
+│   │   └── inventario/         # App principal de inventario
+│   │       ├── models/         # Modelos (Sede, Item, etc.)
+│   │       ├── serializers/    # Serializers DRF
+│   │       ├── views/          # ViewSets
+│   │       └── tests/          # Tests unitarios
+│   ├── requirements/           # Dependencias Python
+│   │   ├── base.txt
+│   │   ├── development.txt
+│   │   └── production.txt
+│   └── manage.py
+│
+├── frontend/                   # Aplicación Next.js
+│   ├── app/                    # App Router de Next.js 16
+│   │   ├── (auth)/             # Grupo de rutas de auth
+│   │   │   └── login/
+│   │   └── (dashboard)/        # Grupo de rutas protegidas
+│   │       ├── items/
+│   │       └── catalogos/
+│   ├── components/             # Componentes React
+│   │   ├── ui/                 # shadcn/ui components
+│   │   ├── items/              # Componentes de ítems
+│   │   └── catalogos/          # Componentes de catálogos
+│   ├── lib/                    # Utilidades
+│   │   ├── api/                # Cliente API Axios
+│   │   ├── stores/             # Zustand stores
+│   │   ├── hooks/              # Custom hooks
+│   │   └── schemas/            # Zod schemas
+│   ├── types/                  # TypeScript types
+│   └── package.json
+│
+├── docs/                       # Documentación técnica detallada
+│   └── specs/
+│       ├── 00-VISION-PROYECTO.md      # Explicación general
+│       ├── 01-MODELO-DATOS.md         # Estructura de base de datos
+│       ├── 02-FEATURES.md             # Especificación funcional
+│       ├── 03-ESTANDARES.md           # Convenciones de código
+│       ├── 04-FASE-0-SETUP.md         # Guía de instalación detallada
+│       └── 05-FASES-1-7.md            # Plan de implementación
+│
+├── .claude/                    # Contexto para IA
+│   └── CONTEXTO.md             # Instrucciones para Claude
+│
+├── README.md                   # Este archivo
+└── PROYECTO.md                 # Estado vivo del proyecto
+```
+
+---
+
 ## 🎯 Características Principales
 
 - ✅ **CRUD completo** de ítems de inventario con validación robusta
@@ -105,75 +168,12 @@ Frontend disponible en: `http://localhost:3000`
 
 ---
 
-## 📁 Estructura del Proyecto
-
-```
-inventario-escolar/
-├── backend/                    # Aplicación Django
-│   ├── config/                 # Configuración del proyecto
-│   │   ├── settings/
-│   │   │   ├── base.py         # Settings base
-│   │   │   ├── development.py  # Settings desarrollo
-│   │   │   └── production.py   # Settings producción
-│   │   ├── urls.py             # URLs raíz
-│   │   └── wsgi.py
-│   ├── apps/                   # Aplicaciones Django
-│   │   ├── core/               # App core (mixins, utils)
-│   │   ├── authentication/     # App de autenticación JWT
-│   │   └── inventario/         # App principal de inventario
-│   │       ├── models/         # Modelos (Sede, Item, etc.)
-│   │       ├── serializers/    # Serializers DRF
-│   │       ├── views/          # ViewSets
-│   │       └── tests/          # Tests unitarios
-│   ├── requirements/           # Dependencias Python
-│   │   ├── base.txt
-│   │   ├── development.txt
-│   │   └── production.txt
-│   └── manage.py
-│
-├── frontend/                   # Aplicación Next.js
-│   ├── app/                    # App Router de Next.js 16
-│   │   ├── (auth)/             # Grupo de rutas de auth
-│   │   │   └── login/
-│   │   └── (dashboard)/        # Grupo de rutas protegidas
-│   │       ├── items/
-│   │       └── catalogos/
-│   ├── components/             # Componentes React
-│   │   ├── ui/                 # shadcn/ui components
-│   │   ├── items/              # Componentes de ítems
-│   │   └── catalogos/          # Componentes de catálogos
-│   ├── lib/                    # Utilidades
-│   │   ├── api/                # Cliente API Axios
-│   │   ├── stores/             # Zustand stores
-│   │   ├── hooks/              # Custom hooks
-│   │   └── schemas/            # Zod schemas
-│   ├── types/                  # TypeScript types
-│   └── package.json
-│
-├── docs/                       # Documentación técnica detallada
-│   └── specs/
-│       ├── 00-VISION-PROYECTO.md      # Explicación general
-│       ├── 01-MODELO-DATOS.md         # Estructura de base de datos
-│       ├── 02-FEATURES.md             # Especificación funcional
-│       ├── 03-ESTANDARES.md           # Convenciones de código
-│       ├── 04-FASE-0-SETUP.md         # Guía de instalación detallada
-│       └── 05-FASES-1-7.md            # Plan de implementación
-│
-├── .claude/                    # Contexto para IA
-│   └── CONTEXTO.md             # Instrucciones para Claude
-│
-├── README.md                   # Este archivo
-└── PROYECTO.md                 # Estado vivo del proyecto
-```
-
----
-
 ## 📚 Documentación Completa
 
 ### Para empezar
 
 1. **Este archivo (README.md)** - Setup rápido y visión general
-2. **PROYECTO.md** - Estado actual del proyecto y próximos pasos
+2. **PROYECTO.md** - Estado actual del proyecto, guía de archivos y próximos pasos
 3. **docs/specs/00-VISION-PROYECTO.md** - Explicación detallada en lenguaje natural
 
 ### Para desarrolladores
