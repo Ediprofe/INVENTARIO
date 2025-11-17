@@ -1,166 +1,76 @@
-# ============================================================================
-# CONFIGURACIÓN PARA AGENTES AI
+# Configuración para Agentes IA (Windsurf/Cursor)
 # Sistema de Inventario Escolar
-# ============================================================================
-#
-# IMPORTANTE: Este archivo NO se actualiza en cada tarea.
-# Solo se modifica cuando cambias decisiones arquitectónicas.
-#
-# Para workflow detallado, ver: .ai/README.md
-# Para prompts, ver: .ai/prompts.md
-#
-# ============================================================================
 
-project_info:
+agent_info:
+  name: "Code Assistant"
+  role: "Developer"
+  context_files:
+    - "PROYECTO.md"
+    - ".claude/CONTEXTO.md"
+    - "docs/specs/00-VISION-PROYECTO.md"
+
+project:
   name: "Sistema de Inventario Escolar"
-  version: "1.0.0"
-  phase_current: 0  # Actualizar manualmente al cambiar de fase
-
-stack:
-  backend:
-    framework: "Django 5.2"
-    database: "PostgreSQL 16.6"
-    language: "Python 3.13"
-    api: "Django REST Framework 3.16.1"
+  stack:
+    backend: "Django 5.2 + DRF + PostgreSQL 16.6"
+    frontend: "Next.js 16 + React 19 + TypeScript 5.7"
+    ui: "Tailwind CSS + shadcn/ui"
   
-  frontend:
-    framework: "Next.js 16"
-    language: "TypeScript 5.7"
-    ui: "Tailwind CSS 3.4.17 + shadcn/ui"
-    state: "Zustand 5.0.3"
-    data_fetching: "TanStack Query 5.61"
+  phase: 0
+  status: "Setup - 0%"
 
-# Archivos críticos para leer SIEMPRE
-critical_files:
-  - "docs/ESTADO.md"
-  - "docs/GUIA-RAPIDA.md"
-  - "docs/specs/04-FASE-0-SETUP.md"  # O el archivo de tu fase actual
+standards:
+  file_limits:
+    max_lines: 300
+    max_function_lines: 50
+    max_line_length: 100
+  
+  testing:
+    min_coverage: 85
+    frameworks:
+      backend: "pytest"
+      frontend: "jest"
+  
+  validation:
+    - "Doble (cliente + servidor)"
+    - "Type hints en Python"
+    - "TypeScript strict mode"
+    - "Zod en formularios"
 
-# Límites NO negociables
-code_standards:
-  max_lines_per_file: 300
-  max_lines_per_function: 50
-  max_line_length: 100
-  test_coverage_min: 85
-  commit_convention: "conventional-commits"
+git:
+  commit_format: "tipo(alcance): descripción"
+  commit_types:
+    - "feat"
+    - "fix"
+    - "docs"
+    - "refactor"
+    - "test"
+    - "chore"
 
-# Comandos de validación (ejecutar TODOS antes de commit)
 validation_commands:
   backend:
-    check: "python manage.py check"
-    tests: "pytest --cov=apps --cov-report=term-missing"
-    format_check: "black --check ."
-    lint: "flake8 apps/"
-  
+    - "cd backend && pytest --cov=apps"
+    - "ruff check ."
+    - "black --check ."
   frontend:
-    lint: "npm run lint"
-    type_check: "tsc --noEmit"
-    tests: "npm run test -- --passWithNoTests"
+    - "cd frontend && npm run lint"
+    - "npm run type-check"
+    - "npm test"
 
-# Archivos a actualizar AL TERMINAR cada tarea
-files_to_update:
-  - path: "docs/ESTADO.md"
-    sections:
-      - "## 📍 AHORA MISMO"  # Cambiar tarea actual
-      - "## ✅ FUNCIONA"      # Agregar lo completado
-  
-  - path: "docs/CHANGELOG.md"
-    action: "add_entry"  # Agregar nueva entrada con fecha
+prohibitions:
+  - "NO cambiar stack"
+  - "NO exceder 300 líneas/archivo"
+  - "NO usar localStorage en artifacts"
+  - "NO commitear sin actualizar PROYECTO.md"
 
-# Template de commits (Conventional Commits)
-commit_template: |
-  {tipo}({alcance}): {descripcion_corta_max_50_chars}
-  
-  - Cambio específico 1
-  - Cambio específico 2
-  - Cambio específico 3
-  - docs: ESTADO.md y CHANGELOG.md actualizados
-  
-  Fase: {fase_actual}
-  Tarea: {tarea_id}
-
-# Tipos de commit permitidos
-commit_types:
-  - "feat"      # Nueva funcionalidad
-  - "fix"       # Corrección de bug
-  - "docs"      # Solo documentación
-  - "style"     # Formato (sin cambio funcional)
-  - "refactor"  # Refactorización (sin cambio funcional)
-  - "test"      # Agregar/modificar tests
-  - "chore"     # Mantenimiento (deps, config)
-
-# Reglas específicas del proyecto
-project_rules:
-  validations:
-    - "Validación doble: cliente Y servidor siempre"
-    - "Transacciones atómicas en operaciones batch"
-    - "Historial automático vía signals"
-  
-  prohibitions:
-    - "NO usar localStorage en React artifacts"
-    - "NO exceder 300 líneas por archivo"
-    - "NO cambiar el stack tecnológico"
-    - "NO commitear sin actualizar docs/"
-  
-  requirements:
-    - "Docstrings en Python (Google Style)"
-    - "Type hints en todas las funciones Python"
-    - "TypeScript strict mode activado"
-    - "Tests con coverage > 85%"
-    - "Nombres descriptivos de variables"
-
-# Workflow simplificado (7 pasos)
 workflow:
-  steps:
-    - id: 1
-      name: "Leer contexto"
-      actions:
-        - "Leer docs/ESTADO.md"
-        - "Leer .ai/agent-config.yaml"
-        - "Leer docs/GUIA-RAPIDA.md"
-    
-    - id: 2
-      name: "Confirmar tarea"
-      actions:
-        - "Confirmar con Edilberto antes de empezar"
-        - "Esperar 'OK, adelante'"
-    
-    - id: 3
-      name: "Implementar"
-      actions:
-        - "Escribir código respetando límites"
-        - "Escribir tests (coverage > 85%)"
-    
-    - id: 4
-      name: "Validar"
-      actions:
-        - "Ejecutar validation_commands"
-        - "Si falla, corregir y volver a validar"
-    
-    - id: 5
-      name: "Actualizar docs"
-      actions:
-        - "Actualizar docs/ESTADO.md"
-        - "Actualizar docs/CHANGELOG.md"
-    
-    - id: 6
-      name: "Commit"
-      actions:
-        - "Usar commit_template"
-        - "Incluir código + docs en UN solo commit"
-    
-    - id: 7
-      name: "Notificar"
-      actions:
-        - "Informar a Edilberto que terminaste"
-        - "Incluir: archivos, validaciones, commit hash"
+  - "Leer PROYECTO.md"
+  - "Confirmar con Edilberto"
+  - "Implementar + tests"
+  - "Validar"
+  - "Actualizar PROYECTO.md"
+  - "Commit"
+  - "Notificar"
+```
 
-# ============================================================================
-# NOTAS FINALES:
-#
-# - Para workflow detallado: .ai/README.md
-# - Para prompts: .ai/prompts.md
-# - Para specs técnicas: docs/specs/
-# - Para estado actual: docs/ESTADO.md
-#
-# ============================================================================
+---
