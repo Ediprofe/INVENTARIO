@@ -1,10 +1,13 @@
 # ============================================================================
-# CONFIGURACIÓN PARA AGENTES AI (Cursor, Windsurf, etc.)
+# CONFIGURACIÓN PARA AGENTES AI
 # Sistema de Inventario Escolar
 # ============================================================================
-# 
-# IMPORTANTE: Este archivo NO se actualiza automáticamente.
-# Solo se modifica manualmente cuando cambias decisiones arquitectónicas.
+#
+# IMPORTANTE: Este archivo NO se actualiza en cada tarea.
+# Solo se modifica cuando cambias decisiones arquitectónicas.
+#
+# Para workflow detallado, ver: .ai/README.md
+# Para prompts, ver: .ai/prompts.md
 #
 # ============================================================================
 
@@ -12,57 +15,66 @@ project_info:
   name: "Sistema de Inventario Escolar"
   version: "1.0.0"
   phase_current: 0  # Actualizar manualmente al cambiar de fase
-  
+
 stack:
   backend:
     framework: "Django 5.2"
     database: "PostgreSQL 16.6"
     language: "Python 3.13"
+    api: "Django REST Framework 3.16.1"
+  
   frontend:
     framework: "Next.js 16"
     language: "TypeScript 5.7"
-    ui: "Tailwind CSS + shadcn/ui"
+    ui: "Tailwind CSS 3.4.17 + shadcn/ui"
     state: "Zustand 5.0.3"
+    data_fetching: "TanStack Query 5.61"
 
-# Archivos que el agente SIEMPRE debe leer antes de empezar
+# Archivos críticos para leer SIEMPRE
 critical_files:
-  - "docs/ESTADO.md"                    # Estado actual del proyecto
-  - "docs/GUIA-RAPIDA.md"               # Referencia técnica rápida
-  - "docs/specs/04-FASE-0-SETUP.md"     # Si estás en Fase 0
-  - "docs/specs/05-FASES-1-7.md"        # Si estás en Fases 1-7
+  - "docs/ESTADO.md"
+  - "docs/GUIA-RAPIDA.md"
+  - "docs/specs/04-FASE-0-SETUP.md"  # O el archivo de tu fase actual
 
-# Estándares NO negociables
+# Límites NO negociables
 code_standards:
   max_lines_per_file: 300
   max_lines_per_function: 50
   max_line_length: 100
   test_coverage_min: 85
   commit_convention: "conventional-commits"
-  
-# Comandos que el agente debe ejecutar después de codificar
+
+# Comandos de validación (ejecutar TODOS antes de commit)
 validation_commands:
   backend:
     check: "python manage.py check"
     tests: "pytest --cov=apps --cov-report=term-missing"
-    format: "black --check ."
+    format_check: "black --check ."
     lint: "flake8 apps/"
+  
   frontend:
     lint: "npm run lint"
     type_check: "tsc --noEmit"
     tests: "npm run test -- --passWithNoTests"
 
-# Archivos que el agente debe actualizar AL TERMINAR cada tarea
-files_to_update_after_task:
-  - "docs/ESTADO.md"                    # Actualizar sección "AHORA MISMO"
-  - "docs/CHANGELOG.md"                 # Agregar entrada con cambios
-
-# Estructura de commit (no cambiar)
-commit_template: |
-  {tipo}({alcance}): {descripcion_corta}
+# Archivos a actualizar AL TERMINAR cada tarea
+files_to_update:
+  - path: "docs/ESTADO.md"
+    sections:
+      - "## 📍 AHORA MISMO"  # Cambiar tarea actual
+      - "## ✅ FUNCIONA"      # Agregar lo completado
   
-  - Cambio 1
-  - Cambio 2
-  - Cambio 3
+  - path: "docs/CHANGELOG.md"
+    action: "add_entry"  # Agregar nueva entrada con fecha
+
+# Template de commits (Conventional Commits)
+commit_template: |
+  {tipo}({alcance}): {descripcion_corta_max_50_chars}
+  
+  - Cambio específico 1
+  - Cambio específico 2
+  - Cambio específico 3
+  - docs: ESTADO.md y CHANGELOG.md actualizados
   
   Fase: {fase_actual}
   Tarea: {tarea_id}
@@ -71,37 +83,84 @@ commit_template: |
 commit_types:
   - "feat"      # Nueva funcionalidad
   - "fix"       # Corrección de bug
-  - "docs"      # Documentación
+  - "docs"      # Solo documentación
   - "style"     # Formato (sin cambio funcional)
-  - "refactor"  # Refactorización
-  - "test"      # Tests
-  - "chore"     # Mantenimiento
+  - "refactor"  # Refactorización (sin cambio funcional)
+  - "test"      # Agregar/modificar tests
+  - "chore"     # Mantenimiento (deps, config)
+
+# Reglas específicas del proyecto
+project_rules:
+  validations:
+    - "Validación doble: cliente Y servidor siempre"
+    - "Transacciones atómicas en operaciones batch"
+    - "Historial automático vía signals"
+  
+  prohibitions:
+    - "NO usar localStorage en React artifacts"
+    - "NO exceder 300 líneas por archivo"
+    - "NO cambiar el stack tecnológico"
+    - "NO commitear sin actualizar docs/"
+  
+  requirements:
+    - "Docstrings en Python (Google Style)"
+    - "Type hints en todas las funciones Python"
+    - "TypeScript strict mode activado"
+    - "Tests con coverage > 85%"
+    - "Nombres descriptivos de variables"
+
+# Workflow simplificado (7 pasos)
+workflow:
+  steps:
+    - id: 1
+      name: "Leer contexto"
+      actions:
+        - "Leer docs/ESTADO.md"
+        - "Leer .ai/agent-config.yaml"
+        - "Leer docs/GUIA-RAPIDA.md"
+    
+    - id: 2
+      name: "Confirmar tarea"
+      actions:
+        - "Confirmar con Edilberto antes de empezar"
+        - "Esperar 'OK, adelante'"
+    
+    - id: 3
+      name: "Implementar"
+      actions:
+        - "Escribir código respetando límites"
+        - "Escribir tests (coverage > 85%)"
+    
+    - id: 4
+      name: "Validar"
+      actions:
+        - "Ejecutar validation_commands"
+        - "Si falla, corregir y volver a validar"
+    
+    - id: 5
+      name: "Actualizar docs"
+      actions:
+        - "Actualizar docs/ESTADO.md"
+        - "Actualizar docs/CHANGELOG.md"
+    
+    - id: 6
+      name: "Commit"
+      actions:
+        - "Usar commit_template"
+        - "Incluir código + docs en UN solo commit"
+    
+    - id: 7
+      name: "Notificar"
+      actions:
+        - "Informar a Edilberto que terminaste"
+        - "Incluir: archivos, validaciones, commit hash"
 
 # ============================================================================
-# NOTAS PARA EL AGENTE:
-# 
-# 1. Antes de empezar CUALQUIER tarea:
-#    - Lee docs/ESTADO.md para saber dónde estamos
-#    - Lee el archivo de specs de la fase actual
-#    - Confirma que entiendes la tarea
+# NOTAS FINALES:
 #
-# 2. Después de implementar:
-#    - Ejecuta TODOS los validation_commands
-#    - Si alguno falla, corrige antes de commitear
-#    - Actualiza docs/ESTADO.md con lo que completaste
-#    - Agrega entrada en docs/CHANGELOG.md
-#    - Genera commit usando commit_template
-#
-# 3. Workflow de cada tarea:
-#    ┌─────────────────────────┐
-#    │ 1. Leer ESTADO.md       │
-#    │ 2. Leer specs de fase   │
-#    │ 3. Confirmar tarea      │
-#    │ 4. Implementar código   │
-#    │ 5. Ejecutar validaciones│
-#    │ 6. Actualizar ESTADO.md │
-#    │ 7. Actualizar CHANGELOG │
-#    │ 8. Commit               │
-#    └─────────────────────────┘
+# - Para workflow detallado: .ai/README.md
+# - Para prompts: .ai/prompts.md
+# - Para specs técnicas: docs/specs/
+# - Para estado actual: docs/ESTADO.md
 #
 # ============================================================================
