@@ -175,34 +175,27 @@ Frontend disponible en: `http://localhost:3000`
 
 ---
 
-## 📚 Documentación Completa
+## 📚 Documentación
 
-### 🚀 Para empezar
+### 🎯 Inicio Rápido
 
-1. **Este archivo (README.md)** - Setup rápido y visión general
-2. **PROYECTO.md** - Estado actual del proyecto, progreso y próximos pasos
-3. **[docs/vision/](docs/vision/)** - Visión, objetivos y alcance del proyecto
+| Necesito... | Ir a... |
+|-------------|---------|
+| **Setup inicial** | [`docs/specs/04-FASE-0-SETUP.md`](docs/specs/04-FASE-0-SETUP.md) |
+| **Ver progreso** | [`ESTADO.md`](ESTADO.md) |
+| **Mapa de docs** | [`docs/NAVIGATION.md`](docs/NAVIGATION.md) 📍 |
+| **Versiones exactas** | [`docs/vision/stack.md`](docs/vision/stack.md) ⭐ |
 
-### 👨‍💻 Para desarrolladores
+### 📖 Por Tema
 
-#### Por Tema (Estructura Modular)
-
-- **🎯 Visión:** [`docs/vision/`](docs/vision/)
-  - [`stack.md`](docs/vision/stack.md) ⭐ Fuente única para versiones
-  - [`objetivos.md`](docs/vision/objetivos.md) - Qué y por qué
-  - [`alcance.md`](docs/vision/alcance.md) - Qué incluye el MVP
-
-- **🎨 Features:** [`docs/features/`](docs/features/)
-  - [`batch-edit.md`](docs/features/batch-edit.md) ⭐ Edición masiva (prioridad)
-  - Ver [`README.md`](docs/features/README.md) para lista completa
-
-- **🗄️ Modelo:** [`docs/specs/01-MODELO-DATOS.md`](docs/specs/01-MODELO-DATOS.md)
-
+- **🎯 Visión:** [`docs/vision/`](docs/vision/) - Objetivos, alcance, stack
+- **🗄️ Modelo:** [`docs/modelo/entidades.md`](docs/modelo/entidades.md) - Base de datos
+- **🎨 Features:** [`docs/features/`](docs/features/) - Funcionalidades
+  - [`batch-edit.md`](docs/features/batch-edit.md) ⭐ Edición masiva
 - **📏 Estándares:** [`docs/specs/03-ESTANDARES.md`](docs/specs/03-ESTANDARES.md)
+- **🚀 Fases:** [`docs/specs/04-FASE-0-SETUP.md`](docs/specs/04-FASE-0-SETUP.md) + [`05-FASES-1-7.md`](docs/specs/05-FASES-1-7.md)
 
-- **🚀 Fases:**
-  - [`docs/specs/04-FASE-0-SETUP.md`](docs/specs/04-FASE-0-SETUP.md) - Setup detallado
-  - [`docs/specs/05-FASES-1-7.md`](docs/specs/05-FASES-1-7.md) - Plan completo (7 fases)
+**Mapa completo:** [`docs/NAVIGATION.md`](docs/NAVIGATION.md)
 
 ---
 
@@ -334,17 +327,20 @@ Ver: `docs/specs/03-ESTANDARES.md` para detalles completos.
 
 ## 📊 Estado del Proyecto
 
-**Fase actual:** Ver `PROYECTO.md` para estado actualizado
+**Ver:** [`ESTADO.md`](ESTADO.md) para progreso actualizado
 
-**Progreso general:**
-- ⏳ Fase 0: Setup del proyecto
-- ⏹️ Fase 1: Modelos + Autenticación (3-4 días)
-- ⏹️ Fase 2: API + Serializers (3-4 días)
-- ⏹️ Fase 3: Frontend MVP (5-6 días)
-- ⏹️ Fase 4: Import/Export Excel (3-4 días)
-- ⏹️ Fase 5: Edición Masiva ⭐ (3-4 días)
-- ⏹️ Fase 6: Testing + Polish (2-3 días)
-- ⏹️ Fase 7: Docker + Deploy (2-3 días)
+**Fase actual:** Fase 0 - Setup (0%)
+
+| Fase | Estado |
+|------|--------|
+| 0: Setup | ⏳ En curso |
+| 1: Modelos + Auth | ⏹️ Pendiente |
+| 2: API + Serializers | ⏹️ Pendiente |
+| 3: Frontend MVP | ⏹️ Pendiente |
+| 4: Import/Export | ⏹️ Pendiente |
+| 5: Batch Edit ⭐ | ⏹️ Pendiente |
+| 6: Testing + Polish | ⏹️ Pendiente |
+| 7: Docker + Deploy | ⏹️ Pendiente |
 
 ---
 

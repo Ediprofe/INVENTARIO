@@ -509,15 +509,22 @@ Usuario → Abre en Excel para análisis offline o presentación
 
 ### Para comenzar a trabajar:
 
-1. **Leer esta visión general** (este archivo) ✅
-2. Revisar `docs/ESTADO.md` para saber en qué fase estamos
-3. Consultar `docs/GUIA-RAPIDA.md` para referencia técnica rápida
-4. Profundizar en archivos técnicos según necesidad:
-   - `01-MODELO-DATOS.md` → Estructura de base de datos
-   - `02-FEATURES.md` → Funcionalidades detalladas
-   - `03-ESTANDARES.md` → Reglas de código
-   - `04-FASE-0-SETUP.md` → Guía de instalación
-   - `05-FASES-1-7.md` → Plan de implementación
+### Para Contexto Rápido
+1. `README.md` - Setup e introducción
+2. `PROYECTO.md` - Este archivo (estado actual y guía de archivos)
+
+### Para Especificaciones Técnicas
+4. `docs/specs/00-VISION-PROYECTO.md` - Visión general
+5. `docs/specs/01-MODELO-DATOS.md` - Base de datos
+6. `docs/specs/02-FEATURES.md` - Funcionalidades (RF-001 a RF-008)
+7. `docs/specs/03-ESTANDARES.md` - Convenciones de código
+8. `docs/specs/04-FASE-0-SETUP.md` - Guía de setup
+9. `docs/specs/05-FASES-1-7.md` - Plan de implementación
+10. `docs/specs/06-PERMISOS.md` - Sistema de permisos
+
+### Para IA (Claude/Cursor)
+11. `.claude/CONTEXTO.md` - Instrucciones para Claude
+12. `.ai/agent-config.yaml` - Configuración Windsurf/Cursor
 
 ---
 
@@ -540,24 +547,3 @@ Si algo no está claro en este documento, es una señal de que necesitamos mejor
 **Última actualización:** 2025-11-17  
 **Versión:** 1.0  
 **Autor:** Edilberto + Claude
-
-✅ RESUMEN DE LO QUE TE DI
-
-.claude/CONTEXTO.md corregido → Referencias actualizadas a los archivos nuevos (01-05)
-docs/specs/00-VISION-PROYECTO.md nuevo → Explicación accesible del proyecto completo
-
-
-📝 INSTRUCCIONES DE IMPLEMENTACIÓN
-bash# 1. Actualizar contexto
-cp nuevo-contenido .claude/CONTEXTO.md
-
-# 2. Crear visión del proyecto
-cp nuevo-contenido docs/specs/00-VISION-PROYECTO.md
-
-# 3. Commit
-git add .claude/CONTEXTO.md docs/specs/00-VISION-PROYECTO.md
-git commit -m "docs: actualizar CONTEXTO.md y agregar 00-VISION-PROYECTO.md
-
-- Corregidas referencias a archivos antiguos en CONTEXTO.md
-- Nuevo archivo 00-VISION-PROYECTO.md con explicación en lenguaje natural
-- Contexto general antes de specs técnicas"

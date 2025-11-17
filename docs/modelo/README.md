@@ -1,44 +1,58 @@
 # 🗄️ Modelo de Datos
 
-Documentación del modelo de datos del Sistema de Inventario Escolar.
+Estructura completa de la base de datos del Sistema de Inventario Escolar.
 
 ---
 
 ## 📚 Contenido
 
-### Documentación Principal
-Por ahora, toda la información del modelo de datos está en:
-**[../specs/01-MODELO-DATOS.md](../specs/01-MODELO-DATOS.md)**
+### [`entidades.md`](entidades.md) ⭐
+**Documento principal** - Modelos Django completos
+
+- Diagrama Entidad-Relación
+- Enums y Choices
+- Modelo Base (TimeStampedModel)
+- Modelos de Catálogos (Sede, Ubicación, Responsable, Artículo)
+- Modelo Principal (ItemInventario)
+- Historial de Movimientos
+- Índices y Optimizaciones
 
 ---
 
-## 🔄 Migración Pendiente
+## 🎯 Uso Rápido
 
-Esta carpeta está preparada para una futura modularización en:
+### Ver todos los modelos
+→ [`entidades.md`](entidades.md)
 
-### Estructura Propuesta
-```
-docs/modelo/
-├── README.md (este archivo)
-├── entidades.md       # Modelos Django detallados
-├── relaciones.md      # Diagramas y relaciones entre modelos
-├── validaciones.md    # Reglas de negocio y constraints
-└── migraciones.md     # Guía de migraciones Django
-```
-
-### Cuándo Migrar
-- Cuando el archivo 01-MODELO-DATOS.md supere las 1000 líneas
-- Cuando se agreguen nuevos modelos complejos
-- Cuando se requiera documentar migraciones complejas
+### Buscar modelo específico
+- **Sede:** [`entidades.md#sede`](entidades.md#sede)
+- **ItemInventario:** [`entidades.md#itemInventario`](entidades.md#itemInventario)
+- **HistorialMovimiento:** [`entidades.md#historialmovimiento`](entidades.md#historialmovimiento)
 
 ---
 
-## 🔗 Referencia Rápida
+## 📝 Mantenimiento
 
-Para consultar el modelo de datos completo:
-→ [docs/specs/01-MODELO-DATOS.md](../specs/01-MODELO-DATOS.md)
+### Agregar nuevo modelo
+```bash
+vim docs/modelo/entidades.md
+# Agregar modelo siguiendo estructura existente
+```
+
+### Modificar modelo existente
+```bash
+vim docs/modelo/entidades.md
+# Buscar el modelo y actualizar
+```
+
+**Regla:** Un solo archivo para todos los modelos. Fácil de buscar con Ctrl+F.
+
+---
+
+## 📦 Legacy
+
+Versión original en: [`../specs/01-MODELO-DATOS.md`](../specs/01-MODELO-DATOS.md) (backup)
 
 ---
 
 **Última actualización:** 2025-11-17
-**Estado:** Pendiente de migración
