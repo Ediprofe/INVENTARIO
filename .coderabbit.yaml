@@ -1,0 +1,207 @@
+# Configuración de CodeRabbit para Sistema de Inventario Escolar
+# Última actualización: 2025-11-17
+
+language: "es"  # Comentarios en español
+
+# Revisiones automáticas
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+  
+  # Nivel de detalle
+  review_status_comment: true
+  poem: false  # Sin poemas, gracias
+  
+  # Qué revisar
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/.venv/**"
+    - "!**/venv/**"
+    - "!**/.next/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/__pycache__/**"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+  
+  # Ignorar archivos generados por shadcn/ui
+  path_ignore:
+    - "frontend/components/ui/**"  # shadcn/ui components
+    - "frontend/lib/utils.ts"      # shadcn/ui utils
+
+# Reglas personalizadas del proyecto
+custom_rules:
+  # Backend Python/Django
+  - name: "Límite de líneas por archivo Python"
+    pattern: "**/*.py"
+    rule: |
+      Si el archivo tiene más de 300 líneas, sugerir dividirlo en múltiples archivos.
+      Excepciones: archivos de tests pueden tener hasta 500 líneas.
+    severity: "warning"
+  
+  - name: "Docstrings obligatorios en Python"
+    pattern: "**/*.py"
+    rule: |
+      Todas las clases y funciones públicas deben tener docstrings.
+      Formato: Google Style.
+    severity: "error"
+  
+  - name: "Type hints obligatorios"
+    pattern: "apps/**/*.py"
+    rule: |
+      Todas las funciones deben tener type hints completos.
+      Ejemplo: def mi_funcion(param: str) -> int:
+    severity: "warning"
+  
+  # Frontend TypeScript/React
+  - name: "Límite de líneas por archivo TypeScript"
+    pattern: "**/*.{ts,tsx}"
+    rule: |
+      Si el archivo tiene más de 300 líneas, sugerir dividirlo.
+      Componentes React: máximo 250 líneas.
+    severity: "warning"
+  
+  - name: "Evitar any en TypeScript"
+    pattern: "**/*.{ts,tsx}"
+    rule: |
+      Evitar el uso de 'any'. Usar tipos específicos o 'unknown' si es necesario.
+    severity: "warning"
+  
+  - name: "Prohibido localStorage en artifacts"
+    pattern: "**/*.{tsx,jsx}"
+    rule: |
+      NO usar localStorage, sessionStorage ni browser storage APIs.
+      Usar React state (useState, useReducer) o variables en memoria.
+    severity: "error"
+  
+  # General
+  - name: "Conventional Commits"
+    pattern: "**/*"
+    rule: |
+      Los mensajes de commit deben seguir Conventional Commits:
+      tipo(alcance): descripción
+      Tipos permitidos: feat, fix, docs, style, refactor, test, chore
+    severity: "error"
+  
+  - name: "Tests obligatorios"
+    pattern: "apps/**/*.py"
+    rule: |
+      Cada nuevo archivo de código debe tener su correspondiente archivo de tests.
+      Backend: pytest con coverage > 85%
+    severity: "warning"
+  
+  - name: "Validación doble"
+    pattern: "{apps/**/*.py,frontend/lib/schemas/*.ts}"
+    rule: |
+      Todas las validaciones deben existir TANTO en backend como en frontend.
+      Backend: Django validators
+      Frontend: Zod schemas
+    severity: "warning"
+
+# Configuración de issues
+chat:
+  auto_reply: true
+
+# Checks de seguridad
+security:
+  enabled: true
+  
+# Ignorar dependencias externas
+ignore:
+  - "package-lock.json"
+  - "poetry.lock"
+  - "Pipfile.lock"
+
+# Configuración de performance
+performance:
+  # Detectar problemas de performance
+  enabled: true
+  
+  # Alertar sobre N+1 queries en Django
+  orm_checks:
+    enabled: true
+    patterns:
+      - "select_related"
+      - "prefetch_related"
+
+# Mejores prácticas
+best_practices:
+  # Django
+  django:
+    - "Usar select_related() para ForeignKey"
+    - "Usar prefetch_related() para ManyToMany"
+    - "Transacciones atómicas en operaciones batch"
+    - "Validaciones en clean() de modelos"
+  
+  # React/Next.js
+  react:
+    - "Usar useMemo para cálculos costosos"
+    - "Usar useCallback para funciones en props"
+    - "Evitar re-renders innecesarios"
+    - "Lazy loading de componentes pesados"
+  
+  # General
+  general:
+    - "Nombres descriptivos de variables (no x, y, z)"
+    - "Funciones pequeñas (< 50 líneas)"
+    - "Un solo propósito por función"
+    - "Comentarios solo cuando el código no es autoexplicativo"
+
+# Configuración de pull requests
+pull_requests:
+  # Auto-merge si cumple criterios
+  auto_merge:
+    enabled: false  # Manual por seguridad
+  
+  # Labels automáticos
+  labeling:
+    enabled: true
+    labels:
+      - name: "backend"
+        files: ["backend/**/*", "apps/**/*"]
+      - name: "frontend"
+        files: ["frontend/**/*"]
+      - name: "docs"
+        files: ["docs/**/*", "*.md"]
+      - name: "tests"
+        files: ["**/tests/**/*", "**/*.test.*"]
+      - name: "config"
+        files: ["*.yaml", "*.json", "*.toml"]
+
+# Configuración de comentarios
+comments:
+  # Colapsar comentarios resueltos
+  collapse_resolved: true
+  
+  # Formato de comentarios
+  format: "concise"  # Comentarios breves y directos
+
+# Exclusiones específicas del proyecto
+exclude:
+  # Archivos de configuración de terceros
+  - "frontend/tailwind.config.ts"
+  - "frontend/next.config.js"
+  - "backend/manage.py"
+  
+  # Migraciones de Django
+  - "apps/**/migrations/**"
+  
+  # Archivos estáticos
+  - "frontend/public/**"
+  - "backend/static/**"
+  - "backend/media/**"
+
+# Configuración de revisiones
+review_settings:
+  # Priorizar estos tipos de issues
+  prioritize:
+    - "security"
+    - "bug"
+    - "performance"
+  
+  # Nivel de comentarios
+  verbosity: "medium"
+  
+  # Sugerencias de código
+  suggest_code: true
