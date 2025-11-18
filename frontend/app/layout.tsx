@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { QueryProvider } from "@/lib/providers/QueryProvider";
+import { ConditionalLayout } from "./ConditionalLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +18,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <QueryProvider>
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </QueryProvider>
+      </body>
     </html>
   );
 }

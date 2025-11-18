@@ -7,9 +7,9 @@
 
 ## 🎯 Fase Actual
 
-### Fase 2: API REST y Serializers - 100% ✅
+### Fase 3: Frontend MVP - 100% ✅
 
-**Estado:** ✅ COMPLETADO - API REST completa con serializers, filtros y ViewSets
+**Estado:** ✅ COMPLETADO - Frontend completo con autenticación, tabla de ítems y CRUD
 
 ### ✅ Completado
 1. ✅ Estructura backend completa
@@ -36,8 +36,8 @@
 | **0** | Setup | 1-2 días | ✅ Completado | 100% |
 | **1** | Modelos + Auth | 3-4 días | ✅ Completado | 100% |
 | **2** | API + Serializers | 3-4 días | ✅ Completado | 100% |
-| **3** | Frontend MVP | 5-6 días | ⏳ Siguiente | 0% |
-| **4** | Import/Export | 3-4 días | ⏹️ Pendiente | 0% |
+| **3** | Frontend MVP | 5-6 días | ✅ Completado | 100% |
+| **4** | Import/Export | 3-4 días | ⏳ Siguiente | 0% |
 | **5** | Batch Edit ⭐ | 3-4 días | ⏹️ Pendiente | 0% |
 | **6** | Testing + Polish | 2-3 días | ⏹️ Pendiente | 0% |
 | **7** | Docker + Deploy | 2-3 días | ⏹️ Pendiente | 0% |
@@ -135,39 +135,65 @@
 /api/v1/inventario/items/
 ```
 
+### Fase 3 - Frontend MVP (2025-11-17)
+
+**Infraestructura:**
+- ✅ Axios API client con interceptors JWT
+- ✅ Refresh token automático
+- ✅ Zustand auth store con persistencia localStorage
+- ✅ Next.js middleware para rutas protegidas
+- ✅ TanStack Query configurado para data fetching
+- ✅ TypeScript types completos para todas las entidades
+
+**Componentes Implementados:**
+- ✅ Login page con validación Zod + React Hook Form
+- ✅ Navbar con logout y datos de usuario
+- ✅ ConditionalLayout (navbar solo en rutas autenticadas)
+- ✅ ItemsTable con búsqueda, filtros avanzados y paginación
+- ✅ ItemFormDialog para crear/editar ítems
+
+**Funcionalidades:**
+- ✅ Autenticación completa (login, logout, refresh, protected routes)
+- ✅ CRUD completo de ítems con validación
+- ✅ Filtros por sede, ubicación, responsable, estado
+- ✅ Búsqueda por código, artículo, ubicación
+- ✅ Paginación de resultados
+- ✅ Soft delete de ítems
+- ✅ Loading y error states en toda la UI
+
+**API Clients:**
+- ✅ AuthAPI (login, refresh, logout)
+- ✅ ItemsAPI (list, get, create, update, delete)
+- ✅ SedesAPI, UbicacionesAPI, ResponsablesAPI, ArticulosAPI
+
+**TanStack Query Hooks:**
+- ✅ useItems, useItem, useCreateItem, useUpdateItem, useDeleteItem
+- ✅ useSedes, useUbicaciones, useResponsables, useArticulos
+- ✅ Optimistic updates y cache management
+
+**Build:**
+- ✅ TypeScript type-check exitoso
+- ✅ Frontend build exitoso (Next.js 16)
+
 ---
 
 ## 🚀 Siguiente Tarea
 
-**Iniciar Fase 3 - Frontend MVP:**
+**Iniciar Fase 4 - Import/Export Excel:**
 
-1. **Cliente API (Axios):**
-   - Configurar interceptors para JWT
-   - Refresh token automático
-   - Manejo de errores
+1. **Backend:**
+   - Endpoint para importar Excel (pandas/openpyxl)
+   - Endpoint para exportar Excel
+   - Validación de datos importados
+   - Manejo de errores y reportes
 
-2. **Store de Autenticación:**
-   - Zustand store para auth
-   - Persistencia de tokens
-   - Estado de usuario
+2. **Frontend:**
+   - Componente de importación con drag-and-drop
+   - Botón de exportación en ItemsTable
+   - Preview de datos antes de importar
+   - Feedback de progreso
 
-3. **Componentes de Items:**
-   - ItemsTable con filtros avanzados
-   - ItemForm (crear/editar)
-   - Paginación y búsqueda
-   - Loading y error states
-
-4. **Navegación y Layout:**
-   - Layout principal con navbar
-   - Rutas protegidas
-   - Middleware de autenticación
-
-5. **Integración con API:**
-   - TanStack Query para data fetching
-   - Optimistic updates
-   - Cache management
-
-**Ver guía detallada:** [`docs/fases/fases-1-7.md`](docs/fases/fases-1-7.md#fase-3-frontend-mvp)
+**Ver guía detallada:** [`docs/fases/fases-1-7.md`](docs/fases/fases-1-7.md#fase-4-importexport-excel)
 
 ---
 
