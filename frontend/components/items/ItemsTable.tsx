@@ -175,14 +175,14 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
           <div className="space-y-2">
             <Label htmlFor="sede">Sede</Label>
             <Select
-              value={filters.sede?.toString() || ''}
-              onValueChange={(value) => handleFilterChange('sede', value ? parseInt(value) : undefined)}
+              value={filters.sede?.toString()}
+              onValueChange={(value) => handleFilterChange('sede', value === 'all' ? undefined : parseInt(value))}
             >
               <SelectTrigger id="sede">
                 <SelectValue placeholder="Todas las sedes" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas las sedes</SelectItem>
+                <SelectItem value="all">Todas las sedes</SelectItem>
                 {sedesData?.results.map((sede) => (
                   <SelectItem key={sede.id} value={sede.id.toString()}>
                     {sede.nombre}
@@ -195,14 +195,14 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
           <div className="space-y-2">
             <Label htmlFor="ubicacion">Ubicación</Label>
             <Select
-              value={filters.ubicacion?.toString() || ''}
-              onValueChange={(value) => handleFilterChange('ubicacion', value ? parseInt(value) : undefined)}
+              value={filters.ubicacion?.toString()}
+              onValueChange={(value) => handleFilterChange('ubicacion', value === 'all' ? undefined : parseInt(value))}
             >
               <SelectTrigger id="ubicacion">
                 <SelectValue placeholder="Todas las ubicaciones" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas las ubicaciones</SelectItem>
+                <SelectItem value="all">Todas las ubicaciones</SelectItem>
                 {ubicacionesData?.results.map((ubicacion) => (
                   <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
                     {ubicacion.nombre}
@@ -215,14 +215,14 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
           <div className="space-y-2">
             <Label htmlFor="estado">Estado</Label>
             <Select
-              value={filters.estado || ''}
-              onValueChange={(value) => handleFilterChange('estado', value as EstadoItem || undefined)}
+              value={filters.estado}
+              onValueChange={(value) => handleFilterChange('estado', value === 'all' ? undefined : value as EstadoItem)}
             >
               <SelectTrigger id="estado">
                 <SelectValue placeholder="Todos los estados" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los estados</SelectItem>
+                <SelectItem value="all">Todos los estados</SelectItem>
                 {ESTADOS.map((estado) => (
                   <SelectItem key={estado.value} value={estado.value}>
                     {estado.label}
