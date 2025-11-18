@@ -7,9 +7,9 @@
 
 ## 🎯 Fase Actual
 
-### Fase 4: Import/Export Excel - 100% ✅
+### Fase 5: Batch Edit - 100% ✅
 
-**Estado:** ✅ COMPLETADO - Importación y exportación de Excel funcionando completamente
+**Estado:** ✅ COMPLETADO - Edición masiva de ítems implementada
 
 ### ✅ Completado
 1. ✅ Estructura backend completa
@@ -38,8 +38,8 @@
 | **2** | API + Serializers | 3-4 días | ✅ Completado | 100% |
 | **3** | Frontend MVP | 5-6 días | ✅ Completado | 100% |
 | **4** | Import/Export | 3-4 días | ✅ Completado | 100% |
-| **5** | Batch Edit ⭐ | 3-4 días | ⏳ Siguiente | 0% |
-| **6** | Testing + Polish | 2-3 días | ⏹️ Pendiente | 0% |
+| **5** | Batch Edit ⭐ | 3-4 días | ✅ Completado | 100% |
+| **6** | Testing + Polish | 2-3 días | ⏳ Siguiente | 0% |
 | **7** | Docker + Deploy | 2-3 días | ⏹️ Pendiente | 0% |
 
 **Total estimado:** 22-30 días
@@ -217,24 +217,75 @@ POST /api/v1/inventario/items/template/
 - ✅ TypeScript type-check exitoso
 - ✅ Frontend build exitoso
 
+### Fase 5 - Batch Edit (2025-11-18)
+
+**Backend:**
+- ✅ Acción `batch_update` en ItemInventarioViewSet
+- ✅ Método `_update_single_item` con validaciones completas
+- ✅ Soporte para dos modos: atómico (todo o nada) y parcial (aplicar válidos)
+- ✅ Validación de ubicación (misma sede)
+- ✅ Validación de responsable (misma sede)
+- ✅ Validación de estado (valores permitidos)
+- ✅ Validación de valor_unitario (numérico >= 0)
+- ✅ Registro en HistorialMovimiento para cada actualización
+- ✅ Límite de 500 ítems por operación
+- ✅ Manejo detallado de errores por ítem
+
+**Frontend:**
+- ✅ Tipos TypeScript: IBatchUpdateItem, IBatchUpdateRequest, IBatchUpdateResponse
+- ✅ API client: ItemsAPI.batchUpdate()
+- ✅ Hook: useBatchUpdateItems() con invalidación de caché
+- ✅ Componentes shadcn/ui: Checkbox, Textarea, Alert
+- ✅ ItemsTable con selección múltiple (checkboxes)
+- ✅ Botón "Editar Seleccionados" (aparece cuando hay selección)
+- ✅ BatchEditDialog con 6 campos editables
+- ✅ Checkbox para seleccionar qué campos actualizar
+- ✅ Toggle para modo atómico
+- ✅ Resultados detallados (éxitos y errores por ítem)
+- ✅ Reset de selección al cambiar de página
+
+**Funcionalidades:**
+- ✅ Actualización masiva de hasta 500 ítems
+- ✅ Campos editables: ubicación, responsable, estado, valor_unitario, descripción, observaciones
+- ✅ Modo atómico: si alguno falla, no se actualiza ninguno
+- ✅ Modo parcial (default): aplica solo los cambios válidos
+- ✅ Validación exhaustiva en backend
+- ✅ Feedback visual de resultados
+- ✅ Historial de cambios registrado
+
+**Endpoint:**
+```
+POST /api/v1/inventario/items/batch-update/
+```
+
+**Build:**
+- ✅ Django check exitoso (0 errores)
+- ✅ TypeScript type-check exitoso
+- ✅ Frontend build exitoso
+
 ---
 
 ## 🚀 Siguiente Tarea
 
-**Iniciar Fase 5 - Edición Masiva (Batch Edit) ⭐ PRIORIDAD ALTA:**
+**Iniciar Fase 6 - Testing + Polish:**
 
-1. **Backend:**
-   - Endpoint para batch update de ítems
-   - Validación de operaciones masivas
-   - Optimización de queries para grandes volúmenes
+1. **Backend Testing:**
+   - Tests unitarios para modelos
+   - Tests de integración para API
+   - Tests para batch operations
+   - Coverage > 85%
 
-2. **Frontend:**
-   - Selección múltiple en ItemsTable
-   - Dialog de edición masiva
-   - Preview de cambios antes de aplicar
-   - Progress bar para operaciones grandes
+2. **Frontend Testing:**
+   - Tests de componentes con React Testing Library
+   - Tests de integración E2E
+   - Tests de accesibilidad
 
-**Ver guía detallada:** [`docs/features/batch-edit.md`](docs/features/batch-edit.md)
+3. **Polish:**
+   - Optimización de performance
+   - Mejoras de UX/UI
+   - Documentación de usuario
+
+**Ver guía detallada:** [`docs/fases/fases-1-7.md`](docs/fases/fases-1-7.md)
 
 ---
 

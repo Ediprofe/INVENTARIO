@@ -3,7 +3,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ItemsAPI } from '@/lib/api';
-import type { IItem, IItemFilters, IItemCreateData, IItemUpdateData } from '@/types';
+import type { IItem, IItemFilters, IItemCreateData, IItemUpdateData, IBatchUpdateRequest } from '@/types';
 
 // Query keys
 export const itemsKeys = {
@@ -101,6 +101,21 @@ export function useBulkUpdateItems() {
     },
     onSuccess: () => {
       // Invalidar todas las listas
+      queryClient.invalidateQueries({ queryKey: itemsKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Hook para actualizar múltiples ítems en lote (batch update endpoint).
+ */
+export function useBatchUpdateItems() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: IBatchUpdateRequest) => ItemsAPI.batchUpdate(request),
+    onSuccess: () => {
+      // Invalidar todas las listas de ítems
       queryClient.invalidateQueries({ queryKey: itemsKeys.lists() });
     },
   });

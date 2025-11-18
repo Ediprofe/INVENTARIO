@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -31,15 +32,19 @@ interface ItemsTableProps {
   onCreateClick?: () => void;
   onEditClick?: (itemId: number) => void;
   onImportClick?: () => void;
+  onBatchEditClick?: (selectedIds: number[]) => void;
 }
 
-export function ItemsTable({ onCreateClick, onEditClick, onImportClick }: ItemsTableProps) {
+export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchEditClick }: ItemsTableProps) {
   // Filtros state
   const [filters, setFilters] = useState<IItemFilters>({
     page: 1,
     page_size: 50,
     ordering: '-created_at',
   });
+
+  // Selected items state
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // Queries
   const { data, isLoading, isError, error } = useItems(filters);
@@ -92,11 +97,38 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick }: ItemsT
 
   const handlePageChange = (newPage: number) => {
     setFilters((prev) => ({ ...prev, page: newPage }));
+    setSelectedIds([]); // Reset selection when changing pages
+  };
+
+  // Checkbox handlers
+  const handleSelectAll = (checked: boolean | 'indeterminate') => {
+    if (checked === true && data) {
+      setSelectedIds(data.results.map((item) => item.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectItem = (itemId: number, checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+      setSelectedIds((prev) => [...prev, itemId]);
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => id !== itemId));
+    }
+  };
+
+  const handleBatchEdit = () => {
+    if (selectedIds.length > 0 && onBatchEditClick) {
+      onBatchEditClick(selectedIds);
+    }
   };
 
   // Calculate pagination
   const totalPages = data ? Math.ceil(data.count / (filters.page_size || 50)) : 0;
   const currentPage = filters.page || 1;
+
+  // Check if all items on current page are selected
+  const allSelected = data ? data.results.length > 0 && data.results.every((item) => selectedIds.includes(item.id)) : false;
 
   return (
     <Card>
@@ -109,6 +141,11 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick }: ItemsT
             </CardDescription>
           </div>
           <div className="flex gap-2">
+            {selectedIds.length > 0 && (
+              <Button variant="default" size="sm" onClick={handleBatchEdit}>
+                Editar Seleccionados ({selectedIds.length})
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={handleDownloadTemplate} disabled={templateMutation.isPending}>
               {templateMutation.isPending ? 'Descargando...' : 'Plantilla'}
             </Button>
@@ -217,6 +254,13 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick }: ItemsT
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={handleSelectAll}
+                        aria-label="Seleccionar todos"
+                      />
+                    </TableHead>
                     <TableHead>Código</TableHead>
                     <TableHead>Artículo</TableHead>
                     <TableHead>Ubicación</TableHead>
@@ -230,13 +274,20 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick }: ItemsT
                 <TableBody>
                   {data.results.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-gray-500">
+                      <TableCell colSpan={9} className="text-center text-gray-500">
                         No se encontraron ítems
                       </TableCell>
                     </TableRow>
                   ) : (
                     data.results.map((item) => (
                       <TableRow key={item.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.includes(item.id)}
+                            onCheckedChange={(checked) => handleSelectItem(item.id, checked)}
+                            aria-label={`Seleccionar ${item.codigo}`}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">{item.codigo}</TableCell>
                         <TableCell>{item.articulo.nombre}</TableCell>
                         <TableCell>{item.ubicacion.nombre}</TableCell>

@@ -8,6 +8,8 @@ import type {
   IItemCreateData,
   IItemUpdateData,
   IPaginatedResponse,
+  IBatchUpdateRequest,
+  IBatchUpdateResponse,
 } from '@/types';
 
 export const ItemsAPI = {
@@ -58,5 +60,13 @@ export const ItemsAPI = {
    */
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/inventario/items/${id}/`);
+  },
+
+  /**
+   * Actualizar múltiples ítems en lote.
+   */
+  batchUpdate: async (request: IBatchUpdateRequest): Promise<IBatchUpdateResponse> => {
+    const response = await apiClient.post('/inventario/items/batch-update/', request);
+    return response.data;
   },
 };

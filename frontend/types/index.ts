@@ -144,6 +144,29 @@ export interface IItemCreateData {
 
 export interface IItemUpdateData extends Partial<IItemCreateData> {}
 
+export interface IBatchUpdateItem {
+  id: number;
+  ubicacion_id?: number;
+  responsable_id?: number;
+  estado?: EstadoItem;
+  valor_unitario?: number;
+  descripcion?: string;
+  observaciones?: string;
+}
+
+export interface IBatchUpdateRequest {
+  items: IBatchUpdateItem[];
+  atomic?: boolean;
+}
+
+export interface IBatchUpdateResponse {
+  success: number[];
+  errors: Array<{
+    id: number;
+    error: string;
+  }>;
+}
+
 // ============================================================================
 // Enums
 // ============================================================================
