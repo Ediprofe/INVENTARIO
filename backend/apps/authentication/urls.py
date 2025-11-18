@@ -2,9 +2,13 @@
 URLs de autenticación.
 """
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
+from .views import LoginView, LogoutView
 
 app_name = 'authentication'
 
 urlpatterns = [
-    # Agregar endpoints en Fase 1
+    path('login/', LoginView.as_view(), name='login'),
+    path('refresh/', TokenRefreshView.as_view(), name='refresh'),
+    path('logout/', LogoutView.as_view(), name='logout'),
 ]
