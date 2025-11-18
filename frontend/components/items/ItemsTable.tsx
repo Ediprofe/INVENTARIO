@@ -37,9 +37,18 @@ interface ItemsTableProps {
   onEditClick?: (itemId: number) => void;
   onImportClick?: () => void;
   onBatchEditClick?: (selectedIds: number[]) => void;
+  onBatchEditSpreadsheetClick?: (selectedIds: number[]) => void;
+  onBulkCreateClick?: () => void;
 }
 
-export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchEditClick }: ItemsTableProps) {
+export function ItemsTable({ 
+  onCreateClick, 
+  onEditClick, 
+  onImportClick, 
+  onBatchEditClick, 
+  onBatchEditSpreadsheetClick,
+  onBulkCreateClick 
+}: ItemsTableProps) {
   // Filtros state
   const [filters, setFilters] = useState<IItemFilters>({
     page: 1,
@@ -127,6 +136,12 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
     }
   };
 
+  const handleBatchEditSpreadsheet = () => {
+    if (selectedIds.length > 0 && onBatchEditSpreadsheetClick) {
+      onBatchEditSpreadsheetClick(selectedIds);
+    }
+  };
+
   // Calculate pagination
   const totalPages = data ? Math.ceil(data.count / (filters.page_size || 50)) : 0;
   const currentPage = filters.page || 1;
@@ -146,9 +161,14 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
           </div>
           <div className="flex gap-2">
             {selectedIds.length > 0 && (
-              <Button variant="default" size="sm" onClick={handleBatchEdit}>
-                Editar Seleccionados ({selectedIds.length})
-              </Button>
+              <>
+                <Button variant="secondary" size="sm" onClick={handleBatchEditSpreadsheet}>
+                  📊 Editar en Hoja ({selectedIds.length})
+                </Button>
+                <Button variant="default" size="sm" onClick={handleBatchEdit}>
+                  Editar Rápido ({selectedIds.length})
+                </Button>
+              </>
             )}
             <Button variant="outline" size="sm" onClick={handleDownloadTemplate} disabled={templateMutation.isPending}>
               {templateMutation.isPending ? 'Descargando...' : 'Plantilla'}
@@ -158,6 +178,9 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
             </Button>
             <Button variant="outline" size="sm" onClick={handleExport} disabled={exportMutation.isPending}>
               {exportMutation.isPending ? 'Exportando...' : 'Exportar'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={onBulkCreateClick}>
+              Alta Masiva
             </Button>
             <Button onClick={onCreateClick}>Crear Ítem</Button>
           </div>

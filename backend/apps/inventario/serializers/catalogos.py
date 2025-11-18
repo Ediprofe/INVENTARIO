@@ -29,12 +29,14 @@ class UbicacionSerializer(serializers.ModelSerializer):
     """Serializer para Ubicacion."""
 
     sede_nombre = serializers.CharField(source='sede.nombre', read_only=True)
+    responsable_nombre = serializers.CharField(source='responsable.nombre_completo', read_only=True)
     total_items = serializers.IntegerField(read_only=True, source='items.count')
 
     class Meta:
         model = Ubicacion
         fields = [
-            'id', 'nombre', 'tipo', 'sede', 'sede_nombre',
+            'id', 'codigo', 'nombre', 'tipo', 'sede', 'sede_nombre',
+            'responsable', 'responsable_nombre',
             'piso', 'capacidad', 'observaciones', 'activo',
             'total_items', 'created_at', 'updated_at'
         ]

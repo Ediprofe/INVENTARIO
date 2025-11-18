@@ -70,26 +70,51 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
 
   // Load item data when editing
   useEffect(() => {
-    if (isEditing && item) {
-      setValue('articulo_id', item.articulo.id);
-      setValue('ubicacion_id', item.ubicacion.id);
-      setValue('responsable_id', item.responsable?.id || null);
-      setValue('placa', item.placa || '');
-      setValue('marca', item.marca || '');
-      setValue('serial', item.serial || '');
-      setValue('estado', item.estado);
-      setValue('disponibilidad', item.disponibilidad);
-      setValue('descripcion', item.descripcion || '');
-      setValue('observaciones', item.observaciones || '');
+    if (open && isEditing && item) {
+      // Reset form con los datos del ítem
+      reset({
+        articulo_id: item.articulo.id,
+        ubicacion_id: item.ubicacion.id,
+        responsable_id: item.responsable?.id || null,
+        placa: item.placa || '',
+        marca: item.marca || '',
+        serial: item.serial || '',
+        estado: item.estado,
+        disponibilidad: item.disponibilidad,
+        descripcion: item.descripcion || '',
+        observaciones: item.observaciones || '',
+      });
+    } else if (open && !isEditing) {
+      // Reset form con valores por defecto para creación
+      reset({
+        articulo_id: undefined,
+        ubicacion_id: undefined,
+        responsable_id: null,
+        placa: '',
+        marca: '',
+        serial: '',
+        estado: 'bueno',
+        disponibilidad: 'en_uso',
+        descripcion: '',
+        observaciones: '',
+      });
     }
-  }, [item, isEditing, setValue]);
+  }, [open, isEditing, item, reset]);
 
   // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
       reset({
+        articulo_id: undefined,
+        ubicacion_id: undefined,
+        responsable_id: null,
+        placa: '',
+        marca: '',
+        serial: '',
         estado: 'bueno',
         disponibilidad: 'en_uso',
+        descripcion: '',
+        observaciones: '',
       });
     }
   }, [open, reset]);
@@ -137,7 +162,7 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
         {(isLoadingItem && isEditing) || isLoadingArticulos || isLoadingUbicaciones || isLoadingResponsables ? (
           <div className="py-8 text-center text-gray-500">Cargando datos...</div>
         ) : (
-          <form key={itemId || 'new'} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form key={`item-form-${itemId || 'new'}-${open}`} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Artículo */}
             <div className="space-y-2">
               <Label htmlFor="articulo_id">
@@ -169,7 +194,17 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
               </Label>
               <Select
                 value={ubicacion_id?.toString() || ''}
-                onValueChange={(value) => setValue('ubicacion_id', parseInt(value))}
+                onValueChange={(value) => {
+                  const ubicacionId = parseInt(value);
+                  setValue('ubicacion_id', ubicacionId);
+                  
+                  // Autoasignar responsable de la ubicación (CLAUDE.md sección 8)
+                  // "El responsable_id se asigna automáticamente con el responsable de la ubicación elegida"
+                  const ubicacionSeleccionada = ubicacionesData?.results.find(u => u.id === ubicacionId);
+                  if (ubicacionSeleccionada?.responsable) {
+                    setValue('responsable_id', ubicacionSeleccionada.responsable);
+                  }
+                }}
                 disabled={isSubmitting}
               >
                 <SelectTrigger id="ubicacion_id">
@@ -178,7 +213,7 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
                 <SelectContent>
                   {ubicacionesData?.results.map((ubicacion) => (
                     <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                      {ubicacion.nombre} ({ubicacion.sede.nombre})
+                      {ubicacion.nombre} ({typeof ubicacion.sede === 'object' ? ubicacion.sede.nombre : ubicacion.sede})
                     </SelectItem>
                   ))}
                 </SelectContent>

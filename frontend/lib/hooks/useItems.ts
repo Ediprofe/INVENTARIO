@@ -120,3 +120,18 @@ export function useBatchUpdateItems() {
     },
   });
 }
+
+/**
+ * Hook para cargar múltiples ítems por sus IDs.
+ */
+export function useMultipleItems(ids: number[]) {
+  return useQuery({
+    queryKey: [...itemsKeys.all, 'multiple', ids.sort().join(',')],
+    queryFn: async () => {
+      if (ids.length === 0) return [];
+      const promises = ids.map((id) => ItemsAPI.get(id));
+      return Promise.all(promises);
+    },
+    enabled: ids.length > 0,
+  });
+}

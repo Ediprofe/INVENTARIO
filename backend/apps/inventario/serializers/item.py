@@ -69,6 +69,13 @@ class ItemInventarioSerializer(serializers.ModelSerializer):
             'descripcion', 'observaciones', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'codigo', 'sede', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'placa': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'marca': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'serial': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'descripcion': {'required': False, 'allow_blank': True},
+            'observaciones': {'required': False, 'allow_blank': True},
+        }
 
     def validate_placa(self, value):
         """Validar placa única (CLAUDE.md línea 194-196)."""

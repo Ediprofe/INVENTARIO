@@ -96,6 +96,7 @@ class ItemInventario(TimeStampedModel):
     marca = models.CharField(
         max_length=100,
         blank=True,
+        null=True,
         verbose_name="Marca",
         help_text="Marca del artículo (lista editable) - CLAUDE.md línea 175"
     )
@@ -103,6 +104,7 @@ class ItemInventario(TimeStampedModel):
     serial = models.CharField(
         max_length=100,
         blank=True,
+        null=True,
         verbose_name="Serial",
         help_text="Número de serie (único por artículo) - CLAUDE.md línea 176"
     )

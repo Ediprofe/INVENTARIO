@@ -73,8 +73,8 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
   const [result, setResult] = useState<IBatchUpdateResponse | null>(null);
 
   // Queries
-  const { data: ubicacionesData } = useUbicaciones();
-  const { data: responsablesData } = useResponsables();
+  const { data: ubicacionesData } = useUbicaciones({ page_size: 1000 });
+  const { data: responsablesData } = useResponsables({ page_size: 1000 });
   const batchUpdateMutation = useBatchUpdateItems();
 
   const handleToggleField = (field: keyof typeof updateFields) => {
@@ -207,11 +207,16 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                     <SelectValue placeholder="Seleccionar ubicación" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ubicacionesData?.results.map((ubicacion) => (
-                      <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                        {ubicacion.nombre} ({ubicacion.sede.codigo})
-                      </SelectItem>
-                    ))}
+                    {ubicacionesData?.results.map((ubicacion) => {
+                      const sedeInfo = typeof ubicacion.sede === 'object' 
+                        ? ubicacion.sede.codigo 
+                        : '';
+                      return (
+                        <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
+                          {ubicacion.nombre} {sedeInfo && `(${sedeInfo})`}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               )}
@@ -236,11 +241,16 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                     <SelectValue placeholder="Seleccionar responsable" />
                   </SelectTrigger>
                   <SelectContent>
-                    {responsablesData?.results.map((responsable) => (
-                      <SelectItem key={responsable.id} value={responsable.id.toString()}>
-                        {responsable.nombre_completo} ({responsable.sede.codigo})
-                      </SelectItem>
-                    ))}
+                    {responsablesData?.results.map((responsable) => {
+                      const sedeInfo = typeof responsable.sede === 'object' 
+                        ? responsable.sede.codigo 
+                        : '';
+                      return (
+                        <SelectItem key={responsable.id} value={responsable.id.toString()}>
+                          {responsable.nombre_completo} {sedeInfo && `(${sedeInfo})`}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               )}

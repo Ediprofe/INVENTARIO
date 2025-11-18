@@ -32,7 +32,7 @@ class UbicacionViewSet(viewsets.ModelViewSet):
 
     permission_classes = [IsAuthenticated]
     serializer_class = UbicacionSerializer
-    queryset = Ubicacion.objects.select_related('sede')
+    queryset = Ubicacion.objects.select_related('sede', 'responsable')
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = UbicacionFilter
     search_fields = ['nombre', 'codigo', 'sede__nombre']

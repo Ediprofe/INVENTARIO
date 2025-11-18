@@ -53,6 +53,16 @@ class Ubicacion(TimeStampedModel):
         verbose_name="Tipo de Ubicación"
     )
 
+    responsable = models.ForeignKey(
+        'Responsable',
+        on_delete=models.SET_NULL,
+        related_name='ubicaciones_responsable',
+        blank=True,
+        null=True,
+        verbose_name="Responsable por defecto",
+        help_text="Responsable por defecto para ítems nuevos en esta ubicación"
+    )
+
     piso = models.IntegerField(
         blank=True,
         null=True,

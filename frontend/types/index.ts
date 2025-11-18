@@ -58,7 +58,9 @@ export interface IUbicacion {
   codigo: string;
   nombre: string;
   tipo: string;
-  sede: ISede;
+  sede: ISede | number; // Puede ser objeto o ID dependiendo del serializer
+  responsable: number | null; // ID del responsable por defecto
+  responsable_nombre: string | null; // Nombre del responsable (read-only)
   piso: number | null;
   capacidad: number | null;
   observaciones: string;
