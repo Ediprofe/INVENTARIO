@@ -5,7 +5,8 @@ Modelos del sistema de inventario.
 from .choices import (
     TipoUbicacion,
     CategoriaArticulo,
-    EstadoItem,
+    EstadoFisico,
+    Disponibilidad,
     TipoMovimiento,
     TipoDocumento,
 )
@@ -20,7 +21,8 @@ __all__ = [
     # Enums
     'TipoUbicacion',
     'CategoriaArticulo',
-    'EstadoItem',
+    'EstadoFisico',
+    'Disponibilidad',
     'TipoMovimiento',
     'TipoDocumento',
     # Modelos

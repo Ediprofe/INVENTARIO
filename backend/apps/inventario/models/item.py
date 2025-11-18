@@ -4,11 +4,10 @@ CRÍTICO: Optimizado para 7,000+ registros con operaciones async.
 """
 
 from django.db import models
-from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
+from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
-from decimal import Decimal
 from apps.core.models import TimeStampedModel
-from .choices import EstadoItem
+from .choices import EstadoFisico, Disponibilidad
 
 
 class ItemInventario(TimeStampedModel):
@@ -78,39 +77,55 @@ class ItemInventario(TimeStampedModel):
                 message='Código debe contener solo mayúsculas, números y guiones'
             )
         ],
-        verbose_name="Código",
-        help_text="Código único del ítem (placa institucional)"
+        verbose_name="Código Interno",
+        help_text="Código único autogenerado del ítem"
+    )
+
+    placa = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        unique=True,
+        db_index=True,
+        verbose_name="Placa",
+        help_text="Placa física del artículo (única si está presente) - CLAUDE.md línea 166"
     )
 
     # === CARACTERÍSTICAS ===
 
-    cantidad = models.IntegerField(
-        default=1,
-        validators=[
-            MinValueValidator(1),
-            MaxValueValidator(9999)
-        ],
-        verbose_name="Cantidad",
-        help_text="Cantidad de unidades (1-9999)"
+    marca = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Marca",
+        help_text="Marca del artículo (lista editable) - CLAUDE.md línea 175"
     )
 
-    valor_unitario = models.DecimalField(
-        max_digits=15,
-        decimal_places=2,
-        default=Decimal('0.00'),
-        validators=[MinValueValidator(Decimal('0.00'))],
-        verbose_name="Valor Unitario",
-        help_text="Valor en pesos colombianos"
+    serial = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Serial",
+        help_text="Número de serie (único por artículo) - CLAUDE.md línea 176"
     )
 
-    # === ESTADO ===
+    # === ESTADO Y DISPONIBILIDAD ===
+    # Separados según CLAUDE.md líneas 172-174
 
     estado = models.CharField(
         max_length=20,
-        choices=EstadoItem.choices,
-        default=EstadoItem.ACTIVO,
+        choices=EstadoFisico.choices,
+        default=EstadoFisico.BUENO,
         db_index=True,
-        verbose_name="Estado"
+        verbose_name="Estado Físico",
+        help_text="Condición física: Bueno/Regular/Malo"
+    )
+
+    disponibilidad = models.CharField(
+        max_length=20,
+        choices=Disponibilidad.choices,
+        default=Disponibilidad.EN_USO,
+        db_index=True,
+        verbose_name="Disponibilidad",
+        help_text="Estado operativo: En uso/En reparación/Extraviado/De baja"
     )
 
     descripcion = models.TextField(
@@ -132,61 +147,82 @@ class ItemInventario(TimeStampedModel):
 
         # === ÍNDICES OPTIMIZADOS ===
         indexes = [
-            # Índice principal: búsqueda por código
+            # Índice principal: búsqueda por código y placa
             models.Index(fields=['codigo'], name='idx_item_codigo'),
+            models.Index(fields=['placa'], name='idx_item_placa'),
 
             # Índices para filtros frecuentes
             models.Index(fields=['estado'], name='idx_item_estado'),
+            models.Index(fields=['disponibilidad'], name='idx_item_disponib'),
             models.Index(fields=['articulo'], name='idx_item_articulo'),
             models.Index(fields=['ubicacion'], name='idx_item_ubicacion'),
             models.Index(fields=['sede'], name='idx_item_sede'),
             models.Index(fields=['responsable'], name='idx_item_responsable'),
+            models.Index(fields=['marca'], name='idx_item_marca'),
 
             # Índices compuestos para filtros combinados
             models.Index(
-                fields=['sede', 'estado'],
-                name='idx_item_sede_estado'
+                fields=['sede', 'disponibilidad'],
+                name='idx_item_sede_disp'
             ),
             models.Index(
-                fields=['ubicacion', 'estado'],
-                name='idx_item_ubic_estado'
+                fields=['ubicacion', 'disponibilidad'],
+                name='idx_item_ubic_disp'
             ),
             models.Index(
-                fields=['articulo', 'estado'],
-                name='idx_item_art_estado'
+                fields=['articulo', 'disponibilidad'],
+                name='idx_item_art_disp'
+            ),
+            models.Index(
+                fields=['articulo', 'serial'],
+                name='idx_item_art_serial'
             ),
         ]
 
         # === CONSTRAINTS A NIVEL BD ===
         constraints = [
-            # Cantidad mínima
-            models.CheckConstraint(
-                check=models.Q(cantidad__gte=1),
-                name='check_cantidad_minima'
-            ),
-
-            # Valor no negativo
-            models.CheckConstraint(
-                check=models.Q(valor_unitario__gte=0),
-                name='check_valor_positivo'
+            # Serial único por artículo (CLAUDE.md línea 199-201)
+            # Permite null pero no permite duplicados para el mismo artículo
+            models.UniqueConstraint(
+                fields=['articulo', 'serial'],
+                condition=models.Q(serial__isnull=False) & ~models.Q(serial=''),
+                name='unique_serial_per_articulo'
             ),
         ]
 
     def __str__(self):
         return f"{self.codigo} - {self.articulo.nombre}"
 
-    @property
-    def valor_total(self):
-        """Valor total = cantidad × valor_unitario."""
-        return self.cantidad * self.valor_unitario
-
     def clean(self):
-        """Validaciones de negocio."""
+        """Validaciones de negocio según CLAUDE.md."""
         super().clean()
 
-        # Normalizar código
+        # Normalizar código y placa
         if self.codigo:
             self.codigo = self.codigo.upper().strip()
+
+        if self.placa:
+            self.placa = self.placa.strip()
+            # Validar placa única (CLAUDE.md línea 194-196)
+            if self.placa:
+                duplicates = ItemInventario.objects.filter(placa=self.placa).exclude(pk=self.pk)
+                if duplicates.exists():
+                    raise ValidationError({
+                        'placa': f'La placa "{self.placa}" ya existe en otro ítem'
+                    })
+
+        # Normalizar serial y validar unicidad por artículo (CLAUDE.md línea 199-201)
+        if self.serial:
+            self.serial = self.serial.strip()
+            if self.serial and self.articulo:
+                duplicates = ItemInventario.objects.filter(
+                    articulo=self.articulo,
+                    serial=self.serial
+                ).exclude(pk=self.pk)
+                if duplicates.exists():
+                    raise ValidationError({
+                        'serial': f'El serial "{self.serial}" ya existe para este artículo'
+                    })
 
         # Validar sede coherente con ubicación
         if self.ubicacion:

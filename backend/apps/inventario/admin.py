@@ -63,23 +63,26 @@ class ArticuloAdmin(admin.ModelAdmin):
 
 @admin.register(ItemInventario)
 class ItemInventarioAdmin(admin.ModelAdmin):
-    """Admin para ItemInventario."""
+    """Admin para ItemInventario - según CLAUDE.md."""
 
-    list_display = ['codigo', 'articulo', 'ubicacion', 'responsable', 'estado', 'valor_total']
-    list_filter = ['estado', 'sede', 'created_at']
-    search_fields = ['codigo', 'articulo__nombre', 'ubicacion__nombre']
+    list_display = ['codigo', 'placa', 'articulo', 'ubicacion', 'responsable', 'estado', 'disponibilidad']
+    list_filter = ['estado', 'disponibilidad', 'sede', 'marca', 'created_at']
+    search_fields = ['codigo', 'placa', 'articulo__nombre', 'ubicacion__nombre', 'serial']
     ordering = ['-created_at']
-    readonly_fields = ['sede', 'valor_total', 'created_at', 'updated_at']
+    readonly_fields = ['sede', 'created_at', 'updated_at']
 
     fieldsets = (
-        ('Información Básica', {
-            'fields': ('codigo', 'articulo', 'cantidad', 'valor_unitario')
+        ('Identificación', {
+            'fields': ('codigo', 'placa', 'articulo')
+        }),
+        ('Características', {
+            'fields': ('marca', 'serial', 'descripcion')
         }),
         ('Ubicación y Responsable', {
             'fields': ('ubicacion', 'sede', 'responsable')
         }),
-        ('Estado', {
-            'fields': ('estado', 'descripcion', 'observaciones')
+        ('Estado y Disponibilidad', {
+            'fields': ('estado', 'disponibilidad', 'observaciones')
         }),
         ('Auditoría', {
             'fields': ('created_at', 'updated_at'),

@@ -31,14 +31,19 @@ class CategoriaArticulo(models.TextChoices):
     OTROS = 'otros', 'Otros'
 
 
-class EstadoItem(models.TextChoices):
-    """Estado físico del ítem."""
-    ACTIVO = 'activo', 'Activo'
-    INACTIVO = 'inactivo', 'Inactivo'
-    MANTENIMIENTO = 'mantenimiento', 'En Mantenimiento'
-    DADO_BAJA = 'dado_baja', 'Dado de Baja'
+class EstadoFisico(models.TextChoices):
+    """Estado físico/condición del ítem (CLAUDE.md líneas 172, 213-216)."""
+    BUENO = 'bueno', 'Bueno'
+    REGULAR = 'regular', 'Regular'
+    MALO = 'malo', 'Malo'
+
+
+class Disponibilidad(models.TextChoices):
+    """Disponibilidad/estado operativo del ítem (CLAUDE.md líneas 174, 207-211)."""
+    EN_USO = 'en_uso', 'En uso'
+    EN_REPARACION = 'en_reparacion', 'En reparación'
     EXTRAVIADO = 'extraviado', 'Extraviado'
-    REPARACION = 'reparacion', 'En Reparación'
+    DE_BAJA = 'de_baja', 'De baja'
 
 
 class TipoMovimiento(models.TextChoices):
