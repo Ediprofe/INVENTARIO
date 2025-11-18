@@ -101,14 +101,15 @@ export interface IArticulo {
 export interface IItem {
   id: number;
   codigo: string;
+  placa: string | null;
   articulo: IArticulo;
   sede: ISede;
   ubicacion: IUbicacion;
   responsable: IResponsable;
-  cantidad: number;
-  valor_unitario: string;
-  valor_total: string;
-  estado: EstadoItem;
+  marca: string;
+  serial: string;
+  estado: EstadoFisico;
+  disponibilidad: Disponibilidad;
   descripcion: string;
   observaciones: string;
   created_at: string;
@@ -131,13 +132,14 @@ export interface IHistorialMovimiento {
 // ============================================================================
 
 export interface IItemCreateData {
-  codigo: string;
   articulo_id: number;
   ubicacion_id: number;
-  responsable_id: number;
-  cantidad: number;
-  valor_unitario: number;
-  estado: EstadoItem;
+  responsable_id?: number | null;
+  placa?: string;
+  marca?: string;
+  serial?: string;
+  estado: EstadoFisico;
+  disponibilidad: Disponibilidad;
   descripcion?: string;
   observaciones?: string;
 }
@@ -148,8 +150,11 @@ export interface IBatchUpdateItem {
   id: number;
   ubicacion_id?: number;
   responsable_id?: number;
-  estado?: EstadoItem;
-  valor_unitario?: number;
+  estado?: EstadoFisico;
+  disponibilidad?: Disponibilidad;
+  placa?: string;
+  marca?: string;
+  serial?: string;
   descripcion?: string;
   observaciones?: string;
 }
@@ -171,13 +176,16 @@ export interface IBatchUpdateResponse {
 // Enums
 // ============================================================================
 
-export type EstadoItem =
-  | 'activo'
-  | 'inactivo'
-  | 'mantenimiento'
-  | 'dado_baja'
+export type EstadoFisico =
+  | 'bueno'
+  | 'regular'
+  | 'malo';
+
+export type Disponibilidad =
+  | 'en_uso'
+  | 'en_reparacion'
   | 'extraviado'
-  | 'reparacion';
+  | 'de_baja';
 
 export type TipoUbicacion =
   | 'aula'
@@ -230,11 +238,11 @@ export interface IItemFilters {
   ubicacion?: number;
   responsable?: number;
   articulo?: number;
-  estado?: EstadoItem;
-  valor_min?: number;
-  valor_max?: number;
-  cantidad_min?: number;
-  cantidad_max?: number;
+  estado?: EstadoFisico;
+  disponibilidad?: Disponibilidad;
+  placa?: string;
+  marca?: string;
+  serial?: string;
   created_after?: string;
   created_before?: string;
   ordering?: string;

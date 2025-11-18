@@ -1,14 +1,9 @@
 /**
- * Zod schemas para validación de ítems de inventario.
+ * Zod schemas para validación de ítems de inventario - según CLAUDE.md.
  */
 import { z } from 'zod';
 
 export const itemSchema = z.object({
-  codigo: z
-    .string()
-    .min(1, 'El código es requerido')
-    .max(50, 'El código no puede exceder 50 caracteres')
-    .regex(/^[A-Z0-9-]+$/, 'El código solo puede contener mayúsculas, números y guiones'),
   articulo_id: z
     .number({
       message: 'El artículo es requerido',
@@ -26,21 +21,26 @@ export const itemSchema = z.object({
       message: 'El responsable es requerido',
     })
     .int('Debe ser un número entero')
-    .positive('Debe seleccionar un responsable'),
-  cantidad: z
-    .number({
-      message: 'La cantidad es requerida',
-    })
-    .int('La cantidad debe ser un número entero')
-    .min(1, 'La cantidad mínima es 1')
-    .max(9999, 'La cantidad máxima es 9999'),
-  valor_unitario: z
-    .number({
-      message: 'El valor unitario es requerido',
-    })
-    .min(0, 'El valor unitario debe ser mayor o igual a 0'),
-  estado: z.enum(['activo', 'inactivo', 'mantenimiento', 'dado_baja', 'extraviado', 'reparacion'], {
-    message: 'El estado es requerido',
+    .positive('Debe seleccionar un responsable')
+    .optional()
+    .nullable(),
+  placa: z
+    .string()
+    .max(100, 'La placa no puede exceder 100 caracteres')
+    .optional(),
+  marca: z
+    .string()
+    .max(100, 'La marca no puede exceder 100 caracteres')
+    .optional(),
+  serial: z
+    .string()
+    .max(100, 'El serial no puede exceder 100 caracteres')
+    .optional(),
+  estado: z.enum(['bueno', 'regular', 'malo'], {
+    message: 'El estado físico es requerido',
+  }),
+  disponibilidad: z.enum(['en_uso', 'en_reparacion', 'extraviado', 'de_baja'], {
+    message: 'La disponibilidad es requerida',
   }),
   descripcion: z.string().max(500, 'La descripción no puede exceder 500 caracteres').optional(),
   observaciones: z.string().max(1000, 'Las observaciones no pueden exceder 1000 caracteres').optional(),

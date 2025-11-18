@@ -9,26 +9,29 @@ from .historial import HistorialMovimientoSerializer
 
 class ItemInventarioListSerializer(serializers.ModelSerializer):
     """
-    Serializer para lista de ítems (optimizado).
+    Serializer para lista de ítems (optimizado) - según CLAUDE.md.
     Solo incluye campos esenciales para listados.
     """
 
     articulo_nombre = serializers.CharField(source='articulo.nombre', read_only=True)
     ubicacion_nombre = serializers.CharField(source='ubicacion.nombre', read_only=True)
+    ubicacion_descripcion = serializers.CharField(source='ubicacion.descripcion', read_only=True)
+    sede_nombre = serializers.CharField(source='sede.nombre', read_only=True)
     responsable_nombre = serializers.CharField(source='responsable.nombre_completo', read_only=True)
 
     class Meta:
         model = ItemInventario
         fields = [
-            'id', 'codigo', 'articulo_nombre', 'ubicacion_nombre',
-            'responsable_nombre', 'cantidad', 'valor_unitario',
-            'valor_total', 'estado', 'created_at'
+            'id', 'codigo', 'placa', 'articulo_nombre', 'ubicacion_nombre',
+            'ubicacion_descripcion', 'sede_nombre', 'responsable_nombre',
+            'marca', 'serial', 'estado', 'disponibilidad',
+            'descripcion', 'observaciones', 'created_at'
         ]
 
 
 class ItemInventarioSerializer(serializers.ModelSerializer):
     """
-    Serializer completo para ItemInventario.
+    Serializer completo para ItemInventario - según CLAUDE.md.
     Incluye nested serializers para lectura e IDs para escritura.
     """
 
@@ -60,27 +63,42 @@ class ItemInventarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemInventario
         fields = [
-            'id', 'codigo', 'articulo', 'articulo_id', 'sede',
+            'id', 'codigo', 'placa', 'articulo', 'articulo_id', 'sede',
             'ubicacion', 'ubicacion_id', 'responsable', 'responsable_id',
-            'cantidad', 'valor_unitario', 'valor_total', 'estado',
+            'marca', 'serial', 'estado', 'disponibilidad',
             'descripcion', 'observaciones', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'sede', 'valor_total', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'sede', 'created_at', 'updated_at']
 
-    def validate_cantidad(self, value):
-        """Validar que cantidad esté en rango."""
-        if not (1 <= value <= 9999):
-            raise serializers.ValidationError(
-                "La cantidad debe estar entre 1 y 9999"
-            )
+    def validate_placa(self, value):
+        """Validar placa única (CLAUDE.md línea 194-196)."""
+        if value:
+            value = value.strip()
+            # Check uniqueness
+            queryset = ItemInventario.objects.filter(placa=value)
+            if self.instance:
+                queryset = queryset.exclude(pk=self.instance.pk)
+            if queryset.exists():
+                raise serializers.ValidationError(
+                    f"La placa '{value}' ya existe en otro ítem"
+                )
         return value
 
-    def validate_valor_unitario(self, value):
-        """Validar que valor sea positivo."""
-        if value < 0:
-            raise serializers.ValidationError(
-                "El valor unitario debe ser mayor o igual a 0"
+    def validate_serial(self, value):
+        """Validar serial único por artículo (CLAUDE.md línea 199-201)."""
+        if value and 'articulo' in self.initial_data:
+            value = value.strip()
+            articulo_id = self.initial_data.get('articulo_id')
+            queryset = ItemInventario.objects.filter(
+                articulo_id=articulo_id,
+                serial=value
             )
+            if self.instance:
+                queryset = queryset.exclude(pk=self.instance.pk)
+            if queryset.exists():
+                raise serializers.ValidationError(
+                    f"El serial '{value}' ya existe para este artículo"
+                )
         return value
 
     def validate(self, attrs):

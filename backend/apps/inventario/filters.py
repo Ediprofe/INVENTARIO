@@ -7,30 +7,31 @@ from apps.inventario.models import ItemInventario, Sede, Ubicacion, Responsable,
 
 class ItemInventarioFilter(django_filters.FilterSet):
     """
-    Filtros avanzados para ítems del inventario.
+    Filtros avanzados para ítems del inventario - según CLAUDE.md.
     """
 
-    # Filtros exactos
+    # Filtros exactos por relaciones
     sede = django_filters.NumberFilter(field_name='sede__id')
     ubicacion = django_filters.NumberFilter(field_name='ubicacion__id')
     responsable = django_filters.NumberFilter(field_name='responsable__id')
     articulo = django_filters.NumberFilter(field_name='articulo__id')
+
+    # Filtros por estado físico y disponibilidad (CLAUDE.md)
     estado = django_filters.ChoiceFilter(choices=ItemInventario._meta.get_field('estado').choices)
+    disponibilidad = django_filters.ChoiceFilter(choices=ItemInventario._meta.get_field('disponibilidad').choices)
 
-    # Filtros por rango
-    valor_min = django_filters.NumberFilter(field_name='valor_unitario', lookup_expr='gte')
-    valor_max = django_filters.NumberFilter(field_name='valor_unitario', lookup_expr='lte')
+    # Filtros de búsqueda por texto (CLAUDE.md campos placa, marca, serial)
+    placa = django_filters.CharFilter(lookup_expr='icontains')
+    marca = django_filters.CharFilter(lookup_expr='icontains')
+    serial = django_filters.CharFilter(lookup_expr='icontains')
 
-    cantidad_min = django_filters.NumberFilter(field_name='cantidad', lookup_expr='gte')
-    cantidad_max = django_filters.NumberFilter(field_name='cantidad', lookup_expr='lte')
-
-    # Filtros por fecha
+    # Filtros por fecha de creación
     created_after = django_filters.DateTimeFilter(field_name='created_at', lookup_expr='gte')
     created_before = django_filters.DateTimeFilter(field_name='created_at', lookup_expr='lte')
 
     class Meta:
         model = ItemInventario
-        fields = ['sede', 'ubicacion', 'responsable', 'articulo', 'estado']
+        fields = ['sede', 'ubicacion', 'responsable', 'articulo', 'estado', 'disponibilidad', 'placa', 'marca', 'serial']
 
 
 class SedeFilter(django_filters.FilterSet):

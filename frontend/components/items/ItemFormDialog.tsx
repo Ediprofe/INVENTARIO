@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { itemSchema, type ItemFormData } from '@/lib/schemas';
 import { useCreateItem, useUpdateItem, useItem } from '@/lib/hooks';
 import { useArticulos, useUbicaciones, useResponsables } from '@/lib/hooks/useCatalogos';
-import type { EstadoItem } from '@/types';
+import type { EstadoFisico, Disponibilidad } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,13 +20,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-const ESTADOS: Array<{ value: EstadoItem; label: string }> = [
-  { value: 'activo', label: 'Activo' },
-  { value: 'inactivo', label: 'Inactivo' },
-  { value: 'mantenimiento', label: 'En Mantenimiento' },
-  { value: 'dado_baja', label: 'Dado de Baja' },
+const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
+  { value: 'bueno', label: 'Bueno' },
+  { value: 'regular', label: 'Regular' },
+  { value: 'malo', label: 'Malo' },
+];
+
+const DISPONIBILIDADES: Array<{ value: Disponibilidad; label: string }> = [
+  { value: 'en_uso', label: 'En uso' },
+  { value: 'en_reparacion', label: 'En reparación' },
   { value: 'extraviado', label: 'Extraviado' },
-  { value: 'reparacion', label: 'En Reparación' },
+  { value: 'de_baja', label: 'De baja' },
 ];
 
 interface ItemFormDialogProps {
@@ -59,22 +63,22 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
   } = useForm<ItemFormData>({
     resolver: zodResolver(itemSchema),
     defaultValues: {
-      cantidad: 1,
-      valor_unitario: 0,
-      estado: 'activo',
+      estado: 'bueno',
+      disponibilidad: 'en_uso',
     },
   });
 
   // Load item data when editing
   useEffect(() => {
     if (isEditing && item) {
-      setValue('codigo', item.codigo);
       setValue('articulo_id', item.articulo.id);
       setValue('ubicacion_id', item.ubicacion.id);
       setValue('responsable_id', item.responsable.id);
-      setValue('cantidad', item.cantidad);
-      setValue('valor_unitario', parseFloat(item.valor_unitario));
+      setValue('placa', item.placa || '');
+      setValue('marca', item.marca || '');
+      setValue('serial', item.serial || '');
       setValue('estado', item.estado);
+      setValue('disponibilidad', item.disponibilidad);
       setValue('descripcion', item.descripcion || '');
       setValue('observaciones', item.observaciones || '');
     }
@@ -84,9 +88,8 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
   useEffect(() => {
     if (!open) {
       reset({
-        cantidad: 1,
-        valor_unitario: 0,
-        estado: 'activo',
+        estado: 'bueno',
+        disponibilidad: 'en_uso',
       });
     }
   }, [open, reset]);
@@ -109,6 +112,7 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
   const ubicacion_id = watch('ubicacion_id');
   const responsable_id = watch('responsable_id');
   const estado = watch('estado');
+  const disponibilidad = watch('disponibilidad');
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -126,20 +130,6 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
           <div className="py-8 text-center text-gray-500">Cargando datos del ítem...</div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Código */}
-            <div className="space-y-2">
-              <Label htmlFor="codigo">
-                Código <span className="text-red-600">*</span>
-              </Label>
-              <Input
-                id="codigo"
-                {...register('codigo')}
-                placeholder="INV-00001"
-                disabled={isSubmitting}
-              />
-              {errors.codigo && <p className="text-sm text-red-600">{errors.codigo.message}</p>}
-            </div>
-
             {/* Artículo */}
             <div className="space-y-2">
               <Label htmlFor="articulo_id">
@@ -212,52 +202,62 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
               {errors.responsable_id && <p className="text-sm text-red-600">{errors.responsable_id.message}</p>}
             </div>
 
-            {/* Grid for Cantidad, Valor, Estado */}
+            {/* Grid for Placa, Marca, Serial */}
             <div className="grid grid-cols-3 gap-4">
-              {/* Cantidad */}
+              {/* Placa */}
               <div className="space-y-2">
-                <Label htmlFor="cantidad">
-                  Cantidad <span className="text-red-600">*</span>
-                </Label>
+                <Label htmlFor="placa">Placa</Label>
                 <Input
-                  id="cantidad"
-                  type="number"
-                  {...register('cantidad', { valueAsNumber: true })}
+                  id="placa"
+                  {...register('placa')}
+                  placeholder="PLA-001"
                   disabled={isSubmitting}
                 />
-                {errors.cantidad && <p className="text-sm text-red-600">{errors.cantidad.message}</p>}
+                {errors.placa && <p className="text-sm text-red-600">{errors.placa.message}</p>}
               </div>
 
-              {/* Valor Unitario */}
+              {/* Marca */}
               <div className="space-y-2">
-                <Label htmlFor="valor_unitario">
-                  Valor Unitario <span className="text-red-600">*</span>
-                </Label>
+                <Label htmlFor="marca">Marca</Label>
                 <Input
-                  id="valor_unitario"
-                  type="number"
-                  step="0.01"
-                  {...register('valor_unitario', { valueAsNumber: true })}
+                  id="marca"
+                  {...register('marca')}
+                  placeholder="HP, Dell, etc."
                   disabled={isSubmitting}
                 />
-                {errors.valor_unitario && <p className="text-sm text-red-600">{errors.valor_unitario.message}</p>}
+                {errors.marca && <p className="text-sm text-red-600">{errors.marca.message}</p>}
               </div>
 
-              {/* Estado */}
+              {/* Serial */}
+              <div className="space-y-2">
+                <Label htmlFor="serial">Serial</Label>
+                <Input
+                  id="serial"
+                  {...register('serial')}
+                  placeholder="SN123456"
+                  disabled={isSubmitting}
+                />
+                {errors.serial && <p className="text-sm text-red-600">{errors.serial.message}</p>}
+              </div>
+            </div>
+
+            {/* Grid for Estado Físico y Disponibilidad */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Estado Físico */}
               <div className="space-y-2">
                 <Label htmlFor="estado">
-                  Estado <span className="text-red-600">*</span>
+                  Estado Físico <span className="text-red-600">*</span>
                 </Label>
                 <Select
-                  value={estado || 'activo'}
-                  onValueChange={(value) => setValue('estado', value as EstadoItem)}
+                  value={estado || 'bueno'}
+                  onValueChange={(value) => setValue('estado', value as EstadoFisico)}
                   disabled={isSubmitting}
                 >
                   <SelectTrigger id="estado">
                     <SelectValue placeholder="Selecciona estado" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ESTADOS.map((e) => (
+                    {ESTADO_FISICO.map((e) => (
                       <SelectItem key={e.value} value={e.value}>
                         {e.label}
                       </SelectItem>
@@ -265,6 +265,30 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
                   </SelectContent>
                 </Select>
                 {errors.estado && <p className="text-sm text-red-600">{errors.estado.message}</p>}
+              </div>
+
+              {/* Disponibilidad */}
+              <div className="space-y-2">
+                <Label htmlFor="disponibilidad">
+                  Disponibilidad <span className="text-red-600">*</span>
+                </Label>
+                <Select
+                  value={disponibilidad || 'en_uso'}
+                  onValueChange={(value) => setValue('disponibilidad', value as Disponibilidad)}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="disponibilidad">
+                    <SelectValue placeholder="Selecciona disponibilidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DISPONIBILIDADES.map((d) => (
+                      <SelectItem key={d.value} value={d.value}>
+                        {d.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.disponibilidad && <p className="text-sm text-red-600">{errors.disponibilidad.message}</p>}
               </div>
             </div>
 

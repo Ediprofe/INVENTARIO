@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useItems, useDeleteItem, useExportItems, useDownloadTemplate } from '@/lib/hooks';
 import { useSedes, useUbicaciones } from '@/lib/hooks/useCatalogos';
-import type { IItemFilters, EstadoItem } from '@/types';
+import type { IItemFilters, EstadoFisico, Disponibilidad } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,13 +19,17 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const ESTADOS: Array<{ value: EstadoItem; label: string }> = [
-  { value: 'activo', label: 'Activo' },
-  { value: 'inactivo', label: 'Inactivo' },
-  { value: 'mantenimiento', label: 'En Mantenimiento' },
-  { value: 'dado_baja', label: 'Dado de Baja' },
+const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
+  { value: 'bueno', label: 'Bueno' },
+  { value: 'regular', label: 'Regular' },
+  { value: 'malo', label: 'Malo' },
+];
+
+const DISPONIBILIDADES: Array<{ value: Disponibilidad; label: string }> = [
+  { value: 'en_uso', label: 'En uso' },
+  { value: 'en_reparacion', label: 'En reparación' },
   { value: 'extraviado', label: 'Extraviado' },
-  { value: 'reparacion', label: 'En Reparación' },
+  { value: 'de_baja', label: 'De baja' },
 ];
 
 interface ItemsTableProps {
@@ -161,7 +165,7 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
       </CardHeader>
       <CardContent>
         {/* Filtros */}
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-5">
           <div className="space-y-2">
             <Label htmlFor="search">Buscar</Label>
             <Input
@@ -213,19 +217,39 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="estado">Estado</Label>
+            <Label htmlFor="estado">Estado Físico</Label>
             <Select
               value={filters.estado}
-              onValueChange={(value) => handleFilterChange('estado', value === 'all' ? undefined : value as EstadoItem)}
+              onValueChange={(value) => handleFilterChange('estado', value === 'all' ? undefined : value as EstadoFisico)}
             >
               <SelectTrigger id="estado">
                 <SelectValue placeholder="Todos los estados" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                {ESTADOS.map((estado) => (
+                <SelectItem value="all">Todos</SelectItem>
+                {ESTADO_FISICO.map((estado) => (
                   <SelectItem key={estado.value} value={estado.value}>
                     {estado.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="disponibilidad">Disponibilidad</Label>
+            <Select
+              value={filters.disponibilidad}
+              onValueChange={(value) => handleFilterChange('disponibilidad', value === 'all' ? undefined : value as Disponibilidad)}
+            >
+              <SelectTrigger id="disponibilidad">
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {DISPONIBILIDADES.map((disp) => (
+                  <SelectItem key={disp.value} value={disp.value}>
+                    {disp.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -262,19 +286,20 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
                       />
                     </TableHead>
                     <TableHead>Código</TableHead>
+                    <TableHead>Placa</TableHead>
                     <TableHead>Artículo</TableHead>
+                    <TableHead>Marca</TableHead>
                     <TableHead>Ubicación</TableHead>
                     <TableHead>Responsable</TableHead>
-                    <TableHead className="text-right">Cantidad</TableHead>
-                    <TableHead className="text-right">Valor Unit.</TableHead>
-                    <TableHead>Estado</TableHead>
+                    <TableHead>Estado Físico</TableHead>
+                    <TableHead>Disponibilidad</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.results.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center text-gray-500">
+                      <TableCell colSpan={10} className="text-center text-gray-500">
                         No se encontraron ítems
                       </TableCell>
                     </TableRow>
@@ -289,26 +314,37 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
                           />
                         </TableCell>
                         <TableCell className="font-medium">{item.codigo}</TableCell>
+                        <TableCell>{item.placa || '-'}</TableCell>
                         <TableCell>{item.articulo.nombre}</TableCell>
+                        <TableCell>{item.marca || '-'}</TableCell>
                         <TableCell>{item.ubicacion.nombre}</TableCell>
                         <TableCell>{item.responsable.nombre_completo}</TableCell>
-                        <TableCell className="text-right">{item.cantidad}</TableCell>
-                        <TableCell className="text-right">
-                          ${parseFloat(item.valor_unitario).toLocaleString('es-CO')}
+                        <TableCell>
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                              item.estado === 'bueno'
+                                ? 'bg-green-100 text-green-800'
+                                : item.estado === 'regular'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {ESTADO_FISICO.find((e) => e.value === item.estado)?.label || item.estado}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <span
                             className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                              item.estado === 'activo'
-                                ? 'bg-green-100 text-green-800'
-                                : item.estado === 'mantenimiento'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : item.estado === 'dado_baja'
-                                ? 'bg-red-100 text-red-800'
+                              item.disponibilidad === 'en_uso'
+                                ? 'bg-blue-100 text-blue-800'
+                                : item.disponibilidad === 'en_reparacion'
+                                ? 'bg-orange-100 text-orange-800'
+                                : item.disponibilidad === 'extraviado'
+                                ? 'bg-purple-100 text-purple-800'
                                 : 'bg-gray-100 text-gray-800'
                             }`}
                           >
-                            {ESTADOS.find((e) => e.value === item.estado)?.label || item.estado}
+                            {DISPONIBILIDADES.find((d) => d.value === item.disponibilidad)?.label || item.disponibilidad}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">

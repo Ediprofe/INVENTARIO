@@ -19,11 +19,14 @@ from apps.inventario.serializers import ItemInventarioSerializer
 @permission_classes([IsAuthenticated])
 def import_items_excel(request):
     """
-    Importar ítems desde archivo Excel.
+    Importar ítems desde archivo Excel - según CLAUDE.md.
 
     Expected Excel columns:
-    - codigo, articulo_codigo, ubicacion_codigo, responsable_documento,
-      cantidad, valor_unitario, estado, descripcion, observaciones
+    - articulo_codigo, ubicacion_codigo, responsable_documento,
+      estado, disponibilidad, placa, marca, serial, descripcion, observaciones
+
+    Nota: El código del ítem se genera automáticamente.
+    Cada fila = 1 ítem físico (sin campo cantidad).
     """
     if 'file' not in request.FILES:
         return Response(
@@ -44,10 +47,10 @@ def import_items_excel(request):
         # Leer Excel con pandas
         df = pd.read_excel(excel_file)
 
-        # Validar columnas requeridas
+        # Validar columnas requeridas (según CLAUDE.md)
         required_columns = [
-            'codigo', 'articulo_codigo', 'ubicacion_codigo',
-            'responsable_documento', 'cantidad', 'valor_unitario', 'estado'
+            'articulo_codigo', 'ubicacion_codigo', 'responsable_documento',
+            'estado', 'disponibilidad'
         ]
         missing_columns = [col for col in required_columns if col not in df.columns]
 
@@ -100,15 +103,16 @@ def import_items_excel(request):
                         })
                         continue
 
-                    # Crear ítem
+                    # Crear ítem (según CLAUDE.md - sin cantidad ni valor_unitario)
                     item_data = {
-                        'codigo': str(row['codigo']).strip(),
-                        'articulo': articulo.id,
-                        'ubicacion': ubicacion.id,
-                        'responsable': responsable.id,
-                        'cantidad': int(row['cantidad']),
-                        'valor_unitario': float(row['valor_unitario']),
+                        'articulo_id': articulo.id,
+                        'ubicacion_id': ubicacion.id,
+                        'responsable_id': responsable.id,
                         'estado': str(row['estado']).strip().lower(),
+                        'disponibilidad': str(row['disponibilidad']).strip().lower().replace(' ', '_'),
+                        'placa': str(row.get('placa', '')).strip() if pd.notna(row.get('placa')) else '',
+                        'marca': str(row.get('marca', '')).strip() if pd.notna(row.get('marca')) else '',
+                        'serial': str(row.get('serial', '')).strip() if pd.notna(row.get('serial')) else '',
                         'descripcion': str(row.get('descripcion', '')).strip() if pd.notna(row.get('descripcion')) else '',
                         'observaciones': str(row.get('observaciones', '')).strip() if pd.notna(row.get('observaciones')) else '',
                     }
@@ -119,6 +123,7 @@ def import_items_excel(request):
                         created_items.append({
                             'row': index + 2,
                             'codigo': item.codigo,
+                            'placa': item.placa or '-',
                             'id': item.id
                         })
                     else:
@@ -152,16 +157,16 @@ def import_items_excel(request):
 @permission_classes([IsAuthenticated])
 def export_items_excel(request):
     """
-    Exportar ítems a archivo Excel.
+    Exportar ítems a archivo Excel - según CLAUDE.md.
 
     Query params opcionales: mismo que ItemInventarioFilter
     """
     from apps.inventario.filters import ItemInventarioFilter
 
-    # Aplicar filtros
+    # Aplicar filtros (excluir solo los dados de baja si es necesario)
     queryset = ItemInventario.objects.select_related(
         'articulo', 'sede', 'ubicacion', 'responsable'
-    ).exclude(estado='dado_baja')
+    )
 
     filterset = ItemInventarioFilter(request.GET, queryset=queryset)
     items = filterset.qs
@@ -176,12 +181,12 @@ def export_items_excel(request):
     header_font = Font(color="FFFFFF", bold=True)
     header_alignment = Alignment(horizontal="center", vertical="center")
 
-    # Headers
+    # Headers (según CLAUDE.md)
     headers = [
-        'ID', 'Código', 'Artículo', 'Artículo Código', 'Categoría',
+        'ID', 'Código Ítem', 'Placa', 'Artículo', 'Artículo Código', 'Categoría',
         'Sede', 'Ubicación', 'Ubicación Código', 'Responsable',
-        'Responsable Documento', 'Cantidad', 'Valor Unitario', 'Valor Total',
-        'Estado', 'Descripción', 'Observaciones', 'Creado', 'Actualizado'
+        'Responsable Documento', 'Marca', 'Serial', 'Estado Físico', 'Disponibilidad',
+        'Descripción', 'Observaciones', 'Creado', 'Actualizado'
     ]
 
     for col_num, header in enumerate(headers, 1):
@@ -194,22 +199,23 @@ def export_items_excel(request):
     for row_num, item in enumerate(items, 2):
         ws.cell(row=row_num, column=1, value=item.id)
         ws.cell(row=row_num, column=2, value=item.codigo)
-        ws.cell(row=row_num, column=3, value=item.articulo.nombre)
-        ws.cell(row=row_num, column=4, value=item.articulo.codigo)
-        ws.cell(row=row_num, column=5, value=item.articulo.get_categoria_display())
-        ws.cell(row=row_num, column=6, value=item.sede.nombre)
-        ws.cell(row=row_num, column=7, value=item.ubicacion.nombre)
-        ws.cell(row=row_num, column=8, value=item.ubicacion.codigo)
-        ws.cell(row=row_num, column=9, value=item.responsable.nombre_completo)
-        ws.cell(row=row_num, column=10, value=item.responsable.documento)
-        ws.cell(row=row_num, column=11, value=item.cantidad)
-        ws.cell(row=row_num, column=12, value=float(item.valor_unitario))
-        ws.cell(row=row_num, column=13, value=float(item.valor_total))
+        ws.cell(row=row_num, column=3, value=item.placa or '')
+        ws.cell(row=row_num, column=4, value=item.articulo.nombre)
+        ws.cell(row=row_num, column=5, value=item.articulo.codigo)
+        ws.cell(row=row_num, column=6, value=item.articulo.get_categoria_display())
+        ws.cell(row=row_num, column=7, value=item.sede.nombre)
+        ws.cell(row=row_num, column=8, value=item.ubicacion.nombre)
+        ws.cell(row=row_num, column=9, value=item.ubicacion.codigo)
+        ws.cell(row=row_num, column=10, value=item.responsable.nombre_completo)
+        ws.cell(row=row_num, column=11, value=item.responsable.documento)
+        ws.cell(row=row_num, column=12, value=item.marca or '')
+        ws.cell(row=row_num, column=13, value=item.serial or '')
         ws.cell(row=row_num, column=14, value=item.get_estado_display())
-        ws.cell(row=row_num, column=15, value=item.descripcion or '')
-        ws.cell(row=row_num, column=16, value=item.observaciones or '')
-        ws.cell(row=row_num, column=17, value=item.created_at.strftime('%Y-%m-%d %H:%M'))
-        ws.cell(row=row_num, column=18, value=item.updated_at.strftime('%Y-%m-%d %H:%M'))
+        ws.cell(row=row_num, column=15, value=item.get_disponibilidad_display())
+        ws.cell(row=row_num, column=16, value=item.descripcion or '')
+        ws.cell(row=row_num, column=17, value=item.observaciones or '')
+        ws.cell(row=row_num, column=18, value=item.created_at.strftime('%Y-%m-%d %H:%M'))
+        ws.cell(row=row_num, column=19, value=item.updated_at.strftime('%Y-%m-%d %H:%M'))
 
     # Ajustar anchos de columna
     for column in ws.columns:
@@ -239,7 +245,12 @@ def export_items_excel(request):
 @permission_classes([IsAuthenticated])
 def download_template(request):
     """
-    Descargar plantilla Excel para importación.
+    Descargar plantilla Excel para importación - según CLAUDE.md.
+
+    Columnas: articulo_codigo, ubicacion_codigo, responsable_documento,
+              estado, disponibilidad, placa, marca, serial, descripcion, observaciones
+
+    Nota: El código del ítem se genera automáticamente.
     """
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -250,10 +261,11 @@ def download_template(request):
     header_font = Font(color="FFFFFF", bold=True)
     header_alignment = Alignment(horizontal="center", vertical="center")
 
-    # Headers
+    # Headers (según CLAUDE.md - sin cantidad ni valor_unitario)
     headers = [
-        'codigo', 'articulo_codigo', 'ubicacion_codigo', 'responsable_documento',
-        'cantidad', 'valor_unitario', 'estado', 'descripcion', 'observaciones'
+        'articulo_codigo', 'ubicacion_codigo', 'responsable_documento',
+        'estado', 'disponibilidad', 'placa', 'marca', 'serial',
+        'descripcion', 'observaciones'
     ]
 
     for col_num, header in enumerate(headers, 1):
@@ -263,19 +275,20 @@ def download_template(request):
         cell.alignment = header_alignment
 
     # Fila de ejemplo
-    ws.cell(row=2, column=1, value='INV-00001')
-    ws.cell(row=2, column=2, value='TEC-00001')
-    ws.cell(row=2, column=3, value='A-101')
-    ws.cell(row=2, column=4, value='1234567890')
-    ws.cell(row=2, column=5, value=1)
-    ws.cell(row=2, column=6, value=1000000.00)
-    ws.cell(row=2, column=7, value='activo')
-    ws.cell(row=2, column=8, value='Descripción del ítem')
-    ws.cell(row=2, column=9, value='Observaciones adicionales')
+    ws.cell(row=2, column=1, value='TEC-00001')  # articulo_codigo
+    ws.cell(row=2, column=2, value='A-101')  # ubicacion_codigo
+    ws.cell(row=2, column=3, value='1234567890')  # responsable_documento
+    ws.cell(row=2, column=4, value='bueno')  # estado (bueno/regular/malo)
+    ws.cell(row=2, column=5, value='en_uso')  # disponibilidad (en_uso/en_reparacion/extraviado/de_baja)
+    ws.cell(row=2, column=6, value='PLA-001')  # placa (opcional)
+    ws.cell(row=2, column=7, value='HP')  # marca (opcional)
+    ws.cell(row=2, column=8, value='SN123456')  # serial (opcional)
+    ws.cell(row=2, column=9, value='Descripción del ítem')  # descripcion
+    ws.cell(row=2, column=10, value='Observaciones adicionales')  # observaciones
 
     # Ajustar anchos
     for col_num in range(1, len(headers) + 1):
-        ws.column_dimensions[openpyxl.utils.get_column_letter(col_num)].width = 20
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col_num)].width = 22
 
     # Preparar respuesta
     response = HttpResponse(

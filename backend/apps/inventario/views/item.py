@@ -78,15 +78,23 @@ class ItemInventarioViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='batch-update')
     def batch_update(self, request):
         """
-        Actualización masiva de ítems.
+        Actualización masiva de ítems - según CLAUDE.md.
 
         Body: {
           "items": [
             {"id": 1, "ubicacion_id": 5, "responsable_id": 3},
-            {"id": 2, "estado": "mantenimiento"}
+            {"id": 2, "estado": "bueno", "disponibilidad": "en_uso"},
+            {"id": 3, "placa": "PLA-001", "marca": "HP", "serial": "SN123"}
           ],
           "atomic": false  # true = todo o nada, false = parcial (default)
         }
+
+        Campos actualizables:
+        - ubicacion_id, responsable_id
+        - estado: bueno, regular, malo
+        - disponibilidad: en_uso, en_reparacion, extraviado, de_baja
+        - placa (única), marca, serial (único por artículo)
+        - descripcion, observaciones
 
         Response: {
           "success": [1, 2],
@@ -205,31 +213,68 @@ class ItemInventarioViewSet(viewsets.ModelViewSet):
                 except Responsable.DoesNotExist:
                     raise ValidationError(f'Responsable con ID {responsable_id} no encontrado')
 
-            # Actualizar estado
+            # Actualizar estado físico (según CLAUDE.md)
             if 'estado' in item_data:
                 estado = item_data['estado']
-                valid_estados = ['activo', 'inactivo', 'mantenimiento', 'dado_baja', 'extraviado', 'reparacion']
+                valid_estados = ['bueno', 'regular', 'malo']
 
                 if estado not in valid_estados:
-                    raise ValidationError(f'Estado inválido: {estado}')
+                    raise ValidationError(f'Estado físico inválido: {estado}. Opciones: bueno, regular, malo')
 
-                datos_anteriores['estado'] = item.estado
+                datos_anteriores['estado'] = item.get_estado_display()
                 item.estado = estado
-                datos_nuevos['estado'] = estado
+                datos_nuevos['estado'] = item.get_estado_display()
 
-            # Actualizar valor_unitario
-            if 'valor_unitario' in item_data:
-                try:
-                    valor = Decimal(str(item_data['valor_unitario']))
-                    if valor < 0:
-                        raise ValidationError('Valor unitario debe ser mayor o igual a 0')
+            # Actualizar disponibilidad (según CLAUDE.md)
+            if 'disponibilidad' in item_data:
+                disponibilidad = item_data['disponibilidad']
+                valid_disponibilidades = ['en_uso', 'en_reparacion', 'extraviado', 'de_baja']
 
-                    datos_anteriores['valor_unitario'] = str(item.valor_unitario)
-                    item.valor_unitario = valor
-                    datos_nuevos['valor_unitario'] = str(valor)
+                if disponibilidad not in valid_disponibilidades:
+                    raise ValidationError(
+                        f'Disponibilidad inválida: {disponibilidad}. '
+                        f'Opciones: en_uso, en_reparacion, extraviado, de_baja'
+                    )
 
-                except (ValueError, TypeError):
-                    raise ValidationError('Valor unitario debe ser un número válido')
+                datos_anteriores['disponibilidad'] = item.get_disponibilidad_display()
+                item.disponibilidad = disponibilidad
+                datos_nuevos['disponibilidad'] = item.get_disponibilidad_display()
+
+            # Actualizar placa (según CLAUDE.md - debe ser única)
+            if 'placa' in item_data:
+                placa = item_data['placa'].strip() if item_data['placa'] else ''
+                if placa:
+                    # Verificar unicidad
+                    duplicates = ItemInventario.objects.filter(placa=placa).exclude(pk=item.pk)
+                    if duplicates.exists():
+                        raise ValidationError(f'La placa "{placa}" ya está asignada a otro ítem')
+
+                datos_anteriores['placa'] = item.placa or ''
+                item.placa = placa if placa else None
+                datos_nuevos['placa'] = placa
+
+            # Actualizar marca (según CLAUDE.md)
+            if 'marca' in item_data:
+                marca = item_data['marca'].strip() if item_data['marca'] else ''
+                datos_anteriores['marca'] = item.marca or ''
+                item.marca = marca
+                datos_nuevos['marca'] = marca
+
+            # Actualizar serial (según CLAUDE.md - debe ser único por artículo)
+            if 'serial' in item_data:
+                serial = item_data['serial'].strip() if item_data['serial'] else ''
+                if serial:
+                    # Verificar unicidad por artículo
+                    duplicates = ItemInventario.objects.filter(
+                        articulo=item.articulo,
+                        serial=serial
+                    ).exclude(pk=item.pk)
+                    if duplicates.exists():
+                        raise ValidationError(f'El serial "{serial}" ya existe para este artículo')
+
+                datos_anteriores['serial'] = item.serial or ''
+                item.serial = serial if serial else ''
+                datos_nuevos['serial'] = serial
 
             # Actualizar descripcion
             if 'descripcion' in item_data:

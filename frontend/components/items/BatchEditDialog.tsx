@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useBatchUpdateItems } from '@/lib/hooks/useItems';
 import { useUbicaciones, useResponsables } from '@/lib/hooks/useCatalogos';
-import type { EstadoItem, IBatchUpdateItem, IBatchUpdateResponse } from '@/types';
+import type { EstadoFisico, Disponibilidad, IBatchUpdateItem, IBatchUpdateResponse } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,13 +20,17 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const ESTADOS: Array<{ value: EstadoItem; label: string }> = [
-  { value: 'activo', label: 'Activo' },
-  { value: 'inactivo', label: 'Inactivo' },
-  { value: 'mantenimiento', label: 'En Mantenimiento' },
-  { value: 'dado_baja', label: 'Dado de Baja' },
+const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
+  { value: 'bueno', label: 'Bueno' },
+  { value: 'regular', label: 'Regular' },
+  { value: 'malo', label: 'Malo' },
+];
+
+const DISPONIBILIDADES: Array<{ value: Disponibilidad; label: string }> = [
+  { value: 'en_uso', label: 'En uso' },
+  { value: 'en_reparacion', label: 'En reparación' },
   { value: 'extraviado', label: 'Extraviado' },
-  { value: 'reparacion', label: 'En Reparación' },
+  { value: 'de_baja', label: 'De baja' },
 ];
 
 interface BatchEditDialogProps {
@@ -41,7 +45,10 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
     ubicacion: false,
     responsable: false,
     estado: false,
-    valor_unitario: false,
+    disponibilidad: false,
+    placa: false,
+    marca: false,
+    serial: false,
     descripcion: false,
     observaciones: false,
   });
@@ -50,8 +57,11 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
   const [formData, setFormData] = useState({
     ubicacion_id: '',
     responsable_id: '',
-    estado: '' as EstadoItem | '',
-    valor_unitario: '',
+    estado: '' as EstadoFisico | '',
+    disponibilidad: '' as Disponibilidad | '',
+    placa: '',
+    marca: '',
+    serial: '',
     descripcion: '',
     observaciones: '',
   });
@@ -87,10 +97,19 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
         item.responsable_id = parseInt(formData.responsable_id);
       }
       if (updateFields.estado && formData.estado) {
-        item.estado = formData.estado as EstadoItem;
+        item.estado = formData.estado as EstadoFisico;
       }
-      if (updateFields.valor_unitario && formData.valor_unitario) {
-        item.valor_unitario = parseFloat(formData.valor_unitario);
+      if (updateFields.disponibilidad && formData.disponibilidad) {
+        item.disponibilidad = formData.disponibilidad as Disponibilidad;
+      }
+      if (updateFields.placa) {
+        item.placa = formData.placa;
+      }
+      if (updateFields.marca) {
+        item.marca = formData.marca;
+      }
+      if (updateFields.serial) {
+        item.serial = formData.serial;
       }
       if (updateFields.descripcion) {
         item.descripcion = formData.descripcion;
@@ -119,7 +138,10 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
       ubicacion: false,
       responsable: false,
       estado: false,
-      valor_unitario: false,
+      disponibilidad: false,
+      placa: false,
+      marca: false,
+      serial: false,
       descripcion: false,
       observaciones: false,
     });
@@ -127,7 +149,10 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
       ubicacion_id: '',
       responsable_id: '',
       estado: '',
-      valor_unitario: '',
+      disponibilidad: '',
+      placa: '',
+      marca: '',
+      serial: '',
       descripcion: '',
       observaciones: '',
     });
@@ -221,7 +246,7 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
               )}
             </div>
 
-            {/* Estado field */}
+            {/* Estado Físico field */}
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -229,7 +254,7 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                   checked={updateFields.estado}
                   onCheckedChange={() => handleToggleField('estado')}
                 />
-                <Label htmlFor="update-estado">Actualizar Estado</Label>
+                <Label htmlFor="update-estado">Actualizar Estado Físico</Label>
               </div>
               {updateFields.estado && (
                 <Select
@@ -237,10 +262,10 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                   onValueChange={(value) => handleFieldChange('estado', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar estado" />
+                    <SelectValue placeholder="Seleccionar estado físico" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ESTADOS.map((estado) => (
+                    {ESTADO_FISICO.map((estado) => (
                       <SelectItem key={estado.value} value={estado.value}>
                         {estado.label}
                       </SelectItem>
@@ -250,23 +275,91 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
               )}
             </div>
 
-            {/* Valor Unitario field */}
+            {/* Disponibilidad field */}
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="update-valor"
-                  checked={updateFields.valor_unitario}
-                  onCheckedChange={() => handleToggleField('valor_unitario')}
+                  id="update-disponibilidad"
+                  checked={updateFields.disponibilidad}
+                  onCheckedChange={() => handleToggleField('disponibilidad')}
                 />
-                <Label htmlFor="update-valor">Actualizar Valor Unitario</Label>
+                <Label htmlFor="update-disponibilidad">Actualizar Disponibilidad</Label>
               </div>
-              {updateFields.valor_unitario && (
+              {updateFields.disponibilidad && (
+                <Select
+                  value={formData.disponibilidad}
+                  onValueChange={(value) => handleFieldChange('disponibilidad', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar disponibilidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DISPONIBILIDADES.map((disp) => (
+                      <SelectItem key={disp.value} value={disp.value}>
+                        {disp.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            {/* Placa field */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="update-placa"
+                  checked={updateFields.placa}
+                  onCheckedChange={() => handleToggleField('placa')}
+                />
+                <Label htmlFor="update-placa">Actualizar Placa</Label>
+              </div>
+              {updateFields.placa && (
                 <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="Valor unitario"
-                  value={formData.valor_unitario}
-                  onChange={(e) => handleFieldChange('valor_unitario', e.target.value)}
+                  type="text"
+                  placeholder="PLA-001"
+                  value={formData.placa}
+                  onChange={(e) => handleFieldChange('placa', e.target.value)}
+                />
+              )}
+            </div>
+
+            {/* Marca field */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="update-marca"
+                  checked={updateFields.marca}
+                  onCheckedChange={() => handleToggleField('marca')}
+                />
+                <Label htmlFor="update-marca">Actualizar Marca</Label>
+              </div>
+              {updateFields.marca && (
+                <Input
+                  type="text"
+                  placeholder="HP, Dell, etc."
+                  value={formData.marca}
+                  onChange={(e) => handleFieldChange('marca', e.target.value)}
+                />
+              )}
+            </div>
+
+            {/* Serial field */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="update-serial"
+                  checked={updateFields.serial}
+                  onCheckedChange={() => handleToggleField('serial')}
+                />
+                <Label htmlFor="update-serial">Actualizar Serial</Label>
+              </div>
+              {updateFields.serial && (
+                <Input
+                  type="text"
+                  placeholder="SN123456"
+                  value={formData.serial}
+                  onChange={(e) => handleFieldChange('serial', e.target.value)}
                 />
               )}
             </div>
