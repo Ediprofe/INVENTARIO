@@ -3,7 +3,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ItemsAPI } from '@/lib/api';
-import type { IItem, IItemFilters, IItemCreateData, IItemUpdateData, IBatchUpdateRequest } from '@/types';
+import type { IItem, IItemList, IItemFilters, IItemCreateData, IItemUpdateData, IBatchUpdateRequest, IPaginatedResponse } from '@/types';
 
 // Query keys
 export const itemsKeys = {
@@ -18,7 +18,7 @@ export const itemsKeys = {
  * Hook para obtener lista de ítems.
  */
 export function useItems(filters: IItemFilters = {}) {
-  return useQuery({
+  return useQuery<IPaginatedResponse<IItemList>>({
     queryKey: itemsKeys.list(filters),
     queryFn: () => ItemsAPI.list(filters),
   });

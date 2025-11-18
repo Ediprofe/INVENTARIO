@@ -4,6 +4,7 @@
 import { apiClient } from './client';
 import type {
   IItem,
+  IItemList,
   IItemFilters,
   IItemCreateData,
   IItemUpdateData,
@@ -15,8 +16,9 @@ import type {
 export const ItemsAPI = {
   /**
    * Listar ítems con filtros y paginación.
+   * Usa el ListSerializer que devuelve campos planos para optimización.
    */
-  list: async (filters: IItemFilters = {}): Promise<IPaginatedResponse<IItem>> => {
+  list: async (filters: IItemFilters = {}): Promise<IPaginatedResponse<IItemList>> => {
     const response = await apiClient.get('/inventario/items/', {
       params: filters,
     });

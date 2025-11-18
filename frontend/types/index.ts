@@ -116,6 +116,24 @@ export interface IItem {
   updated_at: string;
 }
 
+export interface IItemList {
+  id: number;
+  codigo: string;
+  placa: string | null;
+  articulo_nombre: string;
+  ubicacion_nombre: string;
+  ubicacion_descripcion: string;
+  sede_nombre: string;
+  responsable_nombre: string;
+  marca: string;
+  serial: string;
+  estado: EstadoFisico;
+  disponibilidad: Disponibilidad;
+  descripcion: string;
+  observaciones: string;
+  created_at: string;
+}
+
 export interface IHistorialMovimiento {
   id: number;
   item: number;

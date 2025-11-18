@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useItems, useDeleteItem, useExportItems, useDownloadTemplate } from '@/lib/hooks';
 import { useSedes, useUbicaciones } from '@/lib/hooks/useCatalogos';
-import type { IItemFilters, EstadoFisico, Disponibilidad } from '@/types';
+import type { IItemFilters, EstadoFisico, Disponibilidad, IItemList } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -285,13 +285,14 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
                         aria-label="Seleccionar todos"
                       />
                     </TableHead>
-                    <TableHead>Código</TableHead>
-                    <TableHead>Placa</TableHead>
                     <TableHead>Artículo</TableHead>
-                    <TableHead>Marca</TableHead>
+                    <TableHead>Placa</TableHead>
                     <TableHead>Ubicación</TableHead>
+                    <TableHead>Sede</TableHead>
                     <TableHead>Responsable</TableHead>
-                    <TableHead>Estado Físico</TableHead>
+                    <TableHead>Marca</TableHead>
+                    <TableHead>Serial</TableHead>
+                    <TableHead>Estado</TableHead>
                     <TableHead>Disponibilidad</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -299,12 +300,12 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
                 <TableBody>
                   {data.results.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={10} className="text-center text-gray-500">
+                      <TableCell colSpan={11} className="text-center text-gray-500">
                         No se encontraron ítems
                       </TableCell>
                     </TableRow>
                   ) : (
-                    data.results.map((item) => (
+                    data.results.map((item: IItemList) => (
                       <TableRow key={item.id}>
                         <TableCell>
                           <Checkbox
@@ -313,12 +314,13 @@ export function ItemsTable({ onCreateClick, onEditClick, onImportClick, onBatchE
                             aria-label={`Seleccionar ${item.codigo}`}
                           />
                         </TableCell>
-                        <TableCell className="font-medium">{item.codigo}</TableCell>
+                        <TableCell className="font-medium">{item.articulo_nombre}</TableCell>
                         <TableCell>{item.placa || '-'}</TableCell>
-                        <TableCell>{item.articulo.nombre}</TableCell>
+                        <TableCell>{item.ubicacion_nombre}</TableCell>
+                        <TableCell>{item.sede_nombre}</TableCell>
+                        <TableCell>{item.responsable_nombre}</TableCell>
                         <TableCell>{item.marca || '-'}</TableCell>
-                        <TableCell>{item.ubicacion.nombre}</TableCell>
-                        <TableCell>{item.responsable.nombre_completo}</TableCell>
+                        <TableCell>{item.serial || '-'}</TableCell>
                         <TableCell>
                           <span
                             className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
