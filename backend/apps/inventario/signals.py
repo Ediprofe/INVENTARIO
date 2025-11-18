@@ -10,7 +10,7 @@ from .models import ItemInventario, HistorialMovimiento
 @receiver(post_save, sender=ItemInventario)
 def crear_historial_creacion(sender, instance, created, **kwargs):
     """
-    Crear registro de historial al crear un ítem.
+    Crear registro de historial al crear un ítem - según CLAUDE.md.
     """
     if created:
         HistorialMovimiento.objects.create(
@@ -18,12 +18,14 @@ def crear_historial_creacion(sender, instance, created, **kwargs):
             tipo_movimiento='creacion',
             datos_nuevos={
                 'codigo': instance.codigo,
+                'placa': instance.placa or '',
                 'articulo': instance.articulo.nombre,
+                'marca': instance.marca or '',
+                'serial': instance.serial or '',
                 'ubicacion': instance.ubicacion.nombre,
                 'responsable': instance.responsable.nombre_completo if instance.responsable else None,
-                'cantidad': instance.cantidad,
-                'valor_unitario': str(instance.valor_unitario),
-                'estado': instance.estado,
+                'estado': instance.get_estado_display(),
+                'disponibilidad': instance.get_disponibilidad_display(),
             },
             observaciones='Creación inicial del ítem'
         )
@@ -62,14 +64,24 @@ def detectar_cambios_item(sender, instance, **kwargs):
                     observaciones=f'Reasignado de {old_instance.responsable.nombre_completo if old_instance.responsable else "Sin asignar"} a {instance.responsable.nombre_completo if instance.responsable else "Sin asignar"}'
                 )
 
-            # Detectar cambio de estado
+            # Detectar cambio de estado físico
             if old_instance.estado != instance.estado:
                 HistorialMovimiento.objects.create(
                     item=instance,
                     tipo_movimiento='cambio_estado',
-                    datos_anteriores={'estado': old_instance.estado},
-                    datos_nuevos={'estado': instance.estado},
-                    observaciones=f'Estado cambiado de {old_instance.estado} a {instance.estado}'
+                    datos_anteriores={'estado': old_instance.get_estado_display()},
+                    datos_nuevos={'estado': instance.get_estado_display()},
+                    observaciones=f'Estado físico cambiado de {old_instance.get_estado_display()} a {instance.get_estado_display()}'
+                )
+
+            # Detectar cambio de disponibilidad
+            if old_instance.disponibilidad != instance.disponibilidad:
+                HistorialMovimiento.objects.create(
+                    item=instance,
+                    tipo_movimiento='cambio_estado',
+                    datos_anteriores={'disponibilidad': old_instance.get_disponibilidad_display()},
+                    datos_nuevos={'disponibilidad': instance.get_disponibilidad_display()},
+                    observaciones=f'Disponibilidad cambiada de {old_instance.get_disponibilidad_display()} a {instance.get_disponibilidad_display()}'
                 )
 
         except ItemInventario.DoesNotExist:
