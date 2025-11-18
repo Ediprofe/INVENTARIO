@@ -207,9 +207,9 @@
 
 **Endpoints:**
 ```
-POST /api/v1/inventario/items/import/
-GET  /api/v1/inventario/items/export/
-POST /api/v1/inventario/items/template/
+POST /api/v1/inventario/excel/import/
+GET  /api/v1/inventario/excel/export/
+GET  /api/v1/inventario/excel/template/
 ```
 
 **Build:**
