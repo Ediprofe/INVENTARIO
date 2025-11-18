@@ -105,7 +105,7 @@ export interface IItem {
   articulo: IArticulo;
   sede: ISede;
   ubicacion: IUbicacion;
-  responsable: IResponsable;
+  responsable: IResponsable | null;
   marca: string;
   serial: string;
   estado: EstadoFisico;

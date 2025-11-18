@@ -44,9 +44,9 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
 
   // Queries
   const { data: item, isLoading: isLoadingItem } = useItem(itemId || 0);
-  const { data: articulosData } = useArticulos();
-  const { data: ubicacionesData } = useUbicaciones();
-  const { data: responsablesData } = useResponsables();
+  const { data: articulosData, isLoading: isLoadingArticulos } = useArticulos();
+  const { data: ubicacionesData, isLoading: isLoadingUbicaciones } = useUbicaciones();
+  const { data: responsablesData, isLoading: isLoadingResponsables } = useResponsables();
 
   // Mutations
   const createMutation = useCreateItem();
@@ -73,7 +73,7 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
     if (isEditing && item) {
       setValue('articulo_id', item.articulo.id);
       setValue('ubicacion_id', item.ubicacion.id);
-      setValue('responsable_id', item.responsable.id);
+      setValue('responsable_id', item.responsable?.id || null);
       setValue('placa', item.placa || '');
       setValue('marca', item.marca || '');
       setValue('serial', item.serial || '');
@@ -134,10 +134,10 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        {isLoadingItem && isEditing ? (
-          <div className="py-8 text-center text-gray-500">Cargando datos del ítem...</div>
+        {(isLoadingItem && isEditing) || isLoadingArticulos || isLoadingUbicaciones || isLoadingResponsables ? (
+          <div className="py-8 text-center text-gray-500">Cargando datos...</div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form key={itemId || 'new'} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Artículo */}
             <div className="space-y-2">
               <Label htmlFor="articulo_id">
