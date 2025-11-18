@@ -72,9 +72,14 @@ class ItemInventarioSerializer(serializers.ModelSerializer):
 
     def validate_placa(self, value):
         """Validar placa única (CLAUDE.md línea 194-196)."""
-        if value:
+        # Normalizar strings vacíos a None
+        if value is not None:
             value = value.strip()
-            # Check uniqueness
+            if not value:  # Si después de strip está vacío, convertir a None
+                return None
+
+        # Solo validar unicidad si hay un valor real
+        if value:
             queryset = ItemInventario.objects.filter(placa=value)
             if self.instance:
                 queryset = queryset.exclude(pk=self.instance.pk)
@@ -86,8 +91,14 @@ class ItemInventarioSerializer(serializers.ModelSerializer):
 
     def validate_serial(self, value):
         """Validar serial único por artículo (CLAUDE.md línea 199-201)."""
-        if value and 'articulo' in self.initial_data:
+        # Normalizar strings vacíos a None
+        if value is not None:
             value = value.strip()
+            if not value:  # Si después de strip está vacío, convertir a None
+                return None
+
+        # Solo validar unicidad si hay un valor real
+        if value and 'articulo' in self.initial_data:
             articulo_id = self.initial_data.get('articulo_id')
             queryset = ItemInventario.objects.filter(
                 articulo_id=articulo_id,
