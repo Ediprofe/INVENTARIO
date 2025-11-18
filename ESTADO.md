@@ -7,9 +7,9 @@
 
 ## 🎯 Fase Actual
 
-### Fase 1: Modelos + Autenticación - 100% ✅
+### Fase 2: API REST y Serializers - 100% ✅
 
-**Estado:** ✅ COMPLETADO - Todos los modelos Django y autenticación JWT implementados
+**Estado:** ✅ COMPLETADO - API REST completa con serializers, filtros y ViewSets
 
 ### ✅ Completado
 1. ✅ Estructura backend completa
@@ -35,8 +35,8 @@
 |------|--------|----------|--------|----------|
 | **0** | Setup | 1-2 días | ✅ Completado | 100% |
 | **1** | Modelos + Auth | 3-4 días | ✅ Completado | 100% |
-| **2** | API + Serializers | 3-4 días | ⏳ Siguiente | 0% |
-| **3** | Frontend MVP | 5-6 días | ⏹️ Pendiente | 0% |
+| **2** | API + Serializers | 3-4 días | ✅ Completado | 100% |
+| **3** | Frontend MVP | 5-6 días | ⏳ Siguiente | 0% |
 | **4** | Import/Export | 3-4 días | ⏹️ Pendiente | 0% |
 | **5** | Batch Edit ⭐ | 3-4 días | ⏹️ Pendiente | 0% |
 | **6** | Testing + Polish | 2-3 días | ⏹️ Pendiente | 0% |
@@ -100,34 +100,74 @@
 - ✅ Constraints a nivel BD para integridad
 - ✅ Relaciones configuradas correctamente
 
+### Fase 2 - API REST y Serializers (2025-11-17)
+
+**Serializers Implementados:**
+- ✅ SedeSerializer, UbicacionSerializer, ResponsableSerializer, ArticuloSerializer
+- ✅ ItemInventarioListSerializer (optimizado para listados)
+- ✅ ItemInventarioSerializer (completo con nested objects)
+- ✅ ItemInventarioDetailSerializer (con historial incluido)
+- ✅ HistorialMovimientoSerializer
+
+**Filtros Avanzados:**
+- ✅ ItemInventarioFilter (12 filtros: sede, ubicacion, responsable, estado, rangos de valor/cantidad, fechas)
+- ✅ SedeFilter, UbicacionFilter, ResponsableFilter, ArticuloFilter
+- ✅ Integración con django-filter para filtros declarativos
+
+**ViewSets Completos:**
+- ✅ 5 ViewSets con CRUD completo (Sede, Ubicacion, Responsable, Articulo, Item)
+- ✅ Búsqueda por texto en campos relevantes
+- ✅ Ordenamiento configurable por múltiples campos
+- ✅ Paginación automática (50 items por defecto)
+- ✅ Soft delete en ItemInventario (cambio de estado)
+
+**Optimizaciones:**
+- ✅ select_related y prefetch_related en queries
+- ✅ Serializers optimizados por acción (list vs retrieve)
+- ✅ Queries eficientes para 7,000+ registros
+
+**Endpoints Disponibles:**
+```
+/api/v1/inventario/sedes/
+/api/v1/inventario/ubicaciones/
+/api/v1/inventario/responsables/
+/api/v1/inventario/articulos/
+/api/v1/inventario/items/
+```
+
 ---
 
 ## 🚀 Siguiente Tarea
 
-**Iniciar Fase 2 - API REST y Serializers:**
+**Iniciar Fase 3 - Frontend MVP:**
 
-1. **Serializers de Catálogos:**
-   - SedeSerializer, UbicacionSerializer
-   - ResponsableSerializer, ArticuloSerializer
+1. **Cliente API (Axios):**
+   - Configurar interceptors para JWT
+   - Refresh token automático
+   - Manejo de errores
 
-2. **Serializers de Items:**
-   - ItemInventarioListSerializer (optimizado)
-   - ItemInventarioSerializer (completo)
-   - ItemInventarioDetailSerializer (con historial)
+2. **Store de Autenticación:**
+   - Zustand store para auth
+   - Persistencia de tokens
+   - Estado de usuario
 
-3. **ViewSets con filtros:**
-   - CRUD completo para todos los modelos
-   - Filtros avanzados (sede, estado, fecha, valor)
-   - Paginación y ordenamiento
-   - Búsqueda por texto
+3. **Componentes de Items:**
+   - ItemsTable con filtros avanzados
+   - ItemForm (crear/editar)
+   - Paginación y búsqueda
+   - Loading y error states
 
-4. **Optimización:**
-   - select_related y prefetch_related
-   - Queries eficientes para 7,000+ registros
+4. **Navegación y Layout:**
+   - Layout principal con navbar
+   - Rutas protegidas
+   - Middleware de autenticación
 
-5. **Testing:** Tests de API > 85% coverage
+5. **Integración con API:**
+   - TanStack Query para data fetching
+   - Optimistic updates
+   - Cache management
 
-**Ver guía detallada:** [`docs/fases/fases-1-7.md`](docs/fases/fases-1-7.md#fase-2-api-rest-y-serializers)
+**Ver guía detallada:** [`docs/fases/fases-1-7.md`](docs/fases/fases-1-7.md#fase-3-frontend-mvp)
 
 ---
 
