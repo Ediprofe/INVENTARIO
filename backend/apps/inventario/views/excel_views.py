@@ -235,7 +235,7 @@ def export_items_excel(request):
     return response
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def download_template(request):
     """

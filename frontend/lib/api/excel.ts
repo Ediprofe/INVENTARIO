@@ -51,13 +51,9 @@ export const ExcelAPI = {
    * Descargar plantilla de importación.
    */
   downloadTemplate: async (): Promise<Blob> => {
-    const response = await apiClient.post(
-      '/inventario/items/template/',
-      {},
-      {
-        responseType: 'blob',
-      }
-    );
+    const response = await apiClient.get('/inventario/items/template/', {
+      responseType: 'blob',
+    });
 
     return response.data;
   },
