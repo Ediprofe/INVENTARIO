@@ -27,14 +27,17 @@ export const itemSchema = z.object({
   placa: z
     .string()
     .max(100, 'La placa no puede exceder 100 caracteres')
+    .transform(val => val === '' ? undefined : val)
     .optional(),
   marca: z
     .string()
     .max(100, 'La marca no puede exceder 100 caracteres')
+    .transform(val => val === '' ? undefined : val)
     .optional(),
   serial: z
     .string()
     .max(100, 'El serial no puede exceder 100 caracteres')
+    .transform(val => val === '' ? undefined : val)
     .optional(),
   estado: z.enum(['bueno', 'regular', 'malo'], {
     message: 'El estado físico es requerido',
@@ -42,8 +45,16 @@ export const itemSchema = z.object({
   disponibilidad: z.enum(['en_uso', 'en_reparacion', 'extraviado', 'de_baja'], {
     message: 'La disponibilidad es requerida',
   }),
-  descripcion: z.string().max(500, 'La descripción no puede exceder 500 caracteres').optional(),
-  observaciones: z.string().max(1000, 'Las observaciones no pueden exceder 1000 caracteres').optional(),
+  descripcion: z
+    .string()
+    .max(500, 'La descripción no puede exceder 500 caracteres')
+    .transform(val => val === '' ? undefined : val)
+    .optional(),
+  observaciones: z
+    .string()
+    .max(1000, 'Las observaciones no pueden exceder 1000 caracteres')
+    .transform(val => val === '' ? undefined : val)
+    .optional(),
 });
 
 export type ItemFormData = z.infer<typeof itemSchema>;

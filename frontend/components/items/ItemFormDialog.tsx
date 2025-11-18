@@ -96,15 +96,23 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
 
   const onSubmit = async (data: ItemFormData) => {
     try {
+      console.log('Enviando datos:', data); // Debug
       if (isEditing && itemId) {
         await updateMutation.mutateAsync({ id: itemId, data });
       } else {
         await createMutation.mutateAsync(data);
       }
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error al guardar ítem:', err);
-      alert('Error al guardar el ítem');
+      console.error('Detalle del error:', err.response?.data); // Mostrar detalles del backend
+
+      // Mostrar errores de validación específicos
+      const errorMsg = err.response?.data
+        ? JSON.stringify(err.response.data, null, 2)
+        : 'Error desconocido al guardar el ítem';
+
+      alert(`Error al guardar el ítem:\n\n${errorMsg}`);
     }
   };
 
