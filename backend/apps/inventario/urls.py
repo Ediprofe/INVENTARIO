@@ -24,9 +24,10 @@ router.register(r'articulos', ArticuloViewSet, basename='articulos')
 router.register(r'items', ItemInventarioViewSet, basename='items')
 
 urlpatterns = [
+    # Excel import/export (antes del router para evitar conflictos)
+    path('excel/import/', import_items_excel, name='items-import'),
+    path('excel/export/', export_items_excel, name='items-export'),
+    path('excel/template/', download_template, name='items-template'),
+    # Router de ViewSets
     path('', include(router.urls)),
-    # Excel import/export
-    path('items/import/', import_items_excel, name='items-import'),
-    path('items/export/', export_items_excel, name='items-export'),
-    path('items/template/', download_template, name='items-template'),
 ]

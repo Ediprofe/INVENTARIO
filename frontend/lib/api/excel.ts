@@ -26,7 +26,7 @@ export const ExcelAPI = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post('/inventario/items/import/', formData, {
+    const response = await apiClient.post('/inventario/excel/import/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -39,7 +39,7 @@ export const ExcelAPI = {
    * Exportar ítems a Excel.
    */
   exportItems: async (filters?: Record<string, unknown>): Promise<Blob> => {
-    const response = await apiClient.get('/inventario/items/export/', {
+    const response = await apiClient.get('/inventario/excel/export/', {
       params: filters,
       responseType: 'blob',
     });
@@ -51,7 +51,7 @@ export const ExcelAPI = {
    * Descargar plantilla de importación.
    */
   downloadTemplate: async (): Promise<Blob> => {
-    const response = await apiClient.get('/inventario/items/template/', {
+    const response = await apiClient.get('/inventario/excel/template/', {
       responseType: 'blob',
     });
 
