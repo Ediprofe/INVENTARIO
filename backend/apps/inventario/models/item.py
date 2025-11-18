@@ -247,6 +247,13 @@ class ItemInventario(TimeStampedModel):
             })
 
     def save(self, *args, **kwargs):
+        # Auto-generar código si no existe (CLAUDE.md - código autogenerado)
+        if not self.codigo:
+            # Obtener el último ítem para generar código secuencial
+            ultimo = ItemInventario.objects.order_by('-id').first()
+            siguiente_num = (ultimo.id + 1) if ultimo else 1
+            self.codigo = f'INV-{siguiente_num:06d}'
+
         # Auto-asignar sede desde ubicación
         if self.ubicacion and not self.sede_id:
             self.sede = self.ubicacion.sede
