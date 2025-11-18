@@ -8,7 +8,10 @@ from .views import (
     UbicacionViewSet,
     ResponsableViewSet,
     ArticuloViewSet,
-    ItemInventarioViewSet
+    ItemInventarioViewSet,
+    import_items_excel,
+    export_items_excel,
+    download_template,
 )
 
 app_name = 'inventario'
@@ -22,4 +25,8 @@ router.register(r'items', ItemInventarioViewSet, basename='items')
 
 urlpatterns = [
     path('', include(router.urls)),
+    # Excel import/export
+    path('items/import/', import_items_excel, name='items-import'),
+    path('items/export/', export_items_excel, name='items-export'),
+    path('items/template/', download_template, name='items-template'),
 ]

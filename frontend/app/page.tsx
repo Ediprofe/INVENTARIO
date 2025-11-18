@@ -1,31 +1,45 @@
 'use client';
 
 import { useState } from 'react';
-import { ItemsTable, ItemFormDialog } from '@/components/items';
+import { ItemsTable, ItemFormDialog, ImportDialog } from '@/components/items';
 
 export default function Home() {
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
   const handleCreateClick = () => {
     setSelectedItemId(null);
-    setDialogOpen(true);
+    setFormDialogOpen(true);
   };
 
   const handleEditClick = (itemId: number) => {
     setSelectedItemId(itemId);
-    setDialogOpen(true);
+    setFormDialogOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setDialogOpen(false);
+  const handleImportClick = () => {
+    setImportDialogOpen(true);
+  };
+
+  const handleFormDialogClose = () => {
+    setFormDialogOpen(false);
     setSelectedItemId(null);
+  };
+
+  const handleImportDialogClose = () => {
+    setImportDialogOpen(false);
   };
 
   return (
     <>
-      <ItemsTable onCreateClick={handleCreateClick} onEditClick={handleEditClick} />
-      <ItemFormDialog open={dialogOpen} onClose={handleDialogClose} itemId={selectedItemId} />
+      <ItemsTable
+        onCreateClick={handleCreateClick}
+        onEditClick={handleEditClick}
+        onImportClick={handleImportClick}
+      />
+      <ItemFormDialog open={formDialogOpen} onClose={handleFormDialogClose} itemId={selectedItemId} />
+      <ImportDialog open={importDialogOpen} onClose={handleImportDialogClose} />
     </>
   );
 }

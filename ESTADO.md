@@ -7,9 +7,9 @@
 
 ## 🎯 Fase Actual
 
-### Fase 3: Frontend MVP - 100% ✅
+### Fase 4: Import/Export Excel - 100% ✅
 
-**Estado:** ✅ COMPLETADO - Frontend completo con autenticación, tabla de ítems y CRUD
+**Estado:** ✅ COMPLETADO - Importación y exportación de Excel funcionando completamente
 
 ### ✅ Completado
 1. ✅ Estructura backend completa
@@ -37,8 +37,8 @@
 | **1** | Modelos + Auth | 3-4 días | ✅ Completado | 100% |
 | **2** | API + Serializers | 3-4 días | ✅ Completado | 100% |
 | **3** | Frontend MVP | 5-6 días | ✅ Completado | 100% |
-| **4** | Import/Export | 3-4 días | ⏳ Siguiente | 0% |
-| **5** | Batch Edit ⭐ | 3-4 días | ⏹️ Pendiente | 0% |
+| **4** | Import/Export | 3-4 días | ✅ Completado | 100% |
+| **5** | Batch Edit ⭐ | 3-4 días | ⏳ Siguiente | 0% |
 | **6** | Testing + Polish | 2-3 días | ⏹️ Pendiente | 0% |
 | **7** | Docker + Deploy | 2-3 días | ⏹️ Pendiente | 0% |
 
@@ -175,25 +175,66 @@
 - ✅ TypeScript type-check exitoso
 - ✅ Frontend build exitoso (Next.js 16)
 
+### Fase 4 - Import/Export Excel (2025-11-17)
+
+**Backend:**
+- ✅ Instaladas dependencias: openpyxl 3.1.5, pandas 2.3.3
+- ✅ Vista `import_items_excel` para importación con validación
+- ✅ Vista `export_items_excel` para exportación con filtros
+- ✅ Vista `download_template` para plantilla de importación
+- ✅ Validación de columnas requeridas
+- ✅ Validación de relaciones (artículo, ubicación, responsable)
+- ✅ Manejo de errores por fila con detalle
+- ✅ Transacciones atómicas para importación
+
+**Frontend:**
+- ✅ `ExcelAPI` client con importItems, exportItems, downloadTemplate
+- ✅ Hooks: useImportItems, useExportItems, useDownloadTemplate
+- ✅ `ImportDialog` componente con upload de archivos
+- ✅ Mostrar resultados de importación (creados y errores)
+- ✅ Botones en ItemsTable: Plantilla, Importar, Exportar
+- ✅ Download automático de archivos Excel
+- ✅ Estados de loading durante import/export
+
+**Funcionalidades:**
+- ✅ Importar ítems desde Excel (.xlsx, .xls)
+- ✅ Exportar ítems a Excel con filtros aplicados
+- ✅ Descargar plantilla de importación con ejemplo
+- ✅ Validación exhaustiva de datos importados
+- ✅ Reporte detallado de errores por fila
+- ✅ Formato Excel profesional con estilos y colores
+- ✅ Columnas auto-ajustadas en exportación
+
+**Endpoints:**
+```
+POST /api/v1/inventario/items/import/
+GET  /api/v1/inventario/items/export/
+POST /api/v1/inventario/items/template/
+```
+
+**Build:**
+- ✅ Django check exitoso (0 errores)
+- ✅ TypeScript type-check exitoso
+- ✅ Frontend build exitoso
+
 ---
 
 ## 🚀 Siguiente Tarea
 
-**Iniciar Fase 4 - Import/Export Excel:**
+**Iniciar Fase 5 - Edición Masiva (Batch Edit) ⭐ PRIORIDAD ALTA:**
 
 1. **Backend:**
-   - Endpoint para importar Excel (pandas/openpyxl)
-   - Endpoint para exportar Excel
-   - Validación de datos importados
-   - Manejo de errores y reportes
+   - Endpoint para batch update de ítems
+   - Validación de operaciones masivas
+   - Optimización de queries para grandes volúmenes
 
 2. **Frontend:**
-   - Componente de importación con drag-and-drop
-   - Botón de exportación en ItemsTable
-   - Preview de datos antes de importar
-   - Feedback de progreso
+   - Selección múltiple en ItemsTable
+   - Dialog de edición masiva
+   - Preview de cambios antes de aplicar
+   - Progress bar para operaciones grandes
 
-**Ver guía detallada:** [`docs/fases/fases-1-7.md`](docs/fases/fases-1-7.md#fase-4-importexport-excel)
+**Ver guía detallada:** [`docs/features/batch-edit.md`](docs/features/batch-edit.md)
 
 ---
 

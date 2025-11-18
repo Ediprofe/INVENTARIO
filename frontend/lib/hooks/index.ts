@@ -3,3 +3,4 @@
  */
 export * from './useItems';
 export * from './useCatalogos';
+export * from './useExcel';

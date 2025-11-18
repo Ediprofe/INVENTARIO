@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useItems, useDeleteItem } from '@/lib/hooks';
+import { useItems, useDeleteItem, useExportItems, useDownloadTemplate } from '@/lib/hooks';
 import { useSedes, useUbicaciones } from '@/lib/hooks/useCatalogos';
 import type { IItemFilters, EstadoItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -30,9 +30,10 @@ const ESTADOS: Array<{ value: EstadoItem; label: string }> = [
 interface ItemsTableProps {
   onCreateClick?: () => void;
   onEditClick?: (itemId: number) => void;
+  onImportClick?: () => void;
 }
 
-export function ItemsTable({ onCreateClick, onEditClick }: ItemsTableProps) {
+export function ItemsTable({ onCreateClick, onEditClick, onImportClick }: ItemsTableProps) {
   // Filtros state
   const [filters, setFilters] = useState<IItemFilters>({
     page: 1,
@@ -45,6 +46,29 @@ export function ItemsTable({ onCreateClick, onEditClick }: ItemsTableProps) {
   const { data: sedesData } = useSedes();
   const { data: ubicacionesData } = useUbicaciones();
   const deleteMutation = useDeleteItem();
+
+  // Excel mutations
+  const exportMutation = useExportItems();
+  const templateMutation = useDownloadTemplate();
+
+  // Excel handlers
+  const handleExport = async () => {
+    try {
+      await exportMutation.mutateAsync(filters as Record<string, unknown>);
+    } catch (err) {
+      console.error('Error al exportar:', err);
+      alert('Error al exportar ítems');
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      await templateMutation.mutateAsync();
+    } catch (err) {
+      console.error('Error al descargar plantilla:', err);
+      alert('Error al descargar plantilla');
+    }
+  };
 
   // Handlers
   const handleFilterChange = (key: keyof IItemFilters, value: unknown) => {
@@ -84,7 +108,18 @@ export function ItemsTable({ onCreateClick, onEditClick }: ItemsTableProps) {
               {data && `${data.count} ítems en total`}
             </CardDescription>
           </div>
-          <Button onClick={onCreateClick}>Crear Ítem</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleDownloadTemplate} disabled={templateMutation.isPending}>
+              {templateMutation.isPending ? 'Descargando...' : 'Plantilla'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={onImportClick}>
+              Importar
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExport} disabled={exportMutation.isPending}>
+              {exportMutation.isPending ? 'Exportando...' : 'Exportar'}
+            </Button>
+            <Button onClick={onCreateClick}>Crear Ítem</Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

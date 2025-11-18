@@ -9,6 +9,11 @@ from .catalogos import (
     ArticuloViewSet,
 )
 from .item import ItemInventarioViewSet
+from .excel_views import (
+    import_items_excel,
+    export_items_excel,
+    download_template,
+)
 
 __all__ = [
     'SedeViewSet',
@@ -16,4 +21,7 @@ __all__ = [
     'ResponsableViewSet',
     'ArticuloViewSet',
     'ItemInventarioViewSet',
+    'import_items_excel',
+    'export_items_excel',
+    'download_template',
 ]
