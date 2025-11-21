@@ -23,7 +23,7 @@ const DISPONIBILIDADES: Array<{ value: Disponibilidad; label: string }> = [
   { value: 'de_baja', label: 'De baja' },
 ];
 
-interface BatchEditRow {
+export interface BatchEditRow {
   id?: number; // undefined para nuevos ítems
   selected: boolean;
   codigo?: string;
@@ -32,6 +32,8 @@ interface BatchEditRow {
   serial: string;
   estado: EstadoFisico;
   disponibilidad: Disponibilidad;
+  ubicacion_id?: number;
+  responsable_id?: number | null;
   descripcion: string;
   observaciones: string;
 }
@@ -54,6 +56,8 @@ export function BatchEditSpreadsheet({
   responsables = [],
 }: BatchEditSpreadsheetProps) {
   const [selectedCount, setSelectedCount] = useState(0);
+  const [showResponsableDialog, setShowResponsableDialog] = useState(false);
+  const [pendingUbicacionId, setPendingUbicacionId] = useState<number | null>(null);
 
   const { control, handleSubmit, setValue, watch } = useForm<{ items: BatchEditRow[] }>({
     defaultValues: {
@@ -91,6 +95,41 @@ export function BatchEditSpreadsheet({
         setValue(`items.${index}.${field}` as any, value);
       }
     });
+  };
+
+  // Cambiar ubicación en lote (con lógica de responsable automático)
+  const handleBatchChangeUbicacion = (ubicacionId: number) => {
+    const ubicacion = ubicaciones.find((u) => u.id === ubicacionId);
+    
+    if (!ubicacion) return;
+
+    // Si la ubicación tiene responsable por defecto, preguntar
+    if (ubicacion.responsable) {
+      setPendingUbicacionId(ubicacionId);
+      setShowResponsableDialog(true);
+    } else {
+      // No hay responsable por defecto, solo cambiar ubicación
+      handleBatchUpdateField('ubicacion_id', ubicacionId);
+    }
+  };
+
+  // Confirmar uso del responsable por defecto de la ubicación
+  const handleConfirmResponsableDefecto = (useDefault: boolean) => {
+    if (pendingUbicacionId === null) return;
+
+    const ubicacion = ubicaciones.find((u) => u.id === pendingUbicacionId);
+    
+    // Cambiar ubicación a todos los seleccionados
+    handleBatchUpdateField('ubicacion_id', pendingUbicacionId);
+
+    // Si acepta usar el responsable por defecto
+    if (useDefault && ubicacion?.responsable) {
+      handleBatchUpdateField('responsable_id', ubicacion.responsable);
+    }
+
+    // Limpiar estado
+    setPendingUbicacionId(null);
+    setShowResponsableDialog(false);
   };
 
   const onSubmit = (data: { items: BatchEditRow[] }) => {
@@ -164,10 +203,81 @@ export function BatchEditSpreadsheet({
               </Select>
             </div>
 
-            {/* TODO: Agregar cambio de ubicación y responsable */}
+            {/* Cambiar ubicación */}
+            {ubicaciones.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Ubicación:</span>
+                <Select onValueChange={(value) => handleBatchChangeUbicacion(parseInt(value))}>
+                  <SelectTrigger className="h-8 w-48">
+                    <SelectValue placeholder="Cambiar..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ubicaciones.map((ubicacion) => {
+                      const sedeInfo = typeof ubicacion.sede === 'object' ? ubicacion.sede.nombre : '';
+                      return (
+                        <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
+                          {ubicacion.nombre} {sedeInfo && `- ${sedeInfo}`}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Cambiar responsable */}
+            {responsables.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Responsable:</span>
+                <Select
+                  onValueChange={(value) =>
+                    handleBatchUpdateField('responsable_id', value ? parseInt(value) : null)
+                  }
+                >
+                  <SelectTrigger className="h-8 w-48">
+                    <SelectValue placeholder="Cambiar..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {responsables.map((responsable) => {
+                      const sedeInfo = typeof responsable.sede === 'object' ? responsable.sede.codigo : '';
+                      return (
+                        <SelectItem key={responsable.id} value={responsable.id.toString()}>
+                          {responsable.nombre_completo} {sedeInfo && `(${sedeInfo})`}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Dialog para confirmar responsable por defecto */}
+      {showResponsableDialog && pendingUbicacionId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold mb-2">Cambiar Ubicación</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              ¿Deseas usar el responsable por defecto de la nueva ubicación para los ítems seleccionados?
+            </p>
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleConfirmResponsableDefecto(false)}
+              >
+                No, mantener actual
+              </Button>
+              <Button type="button" onClick={() => handleConfirmResponsableDefecto(true)}>
+                Sí, usar por defecto
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
 
       {/* Tabla tipo hoja de cálculo */}
       <div className="flex-1 overflow-auto">

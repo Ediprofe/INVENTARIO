@@ -2,24 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BatchEditSpreadsheet } from './BatchEditSpreadsheet';
+import { BatchEditSpreadsheet, type BatchEditRow } from './BatchEditSpreadsheet';
 import { useMultipleItems, useBulkUpdateItems } from '@/lib/hooks/useItems';
 import { useUbicaciones, useResponsables } from '@/lib/hooks/useCatalogos';
-import type { EstadoFisico, Disponibilidad, IItem, IItemUpdateData } from '@/types';
+import type { IItemUpdateData } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-interface BatchEditRow {
-  id?: number;
-  selected: boolean;
-  codigo?: string;
-  placa: string;
-  marca: string;
-  serial: string;
-  estado: EstadoFisico;
-  disponibilidad: Disponibilidad;
-  descripcion: string;
-  observaciones: string;
-}
 
 interface BatchEditSpreadsheetDialogProps {
   open: boolean;
@@ -59,6 +46,8 @@ export function BatchEditSpreadsheetDialog({
         serial: item.serial || '',
         estado: item.estado,
         disponibilidad: item.disponibilidad,
+        ubicacion_id: typeof item.ubicacion === 'object' ? item.ubicacion.id : item.ubicacion,
+        responsable_id: item.responsable ? (typeof item.responsable === 'object' ? item.responsable.id : item.responsable) : null,
         descripcion: item.descripcion || '',
         observaciones: item.observaciones || '',
       }));
@@ -79,6 +68,8 @@ export function BatchEditSpreadsheetDialog({
             serial: row.serial || undefined,
             estado: row.estado,
             disponibilidad: row.disponibilidad,
+            ubicacion_id: row.ubicacion_id,
+            responsable_id: row.responsable_id,
             descripcion: row.descripcion || undefined,
             observaciones: row.observaciones || undefined,
           } as IItemUpdateData,

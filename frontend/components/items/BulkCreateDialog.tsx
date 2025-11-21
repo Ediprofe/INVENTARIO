@@ -16,10 +16,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { BatchEditSpreadsheet } from './BatchEditSpreadsheet';
+import { BatchEditSpreadsheet, type BatchEditRow } from './BatchEditSpreadsheet';
 import { useArticulos, useUbicaciones, useSedes, useResponsables } from '@/lib/hooks/useCatalogos';
 import { useCreateItem } from '@/lib/hooks/useItems';
-import type { EstadoFisico, Disponibilidad, IItemCreateData } from '@/types';
+import type { IItemCreateData } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const bulkCreateSchema = z.object({
@@ -41,19 +41,6 @@ const bulkCreateSchema = z.object({
 });
 
 type BulkCreateFormData = z.infer<typeof bulkCreateSchema>;
-
-interface BatchEditRow {
-  id?: number;
-  selected: boolean;
-  codigo?: string;
-  placa: string;
-  marca: string;
-  serial: string;
-  estado: EstadoFisico;
-  disponibilidad: Disponibilidad;
-  descripcion: string;
-  observaciones: string;
-}
 
 interface BulkCreateDialogProps {
   open: boolean;
@@ -127,6 +114,10 @@ export function BulkCreateDialog({ open, onClose }: BulkCreateDialogProps) {
   const onConfigSubmit = (data: BulkCreateFormData) => {
     setConfig(data);
 
+    // Obtener el responsable por defecto de la ubicación seleccionada
+    const ubicacion = ubicacionesData?.results?.find((u) => u.id === data.ubicacion_id);
+    const responsable_id = ubicacion?.responsable || undefined;
+
     // Crear filas para el spreadsheet
     const newRows: BatchEditRow[] = Array.from({ length: data.cantidad }, (_, index) => ({
       selected: false,
@@ -136,6 +127,8 @@ export function BulkCreateDialog({ open, onClose }: BulkCreateDialogProps) {
       serial: '',
       estado: 'bueno',
       disponibilidad: 'en_uso',
+      ubicacion_id: data.ubicacion_id,
+      responsable_id: responsable_id,
       descripcion: '',
       observaciones: '',
     }));
@@ -150,20 +143,16 @@ export function BulkCreateDialog({ open, onClose }: BulkCreateDialogProps) {
     const createdItems: number[] = [];
     const errorItems: Array<{ index: number; error: string }> = [];
 
-    // Obtener el responsable por defecto de la ubicación seleccionada
-    // Según CLAUDE.md sección 8: "El responsable_id se asigna automáticamente 
-    // con el responsable de la ubicación elegida"
-    const ubicacion = ubicacionesData?.results?.find((u) => u.id === config.ubicacion_id);
-    const responsable_id = ubicacion?.responsable || undefined;
-
     // Crear cada ítem
+    // El ubicacion_id y responsable_id ya vienen en cada row, y pueden haber sido modificados
+    // en el spreadsheet usando las acciones en lote
     for (let i = 0; i < updatedRows.length; i++) {
       const row = updatedRows[i];
       try {
         const itemData: IItemCreateData = {
           articulo_id: config.articulo_id,
-          ubicacion_id: config.ubicacion_id,
-          responsable_id: responsable_id,
+          ubicacion_id: row.ubicacion_id || config.ubicacion_id,
+          responsable_id: row.responsable_id,
           placa: row.placa || undefined,
           marca: row.marca || undefined,
           serial: row.serial || undefined,
