@@ -127,7 +127,44 @@ class Articulo(TimeStampedModel):
     @property
     def total_items(self):
         """Cantidad total de ítems físicos de este artículo."""
-        from .choices import EstadoItem
+        from .choices import Disponibilidad
         return self.items_inventario.exclude(
-            estado=EstadoItem.DADO_BAJA
+            disponibilidad=Disponibilidad.DE_BAJA
         ).count()
+
+    @classmethod
+    def get_or_create_by_name(cls, nombre, categoria='otros', **extra_fields):
+        """
+        Busca o crea un artículo por nombre.
+        
+        Este método es utilizado en la importación Excel según INICIAL.md líneas 1166-1178.
+        Si el artículo no existe, se crea con el nombre y se genera el código automáticamente.
+        
+        Args:
+            nombre: Nombre del artículo (único)
+            categoria: Categoría del artículo (default: 'otros')
+            **extra_fields: Campos adicionales opcionales (descripcion, foto, etc.)
+        
+        Returns:
+            tuple: (articulo, created) - El artículo y un booleano indicando si fue creado
+        
+        Raises:
+            ValidationError: Si el nombre está vacío
+        """
+        if not nombre or not nombre.strip():
+            raise ValidationError("El nombre del artículo no puede estar vacío")
+        
+        nombre = nombre.strip()
+        
+        # Buscar por nombre (único)
+        try:
+            articulo = cls.objects.get(nombre__iexact=nombre)
+            return articulo, False
+        except cls.DoesNotExist:
+            # No existe, crear nuevo con código autogenerado
+            articulo = cls.objects.create(
+                nombre=nombre,
+                categoria=categoria,
+                **extra_fields
+            )
+            return articulo, True

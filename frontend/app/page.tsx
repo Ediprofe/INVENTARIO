@@ -5,8 +5,7 @@ import {
   ItemsTable, 
   ItemFormDialog, 
   ImportDialog, 
-  BatchEditDialog, 
-  BatchEditSpreadsheetDialog,
+  BatchEditDialog,
   BulkCreateDialog 
 } from '@/components/items';
 
@@ -14,7 +13,6 @@ export default function Home() {
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [batchEditDialogOpen, setBatchEditDialogOpen] = useState(false);
-  const [batchEditSpreadsheetDialogOpen, setBatchEditSpreadsheetDialogOpen] = useState(false);
   const [bulkCreateDialogOpen, setBulkCreateDialogOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
@@ -38,11 +36,6 @@ export default function Home() {
     setBatchEditDialogOpen(true);
   };
 
-  const handleBatchEditSpreadsheetClick = (selectedIds: number[]) => {
-    setSelectedItemIds(selectedIds);
-    setBatchEditSpreadsheetDialogOpen(true);
-  };
-
   const handleBulkCreateClick = () => {
     setBulkCreateDialogOpen(true);
   };
@@ -61,11 +54,6 @@ export default function Home() {
     setSelectedItemIds([]);
   };
 
-  const handleBatchEditSpreadsheetDialogClose = () => {
-    setBatchEditSpreadsheetDialogOpen(false);
-    setSelectedItemIds([]);
-  };
-
   const handleBulkCreateDialogClose = () => {
     setBulkCreateDialogOpen(false);
   };
@@ -77,7 +65,6 @@ export default function Home() {
         onEditClick={handleEditClick}
         onImportClick={handleImportClick}
         onBatchEditClick={handleBatchEditClick}
-        onBatchEditSpreadsheetClick={handleBatchEditSpreadsheetClick}
         onBulkCreateClick={handleBulkCreateClick}
       />
       
@@ -94,11 +81,6 @@ export default function Home() {
       <BatchEditDialog 
         open={batchEditDialogOpen} 
         onClose={handleBatchEditDialogClose} 
-        selectedIds={selectedItemIds} 
-      />
-      <BatchEditSpreadsheetDialog 
-        open={batchEditSpreadsheetDialogOpen} 
-        onClose={handleBatchEditSpreadsheetDialogClose} 
         selectedIds={selectedItemIds} 
       />
       <BulkCreateDialog 

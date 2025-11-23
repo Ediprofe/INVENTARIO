@@ -101,7 +101,7 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
               </Alert>
 
               {/* Created items */}
-              {importResult.created_items.length > 0 && (
+              {importResult.created_items && importResult.created_items.length > 0 && (
                 <div>
                   <h4 className="font-semibold mb-2">Ítems creados:</h4>
                   <div className="max-h-40 overflow-y-auto border rounded-md p-2">
@@ -117,7 +117,7 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
               )}
 
               {/* Errors */}
-              {importResult.error_details.length > 0 && (
+              {importResult.error_details && importResult.error_details.length > 0 && (
                 <div>
                   <h4 className="font-semibold mb-2 text-red-600">Errores encontrados:</h4>
                   <div className="max-h-60 overflow-y-auto border rounded-md p-2 bg-red-50">

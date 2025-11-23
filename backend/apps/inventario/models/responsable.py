@@ -149,7 +149,65 @@ class Responsable(TimeStampedModel):
     @property
     def items_a_cargo(self):
         """Cantidad de ítems activos asignados."""
-        from .choices import EstadoItem
+        from .choices import Disponibilidad
         return self.items_asignados.exclude(
-            estado=EstadoItem.DADO_BAJA
+            disponibilidad=Disponibilidad.DE_BAJA
         ).count()
+
+    @classmethod
+    def get_or_create_by_fullname(cls, nombre_completo, sede, **extra_fields):
+        """
+        Busca o crea un responsable por nombre completo y sede.
+        
+        Este método es utilizado en la importación Excel según INICIAL.md líneas 1147-1161.
+        Divide el nombre completo en nombre y apellido, y crea el responsable si no existe.
+        
+        Args:
+            nombre_completo: Nombre completo del responsable (ej: "Juan Pérez")
+            sede: Instancia de Sede a la que pertenece
+            **extra_fields: Campos adicionales opcionales (email, telefono, cargo, etc.)
+        
+        Returns:
+            tuple: (responsable, created) - El responsable y un booleano indicando si fue creado
+        
+        Raises:
+            ValidationError: Si el nombre_completo está vacío o sede es None
+        """
+        if not nombre_completo or not nombre_completo.strip():
+            raise ValidationError("El nombre completo no puede estar vacío")
+        
+        if not sede:
+            raise ValidationError("La sede es obligatoria")
+        
+        nombre_completo = nombre_completo.strip()
+        
+        # Intentar buscar por nombre_completo exacto + sede
+        # Construir query dinámica buscando combinaciones de nombre/apellido
+        partes = nombre_completo.split()
+        
+        if len(partes) == 1:
+            # Solo un nombre, usarlo como nombre
+            nombre = partes[0]
+            apellido = ''
+        else:
+            # Asumir: primer palabra = nombre, resto = apellido
+            nombre = partes[0]
+            apellido = ' '.join(partes[1:])
+        
+        # Buscar existente con misma combinación nombre+apellido+sede
+        try:
+            responsable = cls.objects.get(
+                nombre__iexact=nombre,
+                apellido__iexact=apellido,
+                sede=sede
+            )
+            return responsable, False
+        except cls.DoesNotExist:
+            # No existe, crear nuevo
+            responsable = cls.objects.create(
+                nombre=nombre,
+                apellido=apellido,
+                sede=sede,
+                **extra_fields
+            )
+            return responsable, True

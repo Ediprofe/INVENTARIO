@@ -7,8 +7,6 @@ import type { EstadoFisico, Disponibilidad, IBatchUpdateItem, IBatchUpdateRespon
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
@@ -39,6 +37,16 @@ interface BatchEditDialogProps {
   selectedIds: number[];
 }
 
+/**
+ * Diálogo de edición masiva simplificado.
+ * 
+ * Solo permite actualizar:
+ * - Modo atómico (todo o nada)
+ * - Ubicación
+ * - Responsable
+ * - Estado Físico
+ * - Disponibilidad
+ */
 export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogProps) {
   // State for which fields to update
   const [updateFields, setUpdateFields] = useState({
@@ -46,11 +54,6 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
     responsable: false,
     estado: false,
     disponibilidad: false,
-    placa: false,
-    marca: false,
-    serial: false,
-    descripcion: false,
-    observaciones: false,
   });
 
   // State for field values
@@ -59,11 +62,6 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
     responsable_id: '',
     estado: '' as EstadoFisico | '',
     disponibilidad: '' as Disponibilidad | '',
-    placa: '',
-    marca: '',
-    serial: '',
-    descripcion: '',
-    observaciones: '',
   });
 
   // State for atomic mode
@@ -102,21 +100,6 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
       if (updateFields.disponibilidad && formData.disponibilidad) {
         item.disponibilidad = formData.disponibilidad as Disponibilidad;
       }
-      if (updateFields.placa) {
-        item.placa = formData.placa;
-      }
-      if (updateFields.marca) {
-        item.marca = formData.marca;
-      }
-      if (updateFields.serial) {
-        item.serial = formData.serial;
-      }
-      if (updateFields.descripcion) {
-        item.descripcion = formData.descripcion;
-      }
-      if (updateFields.observaciones) {
-        item.observaciones = formData.observaciones;
-      }
 
       return item;
     });
@@ -139,22 +122,12 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
       responsable: false,
       estado: false,
       disponibilidad: false,
-      placa: false,
-      marca: false,
-      serial: false,
-      descripcion: false,
-      observaciones: false,
     });
     setFormData({
       ubicacion_id: '',
       responsable_id: '',
       estado: '',
       disponibilidad: '',
-      placa: '',
-      marca: '',
-      serial: '',
-      descripcion: '',
-      observaciones: '',
     });
     setAtomicMode(false);
     setResult(null);
@@ -168,7 +141,7 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edición Masiva</DialogTitle>
+          <DialogTitle>Edición Rápida</DialogTitle>
           <DialogDescription>
             Actualizar {selectedIds.length} ítems seleccionados
           </DialogDescription>
@@ -177,14 +150,14 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
         {!result ? (
           <div className="space-y-6">
             {/* Atomic mode toggle */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
               <Checkbox
                 id="atomic"
                 checked={atomicMode}
                 onCheckedChange={(checked: boolean) => setAtomicMode(checked)}
               />
-              <Label htmlFor="atomic" className="text-sm font-normal">
-                Modo atómico (todo o nada - si alguno falla, no se actualiza ninguno)
+              <Label htmlFor="atomic" className="text-sm font-normal cursor-pointer">
+                <span className="font-semibold">Modo atómico:</span> Si algún ítem falla, no se actualiza ninguno (todo o nada)
               </Label>
             </div>
 
@@ -196,7 +169,9 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                   checked={updateFields.ubicacion}
                   onCheckedChange={() => handleToggleField('ubicacion')}
                 />
-                <Label htmlFor="update-ubicacion">Actualizar Ubicación</Label>
+                <Label htmlFor="update-ubicacion" className="font-semibold">
+                  Actualizar Ubicación
+                </Label>
               </div>
               {updateFields.ubicacion && (
                 <Select
@@ -208,7 +183,7 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                   </SelectTrigger>
                   <SelectContent>
                     {ubicacionesData?.results.map((ubicacion) => {
-                      const sedeInfo = typeof ubicacion.sede === 'object' 
+                      const sedeInfo = typeof ubicacion.sede === 'object' && ubicacion.sede
                         ? ubicacion.sede.codigo 
                         : '';
                       return (
@@ -230,7 +205,9 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                   checked={updateFields.responsable}
                   onCheckedChange={() => handleToggleField('responsable')}
                 />
-                <Label htmlFor="update-responsable">Actualizar Responsable</Label>
+                <Label htmlFor="update-responsable" className="font-semibold">
+                  Actualizar Responsable
+                </Label>
               </div>
               {updateFields.responsable && (
                 <Select
@@ -242,7 +219,7 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                   </SelectTrigger>
                   <SelectContent>
                     {responsablesData?.results.map((responsable) => {
-                      const sedeInfo = typeof responsable.sede === 'object' 
+                      const sedeInfo = typeof responsable.sede === 'object' && responsable.sede
                         ? responsable.sede.codigo 
                         : '';
                       return (
@@ -264,7 +241,9 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                   checked={updateFields.estado}
                   onCheckedChange={() => handleToggleField('estado')}
                 />
-                <Label htmlFor="update-estado">Actualizar Estado Físico</Label>
+                <Label htmlFor="update-estado" className="font-semibold">
+                  Actualizar Estado Físico
+                </Label>
               </div>
               {updateFields.estado && (
                 <Select
@@ -293,7 +272,9 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                   checked={updateFields.disponibilidad}
                   onCheckedChange={() => handleToggleField('disponibilidad')}
                 />
-                <Label htmlFor="update-disponibilidad">Actualizar Disponibilidad</Label>
+                <Label htmlFor="update-disponibilidad" className="font-semibold">
+                  Actualizar Disponibilidad
+                </Label>
               </div>
               {updateFields.disponibilidad && (
                 <Select
@@ -311,106 +292,6 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                     ))}
                   </SelectContent>
                 </Select>
-              )}
-            </div>
-
-            {/* Placa field */}
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="update-placa"
-                  checked={updateFields.placa}
-                  onCheckedChange={() => handleToggleField('placa')}
-                />
-                <Label htmlFor="update-placa">Actualizar Placa</Label>
-              </div>
-              {updateFields.placa && (
-                <Input
-                  type="text"
-                  placeholder="PLA-001"
-                  value={formData.placa}
-                  onChange={(e) => handleFieldChange('placa', e.target.value)}
-                />
-              )}
-            </div>
-
-            {/* Marca field */}
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="update-marca"
-                  checked={updateFields.marca}
-                  onCheckedChange={() => handleToggleField('marca')}
-                />
-                <Label htmlFor="update-marca">Actualizar Marca</Label>
-              </div>
-              {updateFields.marca && (
-                <Input
-                  type="text"
-                  placeholder="HP, Dell, etc."
-                  value={formData.marca}
-                  onChange={(e) => handleFieldChange('marca', e.target.value)}
-                />
-              )}
-            </div>
-
-            {/* Serial field */}
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="update-serial"
-                  checked={updateFields.serial}
-                  onCheckedChange={() => handleToggleField('serial')}
-                />
-                <Label htmlFor="update-serial">Actualizar Serial</Label>
-              </div>
-              {updateFields.serial && (
-                <Input
-                  type="text"
-                  placeholder="SN123456"
-                  value={formData.serial}
-                  onChange={(e) => handleFieldChange('serial', e.target.value)}
-                />
-              )}
-            </div>
-
-            {/* Descripcion field */}
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="update-descripcion"
-                  checked={updateFields.descripcion}
-                  onCheckedChange={() => handleToggleField('descripcion')}
-                />
-                <Label htmlFor="update-descripcion">Actualizar Descripción</Label>
-              </div>
-              {updateFields.descripcion && (
-                <Textarea
-                  placeholder="Descripción"
-                  value={formData.descripcion}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('descripcion', e.target.value)}
-                  rows={3}
-                />
-              )}
-            </div>
-
-            {/* Observaciones field */}
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="update-observaciones"
-                  checked={updateFields.observaciones}
-                  onCheckedChange={() => handleToggleField('observaciones')}
-                />
-                <Label htmlFor="update-observaciones">Actualizar Observaciones</Label>
-              </div>
-              {updateFields.observaciones && (
-                <Textarea
-                  placeholder="Observaciones"
-                  value={formData.observaciones}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('observaciones', e.target.value)}
-                  rows={3}
-                />
               )}
             </div>
           </div>
