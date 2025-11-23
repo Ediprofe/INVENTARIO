@@ -66,3 +66,18 @@ class TipoDocumento(models.TextChoices):
     CE = 'ce', 'Cédula de Extranjería'
     PAS = 'pas', 'Pasaporte'
     NIT = 'nit', 'NIT'
+
+
+class CargoResponsable(models.TextChoices):
+    """
+    Cargos predeterminados para los responsables del inventario.
+    
+    Lista configurable según las necesidades de la institución educativa.
+    Incluye los cargos mencionados en CLAUDE.md línea 196.
+    """
+    DOCENTE = 'docente', 'Docente'
+    COORDINADOR = 'coordinador', 'Coordinador'
+    RECTOR = 'rector', 'Rector'
+    AUXILIAR_ADMINISTRATIVO = 'auxiliar_administrativo', 'Auxiliar Administrativo'
+    OPERARIO_SISTEMA = 'operario_sistema', 'Operario Sistema'
+    OTRO = 'otro', 'Otro'

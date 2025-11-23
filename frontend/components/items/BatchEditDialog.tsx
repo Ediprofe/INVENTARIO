@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useBatchUpdateItems } from '@/lib/hooks/useItems';
-import { useUbicaciones, useResponsables } from '@/lib/hooks/useCatalogos';
+import { useUbicaciones, useResponsables, useSedes } from '@/lib/hooks/useCatalogos';
 import type { EstadoFisico, Disponibilidad, IBatchUpdateItem, IBatchUpdateResponse } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -64,6 +64,10 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
     disponibilidad: '' as Disponibilidad | '',
   });
 
+  // State for sede selection (used when changing ubicacion)
+  const [selectedSedeId, setSelectedSedeId] = useState<string>('');
+  const [changeSede, setChangeSede] = useState(false);
+
   // State for atomic mode
   const [atomicMode, setAtomicMode] = useState(false);
 
@@ -71,12 +75,31 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
   const [result, setResult] = useState<IBatchUpdateResponse | null>(null);
 
   // Queries
-  const { data: ubicacionesData } = useUbicaciones({ page_size: 1000 });
-  const { data: responsablesData } = useResponsables({ page_size: 1000 });
+  const { data: sedesData } = useSedes({ activo: true, page_size: 1000 });
+  const { data: ubicacionesData } = useUbicaciones({ page_size: 1000, activo: true });
+  const { data: responsablesData } = useResponsables({ page_size: 1000, activo: true });
   const batchUpdateMutation = useBatchUpdateItems();
+
+  // Filter ubicaciones by selected sede
+  const filteredUbicaciones = useMemo(() => {
+    if (!ubicacionesData?.results) return [];
+    if (!selectedSedeId) return ubicacionesData.results;
+    
+    return ubicacionesData.results.filter((ubicacion) => {
+      const sedeId = typeof ubicacion.sede === 'object' ? ubicacion.sede.id : ubicacion.sede;
+      return sedeId.toString() === selectedSedeId;
+    });
+  }, [ubicacionesData, selectedSedeId]);
 
   const handleToggleField = (field: keyof typeof updateFields) => {
     setUpdateFields((prev) => ({ ...prev, [field]: !prev[field] }));
+    
+    // Reset sede selection when unchecking ubicacion
+    if (field === 'ubicacion' && updateFields.ubicacion) {
+      setSelectedSedeId('');
+      setChangeSede(false);
+      setFormData((prev) => ({ ...prev, ubicacion_id: '' }));
+    }
   };
 
   const handleFieldChange = (field: keyof typeof formData, value: string) => {
@@ -129,6 +152,8 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
       estado: '',
       disponibilidad: '',
     });
+    setSelectedSedeId('');
+    setChangeSede(false);
     setAtomicMode(false);
     setResult(null);
     onClose();
@@ -174,26 +199,101 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                 </Label>
               </div>
               {updateFields.ubicacion && (
-                <Select
-                  value={formData.ubicacion_id}
-                  onValueChange={(value) => handleFieldChange('ubicacion_id', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar ubicación" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ubicacionesData?.results.map((ubicacion) => {
-                      const sedeInfo = typeof ubicacion.sede === 'object' && ubicacion.sede
-                        ? ubicacion.sede.codigo 
-                        : '';
-                      return (
-                        <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                          {ubicacion.nombre} {sedeInfo && `(${sedeInfo})`}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-3 pl-6 border-l-2 border-blue-200">
+                  {/* Pregunta sobre cambio de sede */}
+                  <div className="space-y-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-md">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="change-sede"
+                        checked={changeSede}
+                        onCheckedChange={(checked: boolean) => {
+                          setChangeSede(checked);
+                          if (!checked) {
+                            setSelectedSedeId('');
+                            setFormData((prev) => ({ ...prev, ubicacion_id: '' }));
+                          }
+                        }}
+                      />
+                      <Label htmlFor="change-sede" className="text-sm font-semibold cursor-pointer">
+                        ¿Esta actualización implica cambio de sede?
+                      </Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground pl-6">
+                      Si marca esta opción, podrá elegir ubicaciones de otra sede. 
+                      Si no la marca, solo verá ubicaciones de la sede actual de los ítems.
+                    </p>
+                  </div>
+
+                  {/* Sede selector - solo si se quiere cambiar de sede */}
+                  {changeSede && (
+                    <div className="space-y-2">
+                      <Label className="text-sm">
+                        <span className="font-semibold">Paso 1:</span> Seleccionar Nueva Sede {selectedSedeId && '✓'}
+                      </Label>
+                      <Select
+                        value={selectedSedeId}
+                        onValueChange={(value) => {
+                          setSelectedSedeId(value);
+                          setFormData((prev) => ({ ...prev, ubicacion_id: '' }));
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar sede destino" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sedesData?.results.map((sede) => (
+                            <SelectItem key={sede.id} value={sede.id.toString()}>
+                              {sede.nombre} ({sede.codigo})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Ubicacion selector */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">
+                      <span className="font-semibold">{changeSede ? 'Paso 2:' : 'Seleccionar'}</span> Ubicación
+                      {filteredUbicaciones.length > 0 && ` (${filteredUbicaciones.length} disponibles)`}
+                    </Label>
+                    <Select
+                      value={formData.ubicacion_id}
+                      onValueChange={(value) => handleFieldChange('ubicacion_id', value)}
+                      disabled={changeSede && !selectedSedeId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={
+                          changeSede && !selectedSedeId 
+                            ? "Primero seleccione una sede" 
+                            : "Seleccionar ubicación"
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredUbicaciones.length === 0 ? (
+                          <div className="py-2 px-4 text-sm text-gray-500">
+                            {changeSede && selectedSedeId 
+                              ? 'No hay ubicaciones en esta sede' 
+                              : changeSede 
+                                ? 'Seleccione primero una sede'
+                                : 'No hay ubicaciones disponibles'}
+                          </div>
+                        ) : (
+                          filteredUbicaciones.map((ubicacion) => {
+                            const sedeInfo = typeof ubicacion.sede === 'object' && ubicacion.sede
+                              ? ubicacion.sede.codigo 
+                              : '';
+                            return (
+                              <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
+                                {ubicacion.nombre} {sedeInfo && `(${sedeInfo})`}
+                              </SelectItem>
+                            );
+                          })
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               )}
             </div>
 

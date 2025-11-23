@@ -39,11 +39,13 @@ export function useResponsableStats(
 
 /**
  * Hook para obtener estadísticas por artículo (matriz de sedes).
+ * 
+ * @param filters - Filtros opcionales (disponibilidad, estado)
  */
-export function useArticuloStats() {
+export function useArticuloStats(filters?: { disponibilidad?: string; estado?: string }) {
   return useQuery<IArticulosStatsResponse>({
-    queryKey: ['stats', 'articulo'],
-    queryFn: () => StatsAPI.porArticulo(),
+    queryKey: ['stats', 'articulo', filters],
+    queryFn: () => StatsAPI.porArticulo(filters),
   });
 }
 

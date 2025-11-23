@@ -9,8 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BatchEditDialog, ItemFormDialog } from '@/components/items';
+import { BatchEditDialog, ItemFormDialog, FloatingBatchEditButton } from '@/components/items';
 import type { EstadoFisico, Disponibilidad } from '@/types';
 
 const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
@@ -33,7 +39,7 @@ export default function InventarioPorResponsables() {
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
-  // Filtros
+  // Filtros - con disponibilidad "en_uso" por defecto según CLAUDE.md línea 203
   const [searchTerm, setSearchTerm] = useState('');
   const [placaFilter, setPlacaFilter] = useState('');
   const [serialFilter, setSerialFilter] = useState('');
@@ -41,7 +47,7 @@ export default function InventarioPorResponsables() {
   const [ubicacionFilter, setUbicacionFilter] = useState<number | undefined>();
   const [sedeFilter, setSedeFilter] = useState<number | undefined>();
   const [estadoFilter, setEstadoFilter] = useState<EstadoFisico | undefined>();
-  const [disponibilidadFilter, setDisponibilidadFilter] = useState<Disponibilidad | undefined>();
+  const [disponibilidadFilter, setDisponibilidadFilter] = useState<Disponibilidad | undefined>('en_uso');
 
   // Queries
   const { data: responsablesData } = useResponsables();
@@ -186,9 +192,9 @@ export default function InventarioPorResponsables() {
                   <CardDescription>Totalizado por artículo y ubicación</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
+                  <div className="rounded-md border overflow-x-auto">
+                    <Table className="w-full table-fixed">
+                      <TableHeader className="sticky top-0 z-20 bg-white shadow-sm">
                         <TableRow>
                           <TableHead>Artículo</TableHead>
                           <TableHead>Ubicación</TableHead>
@@ -368,42 +374,34 @@ export default function InventarioPorResponsables() {
 
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Inventario Detallado</CardTitle>
-                      <CardDescription>
-                        Mostrando {filteredItems.length} de {stats.detalle.count} ítems
-                      </CardDescription>
-                    </div>
-                    {selectedIds.length > 0 && (
-                      <Button variant="default" size="sm" onClick={handleBatchEditClick}>
-                        Editar Rápido ({selectedIds.length})
-                      </Button>
-                    )}
-                  </div>
+                  <CardTitle>Inventario Detallado</CardTitle>
+                  <CardDescription>
+                    Mostrando {filteredItems.length} de {stats.detalle.count} ítems
+                    {selectedIds.length > 0 && ` • ${selectedIds.length} seleccionados`}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
+                  <div className="rounded-md border overflow-x-auto">
+                    <Table className="w-full table-fixed">
+                      <TableHeader className="sticky top-0 z-20 bg-white shadow-sm">
                         <TableRow>
-                          <TableHead className="w-12">
+                          <TableHead className="w-[3%]">
                             <Checkbox
                               checked={allSelected}
                               onCheckedChange={handleSelectAll}
                               aria-label="Seleccionar todos"
                             />
                           </TableHead>
-                          <TableHead>Artículo</TableHead>
-                          <TableHead>Placa</TableHead>
-                          <TableHead>Ubicación</TableHead>
-                          <TableHead>Código Ubicación</TableHead>
-                          <TableHead>Sede</TableHead>
-                          <TableHead>Estado</TableHead>
-                          <TableHead>Marca</TableHead>
-                          <TableHead>Serial</TableHead>
-                          <TableHead>Disponibilidad</TableHead>
-                          <TableHead className="text-right">Acciones</TableHead>
+                          <TableHead className="w-[13%]">Artículo</TableHead>
+                          <TableHead className="w-[8%]">Placa</TableHead>
+                          <TableHead className="w-[12%]">Ubicación</TableHead>
+                          <TableHead className="w-[10%]">Código Ubicación</TableHead>
+                          <TableHead className="w-[8%]">Sede</TableHead>
+                          <TableHead className="w-[8%]">Estado</TableHead>
+                          <TableHead className="w-[8%]">Marca</TableHead>
+                          <TableHead className="w-[12%]">Serial</TableHead>
+                          <TableHead className="w-[10%]">Disponibilidad</TableHead>
+                          <TableHead className="w-[5%] text-right">Acciones</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -423,14 +421,24 @@ export default function InventarioPorResponsables() {
                                   aria-label={`Seleccionar ${item.codigo}`}
                                 />
                               </TableCell>
-                              <TableCell className="font-medium">{item.articulo_nombre}</TableCell>
-                              <TableCell>{item.placa || '-'}</TableCell>
-                              <TableCell>{item.ubicacion_nombre}</TableCell>
-                              <TableCell className="font-mono text-xs">{item.ubicacion_codigo}</TableCell>
-                              <TableCell>{item.sede_nombre}</TableCell>
+                              <TableCell className="font-medium">
+                                <div className="line-clamp-2 break-words text-sm">{item.articulo_nombre}</div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="line-clamp-2 break-words text-sm">{item.placa || '-'}</div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="line-clamp-2 break-words text-sm">{item.ubicacion_nombre}</div>
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">
+                                <div className="line-clamp-2 break-all">{item.ubicacion_codigo}</div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="line-clamp-2 break-words text-sm">{item.sede_nombre}</div>
+                              </TableCell>
                               <TableCell>
                                 <span
-                                  className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                                  className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold whitespace-nowrap ${
                                     item.estado === 'bueno'
                                       ? 'bg-green-100 text-green-800'
                                       : item.estado === 'regular'
@@ -441,8 +449,12 @@ export default function InventarioPorResponsables() {
                                   {item.estado === 'bueno' ? 'Bueno' : item.estado === 'regular' ? 'Regular' : 'Malo'}
                                 </span>
                               </TableCell>
-                              <TableCell>{item.marca || '-'}</TableCell>
-                              <TableCell>{item.serial || '-'}</TableCell>
+                              <TableCell>
+                                <div className="line-clamp-2 break-words text-sm">{item.marca || '-'}</div>
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                <div className="line-clamp-3 break-all leading-tight">{item.serial || '-'}</div>
+                              </TableCell>
                               <TableCell>
                                 <span
                                   className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
@@ -461,23 +473,40 @@ export default function InventarioPorResponsables() {
                                 </span>
                               </TableCell>
                               <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleEditClick(item.id)}
-                                  >
-                                    Editar
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleDelete(item.id, item.codigo)}
-                                    disabled={deleteMutation.isPending}
-                                  >
-                                    Eliminar
-                                  </Button>
-                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                      <span className="sr-only">Abrir menú</span>
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        <circle cx="12" cy="12" r="1" />
+                                        <circle cx="12" cy="5" r="1" />
+                                        <circle cx="12" cy="19" r="1" />
+                                      </svg>
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleEditClick(item.id)}>
+                                      Editar
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleDelete(item.id, item.codigo)}
+                                      disabled={deleteMutation.isPending}
+                                      className="text-red-600"
+                                    >
+                                      Eliminar
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </TableCell>
                             </TableRow>
                           ))
@@ -516,6 +545,12 @@ export default function InventarioPorResponsables() {
         open={batchEditDialogOpen} 
         onClose={handleBatchEditDialogClose} 
         selectedIds={selectedIds} 
+      />
+
+      {/* Botón flotante de edición rápida */}
+      <FloatingBatchEditButton
+        selectedCount={selectedIds.length}
+        onClick={handleBatchEditClick}
       />
     </>
   );

@@ -18,6 +18,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
   { value: 'bueno', label: 'Bueno' },
@@ -47,11 +53,12 @@ export function ItemsTable({
   onBatchEditClick,
   onBulkCreateClick 
 }: ItemsTableProps) {
-  // Filtros state
+  // Filtros state - con disponibilidad "en_uso" por defecto según CLAUDE.md línea 203
   const [filters, setFilters] = useState<IItemFilters>({
     page: 1,
     page_size: 50,
     ordering: '-created_at',
+    disponibilidad: 'en_uso',
   });
 
   // Selected items state
@@ -388,28 +395,28 @@ export function ItemsTable({
         {/* Table */}
         {!isLoading && !isError && data && (
           <>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
+            <div className="rounded-md border overflow-x-auto">
+              <Table className="w-full table-fixed">
+                <TableHeader className="sticky top-0 z-20 bg-white shadow-sm">
                   <TableRow>
-                    <TableHead className="w-12">
+                    <TableHead className="w-[3%]">
                       <Checkbox
                         checked={allSelected}
                         onCheckedChange={handleSelectAll}
                         aria-label="Seleccionar todos"
                       />
                     </TableHead>
-                    <TableHead>Artículo</TableHead>
-                    <TableHead>Placa</TableHead>
-                    <TableHead>Ubicación</TableHead>
-                    <TableHead>Código Ubicación</TableHead>
-                    <TableHead>Sede</TableHead>
-                    <TableHead>Responsable</TableHead>
-                    <TableHead>Marca</TableHead>
-                    <TableHead>Serial</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Disponibilidad</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead className="w-[12%]">Artículo</TableHead>
+                    <TableHead className="w-[8%]">Placa</TableHead>
+                    <TableHead className="w-[11%]">Ubicación</TableHead>
+                    <TableHead className="w-[9%]">Código Ubicación</TableHead>
+                    <TableHead className="w-[8%]">Sede</TableHead>
+                    <TableHead className="w-[11%]">Responsable</TableHead>
+                    <TableHead className="w-[8%]">Marca</TableHead>
+                    <TableHead className="w-[10%]">Serial</TableHead>
+                    <TableHead className="w-[8%]">Estado</TableHead>
+                    <TableHead className="w-[8%]">Disponibilidad</TableHead>
+                    <TableHead className="w-[4%] text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -429,14 +436,30 @@ export function ItemsTable({
                             aria-label={`Seleccionar ${item.codigo}`}
                           />
                         </TableCell>
-                        <TableCell className="font-medium">{item.articulo_nombre}</TableCell>
-                        <TableCell>{item.placa || '-'}</TableCell>
-                        <TableCell>{item.ubicacion_nombre}</TableCell>
-                        <TableCell className="font-mono text-xs">{item.ubicacion_codigo || '-'}</TableCell>
-                        <TableCell>{item.sede_nombre}</TableCell>
-                        <TableCell>{item.responsable_nombre}</TableCell>
-                        <TableCell>{item.marca || '-'}</TableCell>
-                        <TableCell>{item.serial || '-'}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="line-clamp-2 break-words text-sm">{item.articulo_nombre}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="line-clamp-2 break-words text-sm">{item.placa || '-'}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="line-clamp-2 break-words text-sm">{item.ubicacion_nombre}</div>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <div className="line-clamp-2 break-all">{item.ubicacion_codigo || '-'}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="line-clamp-2 break-words text-sm">{item.sede_nombre}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="line-clamp-2 break-words text-sm">{item.responsable_nombre}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="line-clamp-2 break-words text-sm">{item.marca || '-'}</div>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <div className="line-clamp-3 break-all leading-tight">{item.serial || '-'}</div>
+                        </TableCell>
                         <TableCell>
                           <span
                             className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
@@ -466,23 +489,40 @@ export function ItemsTable({
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => onEditClick?.(item.id)}
-                            >
-                              Editar
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDelete(item.id, item.codigo)}
-                              disabled={deleteMutation.isPending}
-                            >
-                              Eliminar
-                            </Button>
-                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <span className="sr-only">Abrir menú</span>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <circle cx="12" cy="12" r="1" />
+                                  <circle cx="12" cy="5" r="1" />
+                                  <circle cx="12" cy="19" r="1" />
+                                </svg>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => onEditClick?.(item.id)}>
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(item.id, item.codigo)}
+                                disabled={deleteMutation.isPending}
+                                className="text-red-600"
+                              >
+                                Eliminar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))

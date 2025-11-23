@@ -42,9 +42,11 @@ export const StatsAPI = {
 
   /**
    * Obtener estadísticas de inventario por artículo (matriz de sedes).
+   * 
+   * @param filters - Filtros opcionales (disponibilidad, estado)
    */
-  porArticulo: async (): Promise<IArticulosStatsResponse> => {
-    const response = await apiClient.get('/inventario/stats/por-articulo/');
+  porArticulo: async (filters?: { disponibilidad?: string; estado?: string }): Promise<IArticulosStatsResponse> => {
+    const response = await apiClient.get('/inventario/stats/por-articulo/', { params: filters });
     return response.data;
   },
 };

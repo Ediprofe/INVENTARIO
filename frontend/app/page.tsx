@@ -6,7 +6,8 @@ import {
   ItemFormDialog, 
   ImportDialog, 
   BatchEditDialog,
-  BulkCreateDialog 
+  BulkCreateDialog,
+  FloatingBatchEditButton
 } from '@/components/items';
 import { DashboardNav } from '@/components/dashboard';
 
@@ -89,6 +90,12 @@ export default function Home() {
       <BulkCreateDialog 
         open={bulkCreateDialogOpen} 
         onClose={handleBulkCreateDialogClose} 
+      />
+
+      {/* Botón flotante de edición rápida */}
+      <FloatingBatchEditButton
+        selectedCount={selectedItemIds.length}
+        onClick={() => setBatchEditDialogOpen(true)}
       />
     </>
   );

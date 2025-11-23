@@ -26,10 +26,10 @@ class SedeAdmin(admin.ModelAdmin):
 
 @admin.register(Responsable)
 class ResponsableAdmin(admin.ModelAdmin):
-    """Admin para Responsable."""
+    """Admin para Responsable con filtros de cargo."""
 
     list_display = ['nombre_completo', 'documento', 'cargo', 'sede', 'activo']
-    list_filter = ['activo', 'sede', 'created_at']
+    list_filter = ['activo', 'cargo', 'sede', 'created_at']
     search_fields = ['nombre', 'apellido', 'documento', 'email']
     ordering = ['apellido', 'nombre']
     readonly_fields = ['created_at', 'updated_at']

@@ -7,7 +7,7 @@ from django.db import models
 from django.core.validators import EmailValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from apps.core.models import TimeStampedModel
-from .choices import TipoDocumento
+from .choices import TipoDocumento, CargoResponsable
 
 
 class Responsable(TimeStampedModel):
@@ -47,7 +47,8 @@ class Responsable(TimeStampedModel):
     )
 
     cargo = models.CharField(
-        max_length=100,
+        max_length=50,
+        choices=CargoResponsable.choices,
         blank=True,
         verbose_name="Cargo",
         help_text="Cargo o rol en la institución"

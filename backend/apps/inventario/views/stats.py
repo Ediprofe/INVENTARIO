@@ -151,17 +151,32 @@ class InventarioStatsViewSet(viewsets.ViewSet):
         Retorna inventario por artículo en matriz de sedes:
         - sedes: lista de sedes (columnas)
         - articulos: lista de artículos con totales por sede (filas)
+        
+        Query params:
+        - disponibilidad: filtrar por disponibilidad (en_uso, en_reparacion, extraviado, de_baja)
+        - estado: filtrar por estado físico (bueno, regular, malo)
         """
+        # Obtener filtros desde query params
+        disponibilidad_filter = request.query_params.get('disponibilidad', None)
+        estado_filter = request.query_params.get('estado', None)
+        
         # Obtener todas las sedes activas
         sedes = Sede.objects.filter(activo=True).order_by('nombre')
         
-        # Obtener todos los artículos con items
+        # Base queryset para items con filtros aplicados
+        items_base_qs = ItemInventario.objects.all()
+        if disponibilidad_filter:
+            items_base_qs = items_base_qs.filter(disponibilidad=disponibilidad_filter)
+        if estado_filter:
+            items_base_qs = items_base_qs.filter(estado=estado_filter)
+        
+        # Obtener todos los artículos que tienen items (con filtros aplicados)
         articulos = Articulo.objects.filter(
             activo=True,
-            items_inventario__isnull=False
+            items_inventario__in=items_base_qs
         ).distinct().order_by('nombre')
 
-        # Construir matriz: artículo x sede
+        # Construir matriz: artículo x sede x estado físico
         matriz = []
         for articulo in articulos:
             fila = {
@@ -171,14 +186,27 @@ class InventarioStatsViewSet(viewsets.ViewSet):
                 'total_general': 0
             }
             
-            # Contar ítems por sede para este artículo
+            # Contar ítems por sede para este artículo (con filtros aplicados)
+            # Desglosado por estado físico
             for sede in sedes:
-                count = ItemInventario.objects.filter(
+                queryset = items_base_qs.filter(
                     articulo=articulo,
                     sede=sede
-                ).count()
-                fila['totales_por_sede'][sede.codigo] = count
-                fila['total_general'] += count
+                )
+                
+                # Contar por estado físico
+                total_bueno = queryset.filter(estado='bueno').count()
+                total_regular = queryset.filter(estado='regular').count()
+                total_malo = queryset.filter(estado='malo').count()
+                total_sede = total_bueno + total_regular + total_malo
+                
+                fila['totales_por_sede'][sede.codigo] = {
+                    'bueno': total_bueno,
+                    'regular': total_regular,
+                    'malo': total_malo,
+                    'total': total_sede
+                }
+                fila['total_general'] += total_sede
             
             matriz.append(fila)
 
@@ -187,6 +215,10 @@ class InventarioStatsViewSet(viewsets.ViewSet):
                 {'id': s.id, 'nombre': s.nombre, 'codigo': s.codigo}
                 for s in sedes
             ],
-            'articulos': matriz
+            'articulos': matriz,
+            'filtros_aplicados': {
+                'disponibilidad': disponibilidad_filter,
+                'estado': estado_filter,
+            }
         }, status=status.HTTP_200_OK)
 
