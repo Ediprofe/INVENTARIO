@@ -14,6 +14,7 @@ from .excel_views import (
     export_items_excel,
     download_template,
 )
+from .stats import InventarioStatsViewSet
 
 __all__ = [
     'SedeViewSet',
@@ -24,4 +25,5 @@ __all__ = [
     'import_items_excel',
     'export_items_excel',
     'download_template',
+    'InventarioStatsViewSet',
 ]

@@ -8,6 +8,7 @@ import {
   BatchEditDialog,
   BulkCreateDialog 
 } from '@/components/items';
+import { DashboardNav } from '@/components/dashboard';
 
 export default function Home() {
   const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -60,6 +61,8 @@ export default function Home() {
 
   return (
     <>
+      <DashboardNav />
+      
       <ItemsTable
         onCreateClick={handleCreateClick}
         onEditClick={handleEditClick}

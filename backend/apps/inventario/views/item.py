@@ -34,7 +34,7 @@ class ItemInventarioViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ItemInventarioFilter
-    search_fields = ['codigo', 'articulo__nombre', 'ubicacion__nombre', 'descripcion']
+    search_fields = ['placa', 'articulo__nombre', 'serial']
     ordering_fields = ['codigo', 'created_at', 'valor_unitario', 'estado']
     ordering = ['-created_at']
 
@@ -71,9 +71,30 @@ class ItemInventarioViewSet(viewsets.ModelViewSet):
             serializer.save()
 
     def perform_destroy(self, instance):
-        """Soft delete: cambiar estado a dado_baja."""
-        instance.estado = 'dado_baja'
+        """
+        Soft delete: cambiar disponibilidad a 'de_baja' y registrar en historial.
+        
+        No se elimina físicamente el ítem para mantener trazabilidad.
+        """
+        # Guardar datos anteriores para historial
+        datos_anteriores = {
+            'disponibilidad': instance.get_disponibilidad_display(),
+            'estado': instance.get_estado_display()
+        }
+        
+        # Cambiar disponibilidad a 'de_baja' (soft delete)
+        instance.disponibilidad = 'de_baja'
         instance.save()
+        
+        # Registrar en historial
+        HistorialMovimiento.objects.create(
+            item=instance,
+            tipo_movimiento='eliminacion',
+            usuario=self.request.user if hasattr(self, 'request') else None,
+            datos_anteriores=datos_anteriores,
+            datos_nuevos={'disponibilidad': 'De baja'},
+            observaciones='Ítem dado de baja (soft delete)'
+        )
 
     @action(detail=False, methods=['post'], url_path='batch-update')
     def batch_update(self, request):

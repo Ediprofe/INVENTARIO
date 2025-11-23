@@ -124,6 +124,7 @@ export interface IItemList {
   placa: string | null;
   articulo_nombre: string;
   ubicacion_nombre: string;
+  ubicacion_codigo: string;
   ubicacion_descripcion: string;
   sede_nombre: string;
   responsable_nombre: string;
@@ -244,6 +245,66 @@ export interface IPaginatedResponse<T> {
 export interface IApiError {
   detail?: string;
   [key: string]: unknown;
+}
+
+// ============================================================================
+// Stats Types
+// ============================================================================
+
+export interface IUbicacionStatsMetadata {
+  ubicacion_id: number;
+  ubicacion_nombre: string;
+  ubicacion_codigo: string;
+  sede_nombre: string;
+  responsable_nombre: string | null;
+}
+
+export interface IUbicacionResumen {
+  articulo__nombre: string;
+  total: number;
+}
+
+export interface IUbicacionStats {
+  metadata: IUbicacionStatsMetadata;
+  resumen: IUbicacionResumen[];
+  detalle: IPaginatedResponse<IItemList>;
+}
+
+export interface IResponsableStatsMetadata {
+  responsable_id: number;
+  responsable_nombre: string;
+  sede_nombre: string;
+}
+
+export interface IResponsableResumen {
+  articulo__nombre: string;
+  ubicacion__nombre: string;
+  ubicacion__codigo: string;
+  total: number;
+}
+
+export interface IResponsableStats {
+  metadata: IResponsableStatsMetadata;
+  resumen: IResponsableResumen[];
+  detalle: IPaginatedResponse<IItemList>;
+}
+
+export interface ISedeInfo {
+  id: number;
+  nombre: string;
+  codigo: string;
+}
+
+export interface IArticuloStats {
+  articulo_id: number;
+  articulo_nombre: string;
+  totales_por_sede: Record<string, number>;
+  total_general: number;
+}
+
+export interface IArticulosStatsResponse {
+  sedes: ISedeInfo[];
+  articulos: IArticuloStats[];
 }
 
 // ============================================================================

@@ -9,6 +9,7 @@ from .views import (
     ResponsableViewSet,
     ArticuloViewSet,
     ItemInventarioViewSet,
+    InventarioStatsViewSet,
     import_items_excel,
     export_items_excel,
     download_template,
@@ -22,6 +23,7 @@ router.register(r'ubicaciones', UbicacionViewSet, basename='ubicaciones')
 router.register(r'responsables', ResponsableViewSet, basename='responsables')
 router.register(r'articulos', ArticuloViewSet, basename='articulos')
 router.register(r'items', ItemInventarioViewSet, basename='items')
+router.register(r'stats', InventarioStatsViewSet, basename='stats')
 
 urlpatterns = [
     # Excel import/export (antes del router para evitar conflictos)

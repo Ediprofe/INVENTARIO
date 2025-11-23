@@ -15,6 +15,7 @@ class ItemInventarioListSerializer(serializers.ModelSerializer):
 
     articulo_nombre = serializers.CharField(source='articulo.nombre', read_only=True)
     ubicacion_nombre = serializers.CharField(source='ubicacion.nombre', read_only=True)
+    ubicacion_codigo = serializers.CharField(source='ubicacion.codigo', read_only=True)
     ubicacion_descripcion = serializers.CharField(source='ubicacion.descripcion', read_only=True)
     sede_nombre = serializers.CharField(source='sede.nombre', read_only=True)
     responsable_nombre = serializers.CharField(source='responsable.nombre_completo', read_only=True)
@@ -23,7 +24,7 @@ class ItemInventarioListSerializer(serializers.ModelSerializer):
         model = ItemInventario
         fields = [
             'id', 'codigo', 'placa', 'articulo_nombre', 'ubicacion_nombre',
-            'ubicacion_descripcion', 'sede_nombre', 'responsable_nombre',
+            'ubicacion_codigo', 'ubicacion_descripcion', 'sede_nombre', 'responsable_nombre',
             'marca', 'serial', 'estado', 'disponibilidad',
             'descripcion', 'observaciones', 'created_at'
         ]

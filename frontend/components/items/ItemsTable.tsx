@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useItems, useDeleteItem, useExportItems, useDownloadTemplate } from '@/lib/hooks';
-import { useSedes, useUbicaciones } from '@/lib/hooks/useCatalogos';
+import { useSedes, useUbicaciones, useResponsables, useArticulos } from '@/lib/hooks/useCatalogos';
 import type { IItemFilters, EstadoFisico, Disponibilidad, IItemList } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +61,8 @@ export function ItemsTable({
   const { data, isLoading, isError, error } = useItems(filters);
   const { data: sedesData } = useSedes();
   const { data: ubicacionesData } = useUbicaciones();
+  const { data: responsablesData } = useResponsables();
+  const { data: articulosData } = useArticulos();
   const deleteMutation = useDeleteItem();
 
   // Excel mutations
@@ -96,12 +98,19 @@ export function ItemsTable({
   };
 
   const handleDelete = async (id: number, codigo: string) => {
-    if (confirm(`¿Estás seguro de eliminar el ítem ${codigo}?`)) {
+    const confirmed = confirm(
+      `¿Estás seguro de dar de baja el ítem ${codigo}?\n\n` +
+      `El ítem no se eliminará físicamente, sino que cambiará su disponibilidad a "De baja".`
+    );
+    
+    if (confirmed) {
       try {
         await deleteMutation.mutateAsync(id);
+        alert(`Ítem ${codigo} dado de baja exitosamente`);
       } catch (err) {
-        console.error('Error al eliminar ítem:', err);
-        alert('Error al eliminar el ítem');
+        console.error('Error al dar de baja el ítem:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+        alert(`Error al dar de baja el ítem: ${errorMessage}\n\nPor favor, intenta de nuevo.`);
       }
     }
   };
@@ -134,9 +143,11 @@ export function ItemsTable({
     }
   };
 
-  // Calculate pagination
+  // Calculate pagination and item range
   const totalPages = data ? Math.ceil(data.count / (filters.page_size || 50)) : 0;
   const currentPage = filters.page || 1;
+  const startItem = data ? (currentPage - 1) * (filters.page_size || 50) + 1 : 0;
+  const endItem = data ? Math.min(currentPage * (filters.page_size || 50), data.count) : 0;
 
   // Check if all items on current page are selected
   const allSelected = data ? data.results.length > 0 && data.results.every((item) => selectedIds.includes(item.id)) : false;
@@ -148,7 +159,7 @@ export function ItemsTable({
           <div>
             <CardTitle>Ítems de Inventario</CardTitle>
             <CardDescription>
-              {data && `${data.count} ítems en total`}
+              {data && `Mostrando ${startItem}-${endItem} de ${data.count} ítems`}
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -175,95 +186,188 @@ export function ItemsTable({
       </CardHeader>
       <CardContent>
         {/* Filtros */}
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-5">
-          <div className="space-y-2">
-            <Label htmlFor="search">Buscar</Label>
-            <Input
-              id="search"
-              placeholder="Código, artículo, ubicación..."
-              value={filters.search || ''}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-            />
+        <div className="mb-6 space-y-4">
+          {/* Primera fila: Búsqueda global */}
+          <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="search" className="font-semibold">
+                Búsqueda General
+              </Label>
+              <Input
+                id="search"
+                placeholder="Buscar por Placa, Artículo o Serial..."
+                value={filters.search || ''}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+              />
+              <p className="text-xs text-gray-500">
+                {data && filters.search && `${data.count} coincidencias encontradas`}
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="sede">Sede</Label>
-            <Select
-              value={filters.sede?.toString()}
-              onValueChange={(value) => handleFilterChange('sede', value === 'all' ? undefined : parseInt(value))}
-            >
-              <SelectTrigger id="sede">
-                <SelectValue placeholder="Todas las sedes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las sedes</SelectItem>
-                {sedesData?.results.map((sede) => (
-                  <SelectItem key={sede.id} value={sede.id.toString()}>
-                    {sede.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Segunda fila: Filtros específicos por campo */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="placa" className="font-semibold">
+                Placa
+              </Label>
+              <Input
+                id="placa"
+                placeholder="Buscar por placa específica..."
+                value={filters.placa || ''}
+                onChange={(e) => handleFilterChange('placa', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="serial" className="font-semibold">
+                Serial
+              </Label>
+              <Input
+                id="serial"
+                placeholder="Buscar por serial específico..."
+                value={filters.serial || ''}
+                onChange={(e) => handleFilterChange('serial', e.target.value)}
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="ubicacion">Ubicación</Label>
-            <Select
-              value={filters.ubicacion?.toString()}
-              onValueChange={(value) => handleFilterChange('ubicacion', value === 'all' ? undefined : parseInt(value))}
-            >
-              <SelectTrigger id="ubicacion">
-                <SelectValue placeholder="Todas las ubicaciones" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las ubicaciones</SelectItem>
-                {ubicacionesData?.results.map((ubicacion) => (
-                  <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                    {ubicacion.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Tercera fila: Selectores de catálogos */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div className="space-y-2">
+              <Label htmlFor="articulo" className="font-semibold">
+                Artículo
+              </Label>
+              <Select
+                value={filters.articulo?.toString()}
+                onValueChange={(value) => handleFilterChange('articulo', value === 'all' ? undefined : parseInt(value))}
+              >
+                <SelectTrigger id="articulo">
+                  <SelectValue placeholder="Todos los artículos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {articulosData?.results.map((articulo) => (
+                    <SelectItem key={articulo.id} value={articulo.id.toString()}>
+                      {articulo.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="responsable" className="font-semibold">
+                Responsable
+              </Label>
+              <Select
+                value={filters.responsable?.toString()}
+                onValueChange={(value) => handleFilterChange('responsable', value === 'all' ? undefined : parseInt(value))}
+              >
+                <SelectTrigger id="responsable">
+                  <SelectValue placeholder="Todos los responsables" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {responsablesData?.results.map((responsable) => (
+                    <SelectItem key={responsable.id} value={responsable.id.toString()}>
+                      {responsable.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ubicacion" className="font-semibold">
+                Ubicación
+              </Label>
+              <Select
+                value={filters.ubicacion?.toString()}
+                onValueChange={(value) => handleFilterChange('ubicacion', value === 'all' ? undefined : parseInt(value))}
+              >
+                <SelectTrigger id="ubicacion">
+                  <SelectValue placeholder="Todas las ubicaciones" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {ubicacionesData?.results.map((ubicacion) => (
+                    <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
+                      {ubicacion.nombre} ({ubicacion.codigo})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sede" className="font-semibold">
+                Sede
+              </Label>
+              <Select
+                value={filters.sede?.toString()}
+                onValueChange={(value) => handleFilterChange('sede', value === 'all' ? undefined : parseInt(value))}
+              >
+                <SelectTrigger id="sede">
+                  <SelectValue placeholder="Todas las sedes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {sedesData?.results.map((sede) => (
+                    <SelectItem key={sede.id} value={sede.id.toString()}>
+                      {sede.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="estado">Estado Físico</Label>
-            <Select
-              value={filters.estado}
-              onValueChange={(value) => handleFilterChange('estado', value === 'all' ? undefined : value as EstadoFisico)}
-            >
-              <SelectTrigger id="estado">
-                <SelectValue placeholder="Todos los estados" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {ESTADO_FISICO.map((estado) => (
-                  <SelectItem key={estado.value} value={estado.value}>
-                    {estado.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Cuarta fila: Estado y Disponibilidad */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="estado" className="font-semibold">
+                Estado Físico
+              </Label>
+              <Select
+                value={filters.estado}
+                onValueChange={(value) => handleFilterChange('estado', value === 'all' ? undefined : value as EstadoFisico)}
+              >
+                <SelectTrigger id="estado">
+                  <SelectValue placeholder="Todos los estados" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {ESTADO_FISICO.map((estado) => (
+                    <SelectItem key={estado.value} value={estado.value}>
+                      {estado.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="disponibilidad">Disponibilidad</Label>
-            <Select
-              value={filters.disponibilidad}
-              onValueChange={(value) => handleFilterChange('disponibilidad', value === 'all' ? undefined : value as Disponibilidad)}
-            >
-              <SelectTrigger id="disponibilidad">
-                <SelectValue placeholder="Todas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {DISPONIBILIDADES.map((disp) => (
-                  <SelectItem key={disp.value} value={disp.value}>
-                    {disp.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label htmlFor="disponibilidad" className="font-semibold">
+                Disponibilidad
+              </Label>
+              <Select
+                value={filters.disponibilidad}
+                onValueChange={(value) => handleFilterChange('disponibilidad', value === 'all' ? undefined : value as Disponibilidad)}
+              >
+                <SelectTrigger id="disponibilidad">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {DISPONIBILIDADES.map((disp) => (
+                    <SelectItem key={disp.value} value={disp.value}>
+                      {disp.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -298,6 +402,7 @@ export function ItemsTable({
                     <TableHead>Artículo</TableHead>
                     <TableHead>Placa</TableHead>
                     <TableHead>Ubicación</TableHead>
+                    <TableHead>Código Ubicación</TableHead>
                     <TableHead>Sede</TableHead>
                     <TableHead>Responsable</TableHead>
                     <TableHead>Marca</TableHead>
@@ -310,7 +415,7 @@ export function ItemsTable({
                 <TableBody>
                   {data.results.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={11} className="text-center text-gray-500">
+                      <TableCell colSpan={12} className="text-center text-gray-500">
                         No se encontraron ítems
                       </TableCell>
                     </TableRow>
@@ -327,6 +432,7 @@ export function ItemsTable({
                         <TableCell className="font-medium">{item.articulo_nombre}</TableCell>
                         <TableCell>{item.placa || '-'}</TableCell>
                         <TableCell>{item.ubicacion_nombre}</TableCell>
+                        <TableCell className="font-mono text-xs">{item.ubicacion_codigo || '-'}</TableCell>
                         <TableCell>{item.sede_nombre}</TableCell>
                         <TableCell>{item.responsable_nombre}</TableCell>
                         <TableCell>{item.marca || '-'}</TableCell>
@@ -389,7 +495,7 @@ export function ItemsTable({
             {totalPages > 1 && (
               <div className="mt-4 flex items-center justify-between">
                 <div className="text-sm text-gray-700">
-                  Página {currentPage} de {totalPages}
+                  Mostrando {startItem}-{endItem} de {data.count} ítems (Página {currentPage} de {totalPages})
                 </div>
                 <div className="flex gap-2">
                   <Button
