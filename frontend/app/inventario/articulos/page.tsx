@@ -14,6 +14,22 @@ const formatOptionLabel = (value: string) => {
   return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 };
 
+// Función para obtener colores según el estado
+const getEstadoColor = (estado: string): string => {
+  const estadoLower = estado?.toLowerCase() || 'sin_estado';
+  
+  const colorMap: Record<string, string> = {
+    'bueno': 'bg-green-100 text-green-700 border-green-300',
+    'regular': 'bg-yellow-100 text-yellow-700 border-yellow-300',
+    'malo': 'bg-red-100 text-red-700 border-red-300',
+    'sin_estado': 'bg-gray-100 text-gray-600 border-gray-300',
+    'excelente': 'bg-emerald-100 text-emerald-700 border-emerald-300',
+    'nuevo': 'bg-blue-100 text-blue-700 border-blue-300',
+  };
+  
+  return colorMap[estadoLower] || 'bg-purple-100 text-purple-700 border-purple-300';
+};
+
 /**
  * Página de Inventario por Artículos.
  * 
@@ -139,6 +155,30 @@ export default function InventarioPorArticulos() {
             </div>
           )}
 
+          {/* Leyenda de estados */}
+          {!isLoading && !isError && stats && stats.estados_disponibles && stats.estados_disponibles.length > 0 && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-start gap-2">
+                <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-900 mb-2">Estados Físicos Detectados:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {stats.estados_disponibles.map((estado: string) => (
+                      <span 
+                        key={estado}
+                        className={`inline-flex items-center px-3 py-1.5 rounded-md text-xs font-semibold border ${getEstadoColor(estado)}`}
+                      >
+                        {formatOptionLabel(estado)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Matriz de Artículos x Sedes */}
           {!isLoading && !isError && stats && (
             <div className="rounded-xl border border-gray-200 shadow-md overflow-hidden">
@@ -187,22 +227,19 @@ export default function InventarioPorArticulos() {
                             return (
                               <TableCell key={sede.id} className="text-center p-3">
                                 <div className="flex flex-col items-center justify-center gap-1.5 min-h-[48px]">
-                                  <div className="flex gap-1.5">
-                                    {totales.bueno > 0 && (
-                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-green-100 to-green-200 text-[11px] font-bold text-green-800 ring-1 ring-green-300 shadow-sm" title={`${totales.bueno} Buenos`}>
-                                        {totales.bueno}
-                                      </span>
-                                    )}
-                                    {totales.regular > 0 && (
-                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-yellow-100 to-yellow-200 text-[11px] font-bold text-yellow-800 ring-1 ring-yellow-300 shadow-sm" title={`${totales.regular} Regulares`}>
-                                        {totales.regular}
-                                      </span>
-                                    )}
-                                    {totales.malo > 0 && (
-                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-red-100 to-red-200 text-[11px] font-bold text-red-800 ring-1 ring-red-300 shadow-sm" title={`${totales.malo} Malos`}>
-                                        {totales.malo}
-                                      </span>
-                                    )}
+                                  <div className="flex flex-wrap gap-1.5 justify-center max-w-[140px]">
+                                    {/* Renderizar dinámicamente todos los estados que existen */}
+                                    {Object.entries(totales)
+                                      .filter(([key, value]) => key !== 'total' && typeof value === 'number' && value > 0)
+                                      .map(([estado, cantidad]) => (
+                                        <span 
+                                          key={estado}
+                                          className={`inline-flex items-center justify-center px-2 py-1 rounded-md text-[10px] font-semibold border ${getEstadoColor(estado)}`}
+                                          title={`${cantidad} ${formatOptionLabel(estado)}`}
+                                        >
+                                          {cantidad}
+                                        </span>
+                                      ))}
                                   </div>
                                   <span className="text-sm font-bold text-gray-900 px-2 py-0.5 bg-gray-100 rounded-md">
                                     {totales.total}
@@ -223,34 +260,40 @@ export default function InventarioPorArticulos() {
                       <TableRow className="bg-gray-100/80 font-semibold border-t-2 border-gray-200">
                         <TableCell className="pl-6 text-gray-800">Total General</TableCell>
                         {stats.sedes.map((sede) => {
-                          // Sumar todos los estados para esta sede
-                          const totalBueno = stats.articulos.reduce(
-                            (sum, articulo) => sum + (articulo.totales_por_sede[sede.codigo]?.bueno || 0),
-                            0
-                          );
-                          const totalRegular = stats.articulos.reduce(
-                            (sum, articulo) => sum + (articulo.totales_por_sede[sede.codigo]?.regular || 0),
-                            0
-                          );
-                          const totalMalo = stats.articulos.reduce(
-                            (sum, articulo) => sum + (articulo.totales_por_sede[sede.codigo]?.malo || 0),
-                            0
-                          );
-                          const totalSede = totalBueno + totalRegular + totalMalo;
+                          // Sumar dinámicamente todos los estados para esta sede
+                          const totalesPorEstado: Record<string, number> = {};
+                          let totalSede = 0;
+                          
+                          stats.articulos.forEach((articulo) => {
+                            const totales = articulo.totales_por_sede[sede.codigo];
+                            if (totales) {
+                              Object.entries(totales).forEach(([estado, cantidad]) => {
+                                if (estado !== 'total' && typeof cantidad === 'number') {
+                                  totalesPorEstado[estado] = (totalesPorEstado[estado] || 0) + cantidad;
+                                  totalSede += cantidad;
+                                }
+                              });
+                            }
+                          });
                           
                           return (
                             <TableCell key={sede.id} className="text-center py-3">
                               {totalSede === 0 ? (
                                 <span className="text-gray-400">-</span>
                               ) : (
-                                <div className="flex flex-col items-center gap-1">
+                                <div className="flex flex-col items-center gap-1.5">
                                   <span className="text-sm font-bold text-gray-900">{totalSede}</span>
-                                  <div className="flex gap-0.5 text-[9px] text-gray-500 uppercase tracking-tighter">
-                                    {totalBueno > 0 && <span className="text-green-700">{totalBueno}B</span>}
-                                    {(totalBueno > 0 && (totalRegular > 0 || totalMalo > 0)) && <span>·</span>}
-                                    {totalRegular > 0 && <span className="text-yellow-700">{totalRegular}R</span>}
-                                    {(totalRegular > 0 && totalMalo > 0) && <span>·</span>}
-                                    {totalMalo > 0 && <span className="text-red-700">{totalMalo}M</span>}
+                                  <div className="flex flex-wrap gap-1 justify-center text-[9px] font-medium">
+                                    {Object.entries(totalesPorEstado)
+                                      .filter(([_, cantidad]) => cantidad > 0)
+                                      .map(([estado, cantidad]) => (
+                                        <span 
+                                          key={estado}
+                                          className={`px-1.5 py-0.5 rounded ${getEstadoColor(estado)}`}
+                                        >
+                                          {cantidad}
+                                        </span>
+                                      ))}
                                   </div>
                                 </div>
                               )}

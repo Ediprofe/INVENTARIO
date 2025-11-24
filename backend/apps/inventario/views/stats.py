@@ -184,7 +184,11 @@ class InventarioStatsViewSet(viewsets.ViewSet):
             items_inventario__in=items_base_qs
         ).distinct().order_by('nombre')
 
-        # Construir matriz: artículo x sede x estado físico
+        # Obtener todos los estados físicos únicos que existen en la BD (dinámico)
+        estados_unicos = items_base_qs.values_list('estado', flat=True).distinct().order_by('estado')
+        estados_list = [estado if estado else 'sin_estado' for estado in estados_unicos]
+
+        # Construir matriz: artículo x sede x estado físico (dinámico)
         matriz = []
         for articulo in articulos:
             fila = {
@@ -195,23 +199,30 @@ class InventarioStatsViewSet(viewsets.ViewSet):
             }
             
             # Contar ítems por sede para este artículo (con filtros aplicados)
-            # Desglosado por estado físico
+            # Desglosado por estado físico (dinámico)
             for sede in sedes:
                 queryset = items_base_qs.filter(
                     articulo=articulo,
                     sede=sede
                 )
                 
-                # Contar por estado físico
-                total_bueno = queryset.filter(estado='bueno').count()
-                total_regular = queryset.filter(estado='regular').count()
-                total_malo = queryset.filter(estado='malo').count()
-                total_sede = total_bueno + total_regular + total_malo
+                # Contar por cada estado físico que existe en la BD
+                totales_por_estado = {}
+                total_sede = 0
+                
+                for estado in estados_unicos:
+                    if estado:
+                        count = queryset.filter(estado=estado).count()
+                    else:
+                        # Manejar estados null/vacíos
+                        count = queryset.filter(Q(estado__isnull=True) | Q(estado='')).count()
+                    
+                    estado_key = estado if estado else 'sin_estado'
+                    totales_por_estado[estado_key] = count
+                    total_sede += count
                 
                 fila['totales_por_sede'][sede.codigo] = {
-                    'bueno': total_bueno,
-                    'regular': total_regular,
-                    'malo': total_malo,
+                    **totales_por_estado,
                     'total': total_sede
                 }
                 fila['total_general'] += total_sede
@@ -224,6 +235,7 @@ class InventarioStatsViewSet(viewsets.ViewSet):
                 for s in sedes
             ],
             'articulos': matriz,
+            'estados_disponibles': estados_list,  # Lista dinámica de estados
             'filtros_aplicados': {
                 'disponibilidad': disponibilidad_filter,
                 'estado': estado_filter,

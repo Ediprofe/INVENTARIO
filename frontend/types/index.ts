@@ -304,13 +304,18 @@ export interface ISedeInfo {
 export interface IArticuloStats {
   articulo_id: number;
   articulo_nombre: string;
-  totales_por_sede: Record<string, { bueno: number; regular: number; malo: number; total: number }>;
+  totales_por_sede: Record<string, Record<string, number> & { total: number }>; // Dinámico: cualquier estado + total
   total_general: number;
 }
 
 export interface IArticulosStatsResponse {
   sedes: ISedeInfo[];
   articulos: IArticuloStats[];
+  estados_disponibles: string[]; // Lista dinámica de estados físicos
+  filtros_aplicados?: {
+    disponibilidad?: string;
+    estado?: string;
+  };
 }
 
 // ============================================================================
