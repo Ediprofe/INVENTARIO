@@ -701,10 +701,10 @@ export function ItemsTable({
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="truncate text-sm text-gray-600" title={item.marca || ''}>{item.marca || '-'}</div>
+                            <div className="truncate text-xs text-gray-500" title={item.marca || ''}>{item.marca || '-'}</div>
                           </TableCell>
-                          <TableCell className="text-xs font-mono text-gray-500">
-                            <div className="truncate" title={item.serial || ''}>{item.serial || '-'}</div>
+                          <TableCell>
+                            <div className="truncate text-xs text-gray-500" title={item.serial || ''}>{item.serial || '-'}</div>
                           </TableCell>
                           <TableCell className="text-right pr-4">
                             <DropdownMenu>
