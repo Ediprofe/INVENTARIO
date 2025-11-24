@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useItems, useDeleteItem, useExportItems, useDownloadTemplate } from '@/lib/hooks';
 import { useSedes, useUbicaciones, useResponsables, useArticulos } from '@/lib/hooks/useCatalogos';
 import type { IItemFilters, EstadoFisico, Disponibilidad, IItemList } from '@/types';
@@ -45,26 +45,45 @@ interface ItemsTableProps {
   onResetImportClick?: () => void;
   onBatchEditClick?: (selectedIds: number[]) => void;
   onBulkCreateClick?: () => void;
+  initialFilters?: Partial<IItemFilters>;
+  hiddenFilters?: Array<keyof IItemFilters>;
+  showDataManagementActions?: boolean;
 }
 
 export function ItemsTable({ 
   onCreateClick, 
   onEditClick, 
-  onImportClick,
+  onImportClick, 
   onResetImportClick,
   onBatchEditClick,
-  onBulkCreateClick 
+  onBulkCreateClick,
+  initialFilters,
+  hiddenFilters = [],
+  showDataManagementActions = true
 }: ItemsTableProps) {
   // Filtros state - con disponibilidad "en_uso" por defecto según CLAUDE.md línea 203
+  // Se combina con initialFilters
   const [filters, setFilters] = useState<IItemFilters>({
     page: 1,
     page_size: 50,
     ordering: '-created_at',
     disponibilidad: 'en_uso',
+    ...initialFilters
   });
 
   // Selected items state
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  // Sincronizar filtros externos cuando cambian las props
+  useEffect(() => {
+    if (initialFilters) {
+      setFilters(prev => ({
+        ...prev,
+        ...initialFilters,
+        page: 1 // Reset a primera página si cambian filtros externos
+      }));
+    }
+  }, [JSON.stringify(initialFilters)]);
 
   // Queries
   const { data, isLoading, isError, error } = useItems(filters);
@@ -177,26 +196,32 @@ export function ItemsTable({
                 Editar Rápido ({selectedIds.length})
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handleDownloadTemplate} disabled={templateMutation.isPending}>
-              {templateMutation.isPending ? 'Descargando...' : 'Plantilla'}
-            </Button>
-            <Button variant="outline" size="sm" onClick={onImportClick}>
-              Importar
-            </Button>
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={onResetImportClick}
-              className="bg-orange-600 hover:bg-orange-700"
-            >
-              🔄 Resetear e Importar
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExport} disabled={exportMutation.isPending}>
-              {exportMutation.isPending ? 'Exportando...' : 'Exportar'}
-            </Button>
-            <Button variant="outline" size="sm" onClick={onBulkCreateClick}>
-              Alta Masiva
-            </Button>
+            
+            {showDataManagementActions && (
+              <>
+                <Button variant="outline" size="sm" onClick={handleDownloadTemplate} disabled={templateMutation.isPending}>
+                  {templateMutation.isPending ? 'Descargando...' : 'Plantilla'}
+                </Button>
+                <Button variant="outline" size="sm" onClick={onImportClick}>
+                  Importar
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={onResetImportClick}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  🔄 Resetear e Importar
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExport} disabled={exportMutation.isPending}>
+                  {exportMutation.isPending ? 'Exportando...' : 'Exportar'}
+                </Button>
+                <Button variant="outline" size="sm" onClick={onBulkCreateClick}>
+                  Alta Masiva
+                </Button>
+              </>
+            )}
+            
             <Button onClick={onCreateClick}>Crear Ítem</Button>
           </div>
         </div>
@@ -224,167 +249,183 @@ export function ItemsTable({
 
           {/* Segunda fila: Filtros específicos por campo */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="placa" className="font-semibold">
-                Placa
-              </Label>
-              <Input
-                id="placa"
-                placeholder="Buscar por placa específica..."
-                value={filters.placa || ''}
-                onChange={(e) => handleFilterChange('placa', e.target.value)}
-              />
-            </div>
+            {!hiddenFilters.includes('placa') && (
+              <div className="space-y-2">
+                <Label htmlFor="placa" className="font-semibold">
+                  Placa
+                </Label>
+                <Input
+                  id="placa"
+                  placeholder="Buscar por placa específica..."
+                  value={filters.placa || ''}
+                  onChange={(e) => handleFilterChange('placa', e.target.value)}
+                />
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="serial" className="font-semibold">
-                Serial
-              </Label>
-              <Input
-                id="serial"
-                placeholder="Buscar por serial específico..."
-                value={filters.serial || ''}
-                onChange={(e) => handleFilterChange('serial', e.target.value)}
-              />
-            </div>
+            {!hiddenFilters.includes('serial') && (
+              <div className="space-y-2">
+                <Label htmlFor="serial" className="font-semibold">
+                  Serial
+                </Label>
+                <Input
+                  id="serial"
+                  placeholder="Buscar por serial específico..."
+                  value={filters.serial || ''}
+                  onChange={(e) => handleFilterChange('serial', e.target.value)}
+                />
+              </div>
+            )}
           </div>
 
           {/* Tercera fila: Selectores de catálogos */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="space-y-2">
-              <Label htmlFor="articulo" className="font-semibold">
-                Artículo
-              </Label>
-              <Select
-                value={filters.articulo?.toString()}
-                onValueChange={(value) => handleFilterChange('articulo', value === 'all' ? undefined : parseInt(value))}
-              >
-                <SelectTrigger id="articulo">
-                  <SelectValue placeholder="Todos los artículos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {articulosData?.results.map((articulo) => (
-                    <SelectItem key={articulo.id} value={articulo.id.toString()}>
-                      {articulo.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!hiddenFilters.includes('articulo') && (
+              <div className="space-y-2">
+                <Label htmlFor="articulo" className="font-semibold">
+                  Artículo
+                </Label>
+                <Select
+                  value={filters.articulo?.toString()}
+                  onValueChange={(value) => handleFilterChange('articulo', value === 'all' ? undefined : parseInt(value))}
+                >
+                  <SelectTrigger id="articulo">
+                    <SelectValue placeholder="Todos los artículos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {articulosData?.results.map((articulo) => (
+                      <SelectItem key={articulo.id} value={articulo.id.toString()}>
+                        {articulo.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="responsable" className="font-semibold">
-                Responsable
-              </Label>
-              <Select
-                value={filters.responsable?.toString()}
-                onValueChange={(value) => handleFilterChange('responsable', value === 'all' ? undefined : parseInt(value))}
-              >
-                <SelectTrigger id="responsable">
-                  <SelectValue placeholder="Todos los responsables" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {responsablesData?.results.map((responsable) => (
-                    <SelectItem key={responsable.id} value={responsable.id.toString()}>
-                      {responsable.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!hiddenFilters.includes('responsable') && (
+              <div className="space-y-2">
+                <Label htmlFor="responsable" className="font-semibold">
+                  Responsable
+                </Label>
+                <Select
+                  value={filters.responsable?.toString()}
+                  onValueChange={(value) => handleFilterChange('responsable', value === 'all' ? undefined : parseInt(value))}
+                >
+                  <SelectTrigger id="responsable">
+                    <SelectValue placeholder="Todos los responsables" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {responsablesData?.results.map((responsable) => (
+                      <SelectItem key={responsable.id} value={responsable.id.toString()}>
+                        {responsable.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="ubicacion" className="font-semibold">
-                Ubicación
-              </Label>
-              <Select
-                value={filters.ubicacion?.toString()}
-                onValueChange={(value) => handleFilterChange('ubicacion', value === 'all' ? undefined : parseInt(value))}
-              >
-                <SelectTrigger id="ubicacion">
-                  <SelectValue placeholder="Todas las ubicaciones" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {ubicacionesData?.results.map((ubicacion) => (
-                    <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                      {ubicacion.nombre} ({ubicacion.codigo})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!hiddenFilters.includes('ubicacion') && (
+              <div className="space-y-2">
+                <Label htmlFor="ubicacion" className="font-semibold">
+                  Ubicación
+                </Label>
+                <Select
+                  value={filters.ubicacion?.toString()}
+                  onValueChange={(value) => handleFilterChange('ubicacion', value === 'all' ? undefined : parseInt(value))}
+                >
+                  <SelectTrigger id="ubicacion">
+                    <SelectValue placeholder="Todas las ubicaciones" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {ubicacionesData?.results.map((ubicacion) => (
+                      <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
+                        {ubicacion.nombre} ({ubicacion.codigo})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="sede" className="font-semibold">
-                Sede
-              </Label>
-              <Select
-                value={filters.sede?.toString()}
-                onValueChange={(value) => handleFilterChange('sede', value === 'all' ? undefined : parseInt(value))}
-              >
-                <SelectTrigger id="sede">
-                  <SelectValue placeholder="Todas las sedes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {sedesData?.results.map((sede) => (
-                    <SelectItem key={sede.id} value={sede.id.toString()}>
-                      {sede.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!hiddenFilters.includes('sede') && (
+              <div className="space-y-2">
+                <Label htmlFor="sede" className="font-semibold">
+                  Sede
+                </Label>
+                <Select
+                  value={filters.sede?.toString()}
+                  onValueChange={(value) => handleFilterChange('sede', value === 'all' ? undefined : parseInt(value))}
+                >
+                  <SelectTrigger id="sede">
+                    <SelectValue placeholder="Todas las sedes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {sedesData?.results.map((sede) => (
+                      <SelectItem key={sede.id} value={sede.id.toString()}>
+                        {sede.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           {/* Cuarta fila: Estado y Disponibilidad */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="estado" className="font-semibold">
-                Estado Físico
-              </Label>
-              <Select
-                value={filters.estado}
-                onValueChange={(value) => handleFilterChange('estado', value === 'all' ? undefined : value as EstadoFisico)}
-              >
-                <SelectTrigger id="estado">
-                  <SelectValue placeholder="Todos los estados" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {ESTADO_FISICO.map((estado) => (
-                    <SelectItem key={estado.value} value={estado.value}>
-                      {estado.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!hiddenFilters.includes('estado') && (
+              <div className="space-y-2">
+                <Label htmlFor="estado" className="font-semibold">
+                  Estado Físico
+                </Label>
+                <Select
+                  value={filters.estado}
+                  onValueChange={(value) => handleFilterChange('estado', value === 'all' ? undefined : value as EstadoFisico)}
+                >
+                  <SelectTrigger id="estado">
+                    <SelectValue placeholder="Todos los estados" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {ESTADO_FISICO.map((estado) => (
+                      <SelectItem key={estado.value} value={estado.value}>
+                        {estado.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="disponibilidad" className="font-semibold">
-                Disponibilidad
-              </Label>
-              <Select
-                value={filters.disponibilidad}
-                onValueChange={(value) => handleFilterChange('disponibilidad', value === 'all' ? undefined : value as Disponibilidad)}
-              >
-                <SelectTrigger id="disponibilidad">
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {DISPONIBILIDADES.map((disp) => (
-                    <SelectItem key={disp.value} value={disp.value}>
-                      {disp.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!hiddenFilters.includes('disponibilidad') && (
+              <div className="space-y-2">
+                <Label htmlFor="disponibilidad" className="font-semibold">
+                  Disponibilidad
+                </Label>
+                <Select
+                  value={filters.disponibilidad}
+                  onValueChange={(value) => handleFilterChange('disponibilidad', value === 'all' ? undefined : value as Disponibilidad)}
+                >
+                  <SelectTrigger id="disponibilidad">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {DISPONIBILIDADES.map((disp) => (
+                      <SelectItem key={disp.value} value={disp.value}>
+                        {disp.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -406,7 +447,7 @@ export function ItemsTable({
         {!isLoading && !isError && data && (
           <>
             <div className="rounded-md border overflow-x-auto">
-              <Table className="w-full table-fixed">
+              <Table className="w-full table-fixed min-w-[1200px]">
                 <TableHeader className="sticky top-0 z-20 bg-white shadow-sm">
                   <TableRow>
                     <TableHead className="w-[3%]">
@@ -416,23 +457,25 @@ export function ItemsTable({
                         aria-label="Seleccionar todos"
                       />
                     </TableHead>
-                    <TableHead className="w-[12%]">Artículo</TableHead>
+                    <TableHead className="w-[10%]">Artículo</TableHead>
                     <TableHead className="w-[8%]">Placa</TableHead>
-                    <TableHead className="w-[11%]">Ubicación</TableHead>
-                    <TableHead className="w-[9%]">Código Ubicación</TableHead>
-                    <TableHead className="w-[8%]">Sede</TableHead>
-                    <TableHead className="w-[11%]">Responsable</TableHead>
-                    <TableHead className="w-[8%]">Marca</TableHead>
-                    <TableHead className="w-[10%]">Serial</TableHead>
-                    <TableHead className="w-[8%]">Estado</TableHead>
-                    <TableHead className="w-[8%]">Disponibilidad</TableHead>
+                    <TableHead className="w-[9%]">Ubicación</TableHead>
+                    {/* Campos adicionales solicitados en CLAUDE.md */}
+                    <TableHead className="w-[12%]">Descripción</TableHead>
+                    <TableHead className="w-[12%]">Observaciones</TableHead>
+                    <TableHead className="w-[9%]">Sede</TableHead>
+                    <TableHead className="w-[10%]">Responsable</TableHead>
+                    <TableHead className="w-[7%]">Marca</TableHead>
+                    <TableHead className="w-[8%]">Serial</TableHead>
+                    <TableHead className="w-[6%]">Estado</TableHead>
+                    <TableHead className="w-[6%]">Disp.</TableHead>
                     <TableHead className="w-[4%] text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.results.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={12} className="text-center text-gray-500">
+                      <TableCell colSpan={13} className="text-center text-gray-500">
                         No se encontraron ítems
                       </TableCell>
                     </TableRow>
@@ -447,32 +490,45 @@ export function ItemsTable({
                           />
                         </TableCell>
                         <TableCell className="font-medium">
-                          <div className="line-clamp-2 break-words text-sm">{item.articulo_nombre}</div>
+                          <div className="truncate text-sm cursor-help" title={item.articulo_nombre}>
+                            {item.articulo_nombre}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <div className="line-clamp-2 break-words text-sm">{item.placa || '-'}</div>
+                          <div className="truncate text-sm" title={item.placa || ''}>{item.placa || '-'}</div>
                         </TableCell>
                         <TableCell>
-                          <div className="line-clamp-2 break-words text-sm">{item.ubicacion_nombre}</div>
+                          <div className="truncate text-sm cursor-help" title={`${item.ubicacion_nombre} (${item.ubicacion_codigo})`}>
+                            {item.ubicacion_nombre}
+                          </div>
                         </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          <div className="line-clamp-2 break-all">{item.ubicacion_codigo || '-'}</div>
+                        {/* Nuevos Campos */}
+                        <TableCell>
+                          <div className="truncate text-xs text-gray-600" title={item.descripcion || ''}>
+                            {item.descripcion || '-'}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <div className="line-clamp-2 break-words text-sm">{item.sede_nombre}</div>
+                          <div className="truncate text-xs text-gray-600" title={item.observaciones || ''}>
+                            {item.observaciones || '-'}
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="truncate text-sm" title={item.sede_nombre}>{item.sede_nombre}</div>
                         </TableCell>
                         <TableCell>
-                          <div className="line-clamp-2 break-words text-sm">{item.responsable_nombre}</div>
+                          <div className="truncate text-sm" title={item.responsable_nombre}>{item.responsable_nombre || '-'}</div>
                         </TableCell>
                         <TableCell>
-                          <div className="line-clamp-2 break-words text-sm">{item.marca || '-'}</div>
+                          <div className="truncate text-sm" title={item.marca || ''}>{item.marca || '-'}</div>
                         </TableCell>
                         <TableCell className="text-xs">
-                          <div className="line-clamp-3 break-all leading-tight">{item.serial || '-'}</div>
+                          <div className="truncate" title={item.serial || ''}>{item.serial || '-'}</div>
                         </TableCell>
                         <TableCell>
                           <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                            className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${
                               item.estado === 'bueno'
                                 ? 'bg-green-100 text-green-800'
                                 : item.estado === 'regular'
@@ -485,7 +541,7 @@ export function ItemsTable({
                         </TableCell>
                         <TableCell>
                           <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                            className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${
                               item.disponibilidad === 'en_uso'
                                 ? 'bg-blue-100 text-blue-800'
                                 : item.disponibilidad === 'en_reparacion'

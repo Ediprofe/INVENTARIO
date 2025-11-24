@@ -20,7 +20,7 @@ export const sedesKeys = {
   list: (filters: ISedeFilters) => [...sedesKeys.lists(), filters] as const,
 };
 
-export function useSedes(filters: ISedeFilters = { activo: true, page_size: 1000 }) {
+export function useSedes(filters: ISedeFilters = { activo: true, page_size: 10000, ordering: 'nombre' }) {
   return useQuery({
     queryKey: sedesKeys.list(filters),
     queryFn: () => SedesAPI.list(filters),
@@ -37,7 +37,7 @@ export const ubicacionesKeys = {
   list: (filters: IUbicacionFilters) => [...ubicacionesKeys.lists(), filters] as const,
 };
 
-export function useUbicaciones(filters: IUbicacionFilters = { activo: true, page_size: 1000 }) {
+export function useUbicaciones(filters: IUbicacionFilters = { activo: true, page_size: 10000, ordering: 'nombre' }) {
   return useQuery({
     queryKey: ubicacionesKeys.list(filters),
     queryFn: () => UbicacionesAPI.list(filters),
@@ -54,7 +54,7 @@ export const responsablesKeys = {
   list: (filters: IResponsableFilters) => [...responsablesKeys.lists(), filters] as const,
 };
 
-export function useResponsables(filters: IResponsableFilters = { activo: true, page_size: 1000 }) {
+export function useResponsables(filters: IResponsableFilters = { activo: true, page_size: 10000, ordering: 'nombre' }) {
   return useQuery({
     queryKey: responsablesKeys.list(filters),
     queryFn: () => ResponsablesAPI.list(filters),
@@ -71,7 +71,7 @@ export const articulosKeys = {
   list: (filters: IArticuloFilters) => [...articulosKeys.lists(), filters] as const,
 };
 
-export function useArticulos(filters: IArticuloFilters = { activo: true, page_size: 1000 }) {
+export function useArticulos(filters: IArticuloFilters = { activo: true, page_size: 10000, ordering: 'nombre' }) {
   return useQuery({
     queryKey: articulosKeys.list(filters),
     queryFn: () => ArticulosAPI.list(filters),

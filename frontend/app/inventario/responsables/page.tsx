@@ -2,169 +2,76 @@
 
 import { useState } from 'react';
 import { DashboardNav } from '@/components/dashboard';
-import { useResponsables, useResponsableStats, useDeleteItem, useArticulos, useSedes, useUbicaciones } from '@/lib/hooks';
+import { useResponsables, useResponsableStats } from '@/lib/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BatchEditDialog, ItemFormDialog, FloatingBatchEditButton } from '@/components/items';
-import type { EstadoFisico, Disponibilidad } from '@/types';
-
-const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
-  { value: 'bueno', label: 'Bueno' },
-  { value: 'regular', label: 'Regular' },
-  { value: 'malo', label: 'Malo' },
-];
-
-const DISPONIBILIDADES: Array<{ value: Disponibilidad; label: string }> = [
-  { value: 'en_uso', label: 'En uso' },
-  { value: 'en_reparacion', label: 'En reparación' },
-  { value: 'extraviado', label: 'Extraviado' },
-  { value: 'de_baja', label: 'De baja' },
-];
+import { BatchEditDialog, ItemFormDialog, ItemsTable, ResetImportDialog } from '@/components/items';
+import { ExcelAPI } from '@/lib/api/excel';
 
 export default function InventarioPorResponsables() {
   const [responsableSeleccionado, setResponsableSeleccionado] = useState<number | null>(null);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  
+  // Diálogos
   const [batchEditDialogOpen, setBatchEditDialogOpen] = useState(false);
   const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [resetImportDialogOpen, setResetImportDialogOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
-
-  // Filtros - con disponibilidad "en_uso" por defecto según CLAUDE.md línea 203
-  const [searchTerm, setSearchTerm] = useState('');
-  const [placaFilter, setPlacaFilter] = useState('');
-  const [serialFilter, setSerialFilter] = useState('');
-  const [articuloFilter, setArticuloFilter] = useState<number | undefined>();
-  const [ubicacionFilter, setUbicacionFilter] = useState<number | undefined>();
-  const [sedeFilter, setSedeFilter] = useState<number | undefined>();
-  const [estadoFilter, setEstadoFilter] = useState<EstadoFisico | undefined>();
-  const [disponibilidadFilter, setDisponibilidadFilter] = useState<Disponibilidad | undefined>('en_uso');
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // Queries
   const { data: responsablesData } = useResponsables();
-  const { data: articulosData } = useArticulos();
-  const { data: ubicacionesData } = useUbicaciones();
-  const { data: sedesData } = useSedes();
-  const { data: stats, isLoading: isLoadingStats, refetch } = useResponsableStats(responsableSeleccionado);
-  const deleteMutation = useDeleteItem();
+  const { data: stats, isLoading: isLoadingStats } = useResponsableStats(responsableSeleccionado);
 
   const handleResponsableChange = (value: string) => {
-    const responsableId = value === 'all' ? null : parseInt(value);
-    setResponsableSeleccionado(responsableId);
-    setSelectedIds([]);
+    const respId = value === 'all' ? null : parseInt(value);
+    setResponsableSeleccionado(respId);
   };
 
+  // Handlers para ItemsTable
   const handleEditClick = (itemId: number) => {
     setSelectedItemId(itemId);
     setFormDialogOpen(true);
   };
 
-  const handleFormDialogClose = () => {
-    setFormDialogOpen(false);
+  const handleCreateClick = () => {
     setSelectedItemId(null);
-    refetch();
+    setFormDialogOpen(true);
   };
 
-  const handleDelete = async (id: number, codigo: string) => {
-    const confirmed = confirm(
-      `¿Estás seguro de dar de baja el ítem ${codigo}?\n\n` +
-      `El ítem no se eliminará físicamente, sino que cambiará su disponibilidad a "De baja".`
-    );
-    
-    if (confirmed) {
-      try {
-        await deleteMutation.mutateAsync(id);
-        alert(`Ítem ${codigo} dado de baja exitosamente`);
-        refetch();
-      } catch (err) {
-        console.error('Error al dar de baja el ítem:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
-        alert(`Error al dar de baja el ítem: ${errorMessage}\n\nPor favor, intenta de nuevo.`);
-      }
-    }
+  const handleBatchEditClick = (ids: number[]) => {
+    setSelectedIds(ids);
+    setBatchEditDialogOpen(true);
   };
 
-  const handleSelectAll = (checked: boolean | 'indeterminate') => {
-    if (checked === true && stats?.detalle.results) {
-      setSelectedIds(filteredItems.map((item) => item.id));
-    } else {
-      setSelectedIds([]);
-    }
+  const handleResetImportClick = () => {
+    setResetImportDialogOpen(true);
   };
-
-  const handleSelectItem = (itemId: number, checked: boolean | 'indeterminate') => {
-    if (checked === true) {
-      setSelectedIds((prev) => [...prev, itemId]);
-    } else {
-      setSelectedIds((prev) => prev.filter((id) => id !== itemId));
-    }
-  };
-
-  const handleBatchEditClick = () => {
-    if (selectedIds.length > 0) {
-      setBatchEditDialogOpen(true);
-    }
-  };
-
-  const handleBatchEditDialogClose = () => {
-    setBatchEditDialogOpen(false);
-    setSelectedIds([]);
-    refetch();
-  };
-
-  // Filtrado local
-  const filteredItems = stats?.detalle.results.filter((item) => {
-    if (searchTerm && !(
-      item.placa?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.articulo_nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.serial?.toLowerCase().includes(searchTerm.toLowerCase())
-    )) {
-      return false;
-    }
-    if (placaFilter && !item.placa?.toLowerCase().includes(placaFilter.toLowerCase())) return false;
-    if (serialFilter && !item.serial?.toLowerCase().includes(serialFilter.toLowerCase())) return false;
-    if (articuloFilter && item.articulo_nombre !== articulosData?.results.find(a => a.id === articuloFilter)?.nombre) return false;
-    if (ubicacionFilter && item.ubicacion_nombre !== ubicacionesData?.results.find(u => u.id === ubicacionFilter)?.nombre) return false;
-    if (sedeFilter && item.sede_nombre !== sedesData?.results.find(s => s.id === sedeFilter)?.nombre) return false;
-    if (estadoFilter && item.estado !== estadoFilter) return false;
-    if (disponibilidadFilter && item.disponibilidad !== disponibilidadFilter) return false;
-    return true;
-  }) || [];
-
-  const allSelected = filteredItems.length > 0 && filteredItems.every((item) => selectedIds.includes(item.id));
 
   return (
     <>
       <DashboardNav />
 
+      {/* Selector de Responsable */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Filtrar por Responsable</CardTitle>
-          <CardDescription>Selecciona un responsable para ver su inventario detallado</CardDescription>
+          <CardDescription>
+            Selecciona un responsable para ver sus ítems asignados
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
+          <div className="max-w-md space-y-2">
             <Label htmlFor="responsable" className="font-semibold">Responsable</Label>
-            <Select
-              value={responsableSeleccionado?.toString() || undefined}
-              onValueChange={handleResponsableChange}
-            >
+            <Select value={responsableSeleccionado?.toString() || undefined} onValueChange={handleResponsableChange}>
               <SelectTrigger id="responsable">
                 <SelectValue placeholder="Selecciona un responsable" />
               </SelectTrigger>
               <SelectContent>
-                {responsablesData?.results.map((responsable) => (
-                  <SelectItem key={responsable.id} value={responsable.id.toString()}>
-                    {responsable.nombre_completo}
+                {responsablesData?.results.map((resp) => (
+                  <SelectItem key={resp.id} value={resp.id.toString()}>
+                    {resp.nombre_completo}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -173,22 +80,29 @@ export default function InventarioPorResponsables() {
         </CardContent>
       </Card>
 
+      {/* Mostrar estadísticas si hay un responsable seleccionado */}
       {responsableSeleccionado && (
         <>
           {isLoadingStats ? (
             <div className="py-8 text-center text-gray-500">Cargando estadísticas...</div>
           ) : stats ? (
             <>
+              {/* Información del Responsable */}
               <Card className="mb-6">
                 <CardHeader>
-                  <CardTitle>{stats.metadata.responsable_nombre}</CardTitle>
-                  <CardDescription>Sede: {stats.metadata.sede_nombre}</CardDescription>
+                  <CardTitle>
+                    {stats.metadata.responsable_nombre}
+                  </CardTitle>
+                  <CardDescription>
+                    Sede: {stats.metadata.sede_nombre}
+                  </CardDescription>
                 </CardHeader>
               </Card>
 
+              {/* Tabla Resumen */}
               <Card className="mb-6">
                 <CardHeader>
-                  <CardTitle>Resumen de Inventario</CardTitle>
+                  <CardTitle>Resumen de Asignaciones</CardTitle>
                   <CardDescription>Totalizado por artículo y ubicación</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -198,14 +112,13 @@ export default function InventarioPorResponsables() {
                         <TableRow>
                           <TableHead>Artículo</TableHead>
                           <TableHead>Ubicación</TableHead>
-                          <TableHead>Código Ubicación</TableHead>
                           <TableHead className="text-right">Total</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {stats.resumen.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={4} className="text-center text-gray-500">
+                            <TableCell colSpan={3} className="text-center text-gray-500">
                               Este responsable no tiene ítems asignados
                             </TableCell>
                           </TableRow>
@@ -213,8 +126,9 @@ export default function InventarioPorResponsables() {
                           stats.resumen.map((item, index) => (
                             <TableRow key={index}>
                               <TableCell className="font-medium">{item.articulo__nombre}</TableCell>
-                              <TableCell>{item.ubicacion__nombre}</TableCell>
-                              <TableCell className="font-mono text-xs">{item.ubicacion__codigo}</TableCell>
+                              <TableCell>
+                                {item.ubicacion__nombre} ({item.ubicacion__codigo})
+                              </TableCell>
                               <TableCell className="text-right font-semibold">{item.total}</TableCell>
                             </TableRow>
                           ))
@@ -225,297 +139,20 @@ export default function InventarioPorResponsables() {
                 </CardContent>
               </Card>
 
-              {/* Filtros de Búsqueda */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Filtros de Búsqueda</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="search" className="font-semibold">Búsqueda General</Label>
-                      <Input
-                        id="search"
-                        placeholder="Buscar por Placa, Artículo o Serial..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                      <p className="text-xs text-gray-500">
-                        {filteredItems.length} coincidencias encontradas
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="placa" className="font-semibold">Placa</Label>
-                        <Input
-                          id="placa"
-                          placeholder="Buscar por placa..."
-                          value={placaFilter}
-                          onChange={(e) => setPlacaFilter(e.target.value)}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="serial" className="font-semibold">Serial</Label>
-                        <Input
-                          id="serial"
-                          placeholder="Buscar por serial..."
-                          value={serialFilter}
-                          onChange={(e) => setSerialFilter(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="articulo" className="font-semibold">Artículo</Label>
-                        <Select
-                          value={articuloFilter?.toString() || undefined}
-                          onValueChange={(value) => setArticuloFilter(value === 'all' ? undefined : parseInt(value))}
-                        >
-                          <SelectTrigger id="articulo">
-                            <SelectValue placeholder="Todos" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            {articulosData?.results.map((articulo) => (
-                              <SelectItem key={articulo.id} value={articulo.id.toString()}>
-                                {articulo.nombre}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="ubicacion" className="font-semibold">Ubicación</Label>
-                        <Select
-                          value={ubicacionFilter?.toString() || undefined}
-                          onValueChange={(value) => setUbicacionFilter(value === 'all' ? undefined : parseInt(value))}
-                        >
-                          <SelectTrigger id="ubicacion">
-                            <SelectValue placeholder="Todas" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todas</SelectItem>
-                            {ubicacionesData?.results.map((ubicacion) => (
-                              <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                                {ubicacion.nombre}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="sede" className="font-semibold">Sede</Label>
-                        <Select
-                          value={sedeFilter?.toString() || undefined}
-                          onValueChange={(value) => setSedeFilter(value === 'all' ? undefined : parseInt(value))}
-                        >
-                          <SelectTrigger id="sede">
-                            <SelectValue placeholder="Todas" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todas</SelectItem>
-                            {sedesData?.results.map((sede) => (
-                              <SelectItem key={sede.id} value={sede.id.toString()}>
-                                {sede.nombre}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="estado" className="font-semibold">Estado Físico</Label>
-                        <Select
-                          value={estadoFilter || undefined}
-                          onValueChange={(value) => setEstadoFilter(value === 'all' ? undefined : value as EstadoFisico)}
-                        >
-                          <SelectTrigger id="estado">
-                            <SelectValue placeholder="Todos" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            {ESTADO_FISICO.map((estado) => (
-                              <SelectItem key={estado.value} value={estado.value}>
-                                {estado.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="disponibilidad" className="font-semibold">Disponibilidad</Label>
-                        <Select
-                          value={disponibilidadFilter || undefined}
-                          onValueChange={(value) => setDisponibilidadFilter(value === 'all' ? undefined : value as Disponibilidad)}
-                        >
-                          <SelectTrigger id="disponibilidad">
-                            <SelectValue placeholder="Todas" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todas</SelectItem>
-                            {DISPONIBILIDADES.map((disp) => (
-                              <SelectItem key={disp.value} value={disp.value}>
-                                {disp.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Inventario Detallado</CardTitle>
-                  <CardDescription>
-                    Mostrando {filteredItems.length} de {stats.detalle.count} ítems
-                    {selectedIds.length > 0 && ` • ${selectedIds.length} seleccionados`}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table className="w-full table-fixed">
-                      <TableHeader className="sticky top-0 z-20 bg-white shadow-sm">
-                        <TableRow>
-                          <TableHead className="w-[3%]">
-                            <Checkbox
-                              checked={allSelected}
-                              onCheckedChange={handleSelectAll}
-                              aria-label="Seleccionar todos"
-                            />
-                          </TableHead>
-                          <TableHead className="w-[13%]">Artículo</TableHead>
-                          <TableHead className="w-[8%]">Placa</TableHead>
-                          <TableHead className="w-[12%]">Ubicación</TableHead>
-                          <TableHead className="w-[10%]">Código Ubicación</TableHead>
-                          <TableHead className="w-[8%]">Sede</TableHead>
-                          <TableHead className="w-[8%]">Estado</TableHead>
-                          <TableHead className="w-[8%]">Marca</TableHead>
-                          <TableHead className="w-[12%]">Serial</TableHead>
-                          <TableHead className="w-[10%]">Disponibilidad</TableHead>
-                          <TableHead className="w-[5%] text-right">Acciones</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredItems.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={11} className="text-center text-gray-500">
-                              No hay ítems que coincidan con los filtros
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredItems.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell>
-                                <Checkbox
-                                  checked={selectedIds.includes(item.id)}
-                                  onCheckedChange={(checked) => handleSelectItem(item.id, checked)}
-                                  aria-label={`Seleccionar ${item.codigo}`}
-                                />
-                              </TableCell>
-                              <TableCell className="font-medium">
-                                <div className="line-clamp-2 break-words text-sm">{item.articulo_nombre}</div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="line-clamp-2 break-words text-sm">{item.placa || '-'}</div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="line-clamp-2 break-words text-sm">{item.ubicacion_nombre}</div>
-                              </TableCell>
-                              <TableCell className="font-mono text-xs">
-                                <div className="line-clamp-2 break-all">{item.ubicacion_codigo}</div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="line-clamp-2 break-words text-sm">{item.sede_nombre}</div>
-                              </TableCell>
-                              <TableCell>
-                                <span
-                                  className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold whitespace-nowrap ${
-                                    item.estado === 'bueno'
-                                      ? 'bg-green-100 text-green-800'
-                                      : item.estado === 'regular'
-                                      ? 'bg-yellow-100 text-yellow-800'
-                                      : 'bg-red-100 text-red-800'
-                                  }`}
-                                >
-                                  {item.estado === 'bueno' ? 'Bueno' : item.estado === 'regular' ? 'Regular' : 'Malo'}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                <div className="line-clamp-2 break-words text-sm">{item.marca || '-'}</div>
-                              </TableCell>
-                              <TableCell className="text-xs">
-                                <div className="line-clamp-3 break-all leading-tight">{item.serial || '-'}</div>
-                              </TableCell>
-                              <TableCell>
-                                <span
-                                  className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                                    item.disponibilidad === 'en_uso'
-                                      ? 'bg-blue-100 text-blue-800'
-                                      : item.disponibilidad === 'en_reparacion'
-                                      ? 'bg-orange-100 text-orange-800'
-                                      : item.disponibilidad === 'extraviado'
-                                      ? 'bg-purple-100 text-purple-800'
-                                      : 'bg-gray-100 text-gray-800'
-                                  }`}
-                                >
-                                  {item.disponibilidad === 'en_uso' ? 'En uso' : 
-                                   item.disponibilidad === 'en_reparacion' ? 'En reparación' :
-                                   item.disponibilidad === 'extraviado' ? 'Extraviado' : 'De baja'}
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                      <span className="sr-only">Abrir menú</span>
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      >
-                                        <circle cx="12" cy="12" r="1" />
-                                        <circle cx="12" cy="5" r="1" />
-                                        <circle cx="12" cy="19" r="1" />
-                                      </svg>
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditClick(item.id)}>
-                                      Editar
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => handleDelete(item.id, item.codigo)}
-                                      disabled={deleteMutation.isPending}
-                                      className="text-red-600"
-                                    >
-                                      Eliminar
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* TABLA DETALLADA CENTRALIZADA */}
+              <ItemsTable 
+                initialFilters={{ 
+                  responsable: responsableSeleccionado
+                }}
+                hiddenFilters={['responsable']} // Ocultar filtro redundante
+                showDataManagementActions={false} // Ocultar botones de gestión masiva
+                onCreateClick={handleCreateClick}
+                onEditClick={handleEditClick}
+                onBatchEditClick={handleBatchEditClick}
+                onResetImportClick={handleResetImportClick}
+                onBulkCreateClick={() => {}}
+                onImportClick={() => {}}
+              />
             </>
           ) : (
             <div className="py-8 text-center text-gray-500">
@@ -525,32 +162,33 @@ export default function InventarioPorResponsables() {
         </>
       )}
 
+      {/* Mensaje inicial */}
       {!responsableSeleccionado && (
         <Card>
           <CardContent className="py-12">
             <div className="text-center text-gray-500">
               <p className="text-lg font-semibold mb-2">Selecciona un responsable</p>
-              <p>Elige un responsable en el filtro superior para ver su inventario</p>
+              <p>Elige un responsable para ver su inventario asignado</p>
             </div>
           </CardContent>
         </Card>
       )}
 
+      {/* Diálogos */}
       <ItemFormDialog 
         open={formDialogOpen} 
-        onClose={handleFormDialogClose} 
+        onClose={() => setFormDialogOpen(false)} 
         itemId={selectedItemId} 
       />
       <BatchEditDialog 
         open={batchEditDialogOpen} 
-        onClose={handleBatchEditDialogClose} 
+        onClose={() => setBatchEditDialogOpen(false)} 
         selectedIds={selectedIds} 
       />
-
-      {/* Botón flotante de edición rápida */}
-      <FloatingBatchEditButton
-        selectedCount={selectedIds.length}
-        onClick={handleBatchEditClick}
+      <ResetImportDialog
+        open={resetImportDialogOpen}
+        onOpenChange={setResetImportDialogOpen}
+        onImport={ExcelAPI.resetImport}
       />
     </>
   );
