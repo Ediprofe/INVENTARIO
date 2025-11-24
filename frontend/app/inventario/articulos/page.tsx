@@ -181,18 +181,18 @@ export default function InventarioPorArticulos() {
 
           {/* Matriz de Artículos x Sedes */}
           {!isLoading && !isError && stats && (
-            <div className="rounded-xl border border-gray-200 shadow-md overflow-hidden">
+            <div className="rounded-lg border border-gray-200 shadow-md overflow-hidden">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-gradient-to-r from-gray-50 to-gray-100/50">
-                    <TableRow className="hover:bg-transparent border-b-2 border-gray-200">
-                      <TableHead className="pl-8 font-bold text-gray-800 text-sm uppercase tracking-wide">Artículo</TableHead>
+                  <TableHeader className="bg-gray-50">
+                    <TableRow className="hover:bg-transparent border-b">
+                      <TableHead className="pl-6 font-bold text-gray-800 text-sm sticky left-0 bg-gray-50 z-10">Artículo</TableHead>
                       {stats.sedes.map((sede) => (
-                        <TableHead key={sede.id} className="text-center font-bold text-gray-800 text-xs uppercase tracking-wide min-w-[140px]">
+                        <TableHead key={sede.id} className="text-center font-bold text-gray-800 text-xs min-w-[120px] px-2">
                           {sede.nombre}
                         </TableHead>
                       ))}
-                      <TableHead className="text-right pr-8 font-bold bg-gradient-to-r from-blue-50 to-blue-100/50 text-blue-900 w-[120px] text-sm uppercase tracking-wide">
+                      <TableHead className="text-right pr-6 font-bold bg-blue-50 text-blue-900 w-[100px] text-sm sticky right-0 z-10">
                         Total
                       </TableHead>
                     </TableRow>
@@ -209,9 +209,9 @@ export default function InventarioPorArticulos() {
                       </TableRow>
                     ) : (
                       stats.articulos.map((articulo) => (
-                        <TableRow key={articulo.articulo_id} className="hover:bg-blue-50/20 transition-all duration-150 border-b border-gray-100">
-                          <TableCell className="pl-8 font-semibold text-gray-900">
-                            <div className="whitespace-normal break-words max-w-[200px] sm:max-w-xs text-sm">
+                        <TableRow key={articulo.articulo_id} className="group hover:bg-gray-50 transition-colors border-b border-gray-100">
+                          <TableCell className="pl-6 font-medium text-gray-900 sticky left-0 bg-white group-hover:bg-gray-50 z-10 transition-colors">
+                            <div className="text-sm py-1">
                               {articulo.articulo_nombre}
                             </div>
                           </TableCell>
@@ -219,36 +219,36 @@ export default function InventarioPorArticulos() {
                             const totales = articulo.totales_por_sede[sede.codigo];
                             if (!totales || totales.total === 0) {
                               return (
-                                <TableCell key={sede.id} className="text-center text-gray-300">
+                                <TableCell key={sede.id} className="text-center text-gray-300 py-2">
                                   -
                                 </TableCell>
                               );
                             }
                             return (
-                              <TableCell key={sede.id} className="text-center p-3">
-                                <div className="flex flex-col items-center justify-center gap-1.5 min-h-[48px]">
-                                  <div className="flex flex-wrap gap-1.5 justify-center max-w-[140px]">
+                              <TableCell key={sede.id} className="text-center py-2 px-2">
+                                <div className="flex flex-col items-center gap-1">
+                                  <div className="flex flex-wrap gap-1 justify-center">
                                     {/* Renderizar dinámicamente todos los estados que existen */}
                                     {Object.entries(totales)
                                       .filter(([key, value]) => key !== 'total' && typeof value === 'number' && value > 0)
                                       .map(([estado, cantidad]) => (
                                         <span 
                                           key={estado}
-                                          className={`inline-flex items-center justify-center px-2 py-1 rounded-md text-[10px] font-semibold border ${getEstadoColor(estado)}`}
+                                          className={`inline-flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold border ${getEstadoColor(estado)}`}
                                           title={`${cantidad} ${formatOptionLabel(estado)}`}
                                         >
                                           {cantidad}
                                         </span>
                                       ))}
                                   </div>
-                                  <span className="text-sm font-bold text-gray-900 px-2 py-0.5 bg-gray-100 rounded-md">
+                                  <span className="text-xs font-bold text-gray-900">
                                     {totales.total}
                                   </span>
                                 </div>
                               </TableCell>
                             );
                           })}
-                          <TableCell className="text-right pr-8 font-bold bg-gradient-to-r from-blue-50/30 to-blue-100/30 text-blue-900 text-lg">
+                          <TableCell className="text-right pr-6 font-bold bg-blue-50 group-hover:bg-blue-100 text-blue-900 text-base sticky right-0 z-10 transition-colors">
                             {articulo.total_general}
                           </TableCell>
                         </TableRow>
@@ -257,8 +257,8 @@ export default function InventarioPorArticulos() {
                     
                     {/* Fila de totales por sede */}
                     {stats.articulos.length > 0 && (
-                      <TableRow className="bg-gray-100/80 font-semibold border-t-2 border-gray-200">
-                        <TableCell className="pl-6 text-gray-800">Total General</TableCell>
+                      <TableRow className="bg-gray-100 font-semibold border-t-2 border-gray-300">
+                        <TableCell className="pl-6 text-gray-900 font-bold sticky left-0 bg-gray-100 z-10">Total General</TableCell>
                         {stats.sedes.map((sede) => {
                           // Sumar dinámicamente todos los estados para esta sede
                           const totalesPorEstado: Record<string, number> = {};
@@ -277,19 +277,19 @@ export default function InventarioPorArticulos() {
                           });
                           
                           return (
-                            <TableCell key={sede.id} className="text-center py-3">
+                            <TableCell key={sede.id} className="text-center py-2">
                               {totalSede === 0 ? (
                                 <span className="text-gray-400">-</span>
                               ) : (
-                                <div className="flex flex-col items-center gap-1.5">
+                                <div className="flex flex-col items-center gap-1">
                                   <span className="text-sm font-bold text-gray-900">{totalSede}</span>
-                                  <div className="flex flex-wrap gap-1 justify-center text-[9px] font-medium">
+                                  <div className="flex flex-wrap gap-0.5 justify-center text-[9px] font-medium">
                                     {Object.entries(totalesPorEstado)
                                       .filter(([_, cantidad]) => cantidad > 0)
                                       .map(([estado, cantidad]) => (
                                         <span 
                                           key={estado}
-                                          className={`px-1.5 py-0.5 rounded ${getEstadoColor(estado)}`}
+                                          className={`px-1 py-0.5 rounded text-[9px] ${getEstadoColor(estado)}`}
                                         >
                                           {cantidad}
                                         </span>
@@ -300,7 +300,7 @@ export default function InventarioPorArticulos() {
                             </TableCell>
                           );
                         })}
-                        <TableCell className="text-right pr-6 bg-gray-200/50 text-gray-900 text-lg">
+                        <TableCell className="text-right pr-6 bg-blue-100 text-blue-900 text-base font-bold sticky right-0 z-10">
                           {stats.articulos.reduce((sum, articulo) => sum + articulo.total_general, 0)}
                         </TableCell>
                       </TableRow>

@@ -87,12 +87,22 @@ export default function InventarioPorUbicaciones() {
       <DashboardNav />
 
       {/* Selector de Sede y Ubicación */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Filtrar por Ubicación</CardTitle>
-          <CardDescription>
-            Selecciona una sede y ubicación para ver el inventario detallado
-          </CardDescription>
+      <Card className="mb-6 shadow-lg border-0">
+        <CardHeader className="bg-gray-50 border-b">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <CardTitle className="text-lg">Filtrar por Ubicación</CardTitle>
+              <CardDescription className="text-sm">
+                Selecciona una sede y ubicación para ver el inventario detallado
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
@@ -143,52 +153,95 @@ export default function InventarioPorUbicaciones() {
           ) : stats ? (
             <>
               {/* Información de la Ubicación */}
-              <Card className="mb-6 border-none shadow-sm bg-blue-50/50">
+              <Card className="mb-6 shadow-lg border-0 bg-gradient-to-r from-blue-50 to-blue-100/50">
                 <CardHeader>
-                  <CardTitle className="text-xl text-blue-900">
-                    {stats.metadata.ubicacion_nombre} <span className="text-blue-600 font-normal">({stats.metadata.ubicacion_codigo})</span>
-                  </CardTitle>
-                  <CardDescription className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-blue-700/80 mt-2">
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">Sede:</span> {stats.metadata.sede_nombre}
-                    </span>
-                    {stats.metadata.responsable_nombre && (
-                      <span className="flex items-center gap-2">
-                        <span className="font-semibold">Responsable:</span> {stats.metadata.responsable_nombre}
-                      </span>
-                    )}
-                  </CardDescription>
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-2xl text-gray-900 mb-1">
+                        {stats.metadata.ubicacion_nombre}
+                      </CardTitle>
+                      <div className="flex flex-wrap gap-3 mt-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-700 border border-gray-200">
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                          </svg>
+                          {stats.metadata.ubicacion_codigo}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-700 border border-gray-200">
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          {stats.metadata.sede_nombre}
+                        </span>
+                        {stats.metadata.responsable_nombre && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-700 border border-gray-200">
+                            <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            {stats.metadata.responsable_nombre}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </CardHeader>
               </Card>
 
               {/* Tabla Resumen */}
-              <Card className="mb-6 border-none shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Resumen de Inventario</CardTitle>
-                  <CardDescription>Distribución de artículos en esta ubicación</CardDescription>
+              <Card className="mb-6 shadow-lg border-0">
+                <CardHeader className="bg-gray-50 border-b">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">Resumen de Inventario</CardTitle>
+                        <CardDescription className="text-sm">Distribución de artículos en esta ubicación</CardDescription>
+                      </div>
+                    </div>
+                    {stats.resumen.length > 0 && (
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                        {stats.resumen.reduce((sum, item) => sum + item.total, 0)} ítems
+                      </span>
+                    )}
+                  </div>
                 </CardHeader>
-                <CardContent className="px-0">
-                  <div className="border-y overflow-x-auto">
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
                     <Table className="w-full">
-                      <TableHeader className="bg-gray-50/80">
-                        <TableRow className="hover:bg-transparent">
-                          <TableHead className="pl-6 font-semibold text-gray-700">Artículo</TableHead>
-                          <TableHead className="text-right pr-6 font-semibold text-gray-700 w-[100px]">Total</TableHead>
+                      <TableHeader className="bg-gray-50">
+                        <TableRow className="hover:bg-transparent border-b">
+                          <TableHead className="pl-6 font-bold text-gray-800 text-sm">Artículo</TableHead>
+                          <TableHead className="text-right pr-6 font-bold text-gray-800 w-[120px] text-sm">Cantidad</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {stats.resumen.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={2} className="text-center py-8 text-gray-500">
-                              No hay ítems registrados en esta ubicación
+                            <TableCell colSpan={2} className="text-center py-12 text-gray-500">
+                              <div className="flex flex-col items-center gap-2">
+                                <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                </svg>
+                                <p className="font-medium">No hay ítems registrados en esta ubicación</p>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ) : (
                           stats.resumen.map((item, index) => (
-                            <TableRow key={index} className="hover:bg-gray-50/50">
+                            <TableRow key={index} className="hover:bg-blue-50/30 transition-colors border-b border-gray-100">
                               <TableCell className="pl-6 font-medium text-gray-900">{item.articulo__nombre}</TableCell>
                               <TableCell className="text-right pr-6">
-                                <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <span className="inline-flex items-center justify-center min-w-[60px] px-3 py-1.5 rounded-lg text-sm font-bold bg-blue-100 text-blue-800 border border-blue-200">
                                   {item.total}
                                 </span>
                               </TableCell>
@@ -250,8 +303,7 @@ export default function InventarioPorUbicaciones() {
       />
       <ResetImportDialog
         open={resetImportDialogOpen}
-        onOpenChange={setResetImportDialogOpen}
-        onImport={ExcelAPI.resetImport}
+        onClose={() => setResetImportDialogOpen(false)}
       />
     </>
   );
