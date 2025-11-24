@@ -138,8 +138,8 @@ class InventarioStatsViewSet(viewsets.ViewSet):
             'metadata': {
                 'responsable_id': responsable.id,
                 'responsable_nombre': responsable.nombre_completo,
-                'responsable_cargo': responsable.get_cargo_display() if responsable.cargo else None,
-                'sede_nombre': responsable.sede.nombre,
+                'responsable_cargo': responsable.cargo if responsable.cargo else None,
+                'sede_nombre': responsable.sede.nombre if responsable.sede else None,
                 'ubicaciones_a_cargo': list(ubicaciones_a_cargo),
             },
             'resumen': list(resumen),
