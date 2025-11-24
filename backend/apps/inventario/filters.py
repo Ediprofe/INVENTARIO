@@ -67,10 +67,11 @@ class ResponsableFilter(django_filters.FilterSet):
 
     activo = django_filters.BooleanFilter()
     sede = django_filters.NumberFilter(field_name='sede__id')
+    cargo = django_filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = Responsable
-        fields = ['activo', 'sede']
+        fields = ['activo', 'sede', 'cargo']
 
 
 class ArticuloFilter(django_filters.FilterSet):

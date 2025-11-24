@@ -75,7 +75,13 @@ export const ItemsAPI = {
   /**
    * Obtener opciones dinámicas para filtros.
    */
-  getFilterOptions: async (): Promise<{ estados: string[]; disponibilidades: string[] }> => {
+  getFilterOptions: async (): Promise<{ 
+    estados: string[]; 
+    disponibilidades: string[];
+    marcas: string[];
+    tipos_ubicacion: string[];
+    cargos: string[];
+  }> => {
     const response = await apiClient.get('/inventario/items/filter-options/');
     return response.data;
   },

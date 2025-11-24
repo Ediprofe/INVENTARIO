@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { itemSchema, type ItemFormData } from '@/lib/schemas';
-import { useCreateItem, useUpdateItem, useItem } from '@/lib/hooks';
+import { useCreateItem, useUpdateItem, useItem, useItemFilterOptions } from '@/lib/hooks';
 import { useArticulos, useUbicaciones, useResponsables } from '@/lib/hooks/useCatalogos';
 import type { EstadoFisico, Disponibilidad, IItemList } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -28,18 +28,10 @@ import {
   sortResponsables,
 } from '@/lib/catalogs';
 
-const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
-  { value: 'bueno', label: 'Bueno' },
-  { value: 'regular', label: 'Regular' },
-  { value: 'malo', label: 'Malo' },
-];
-
-const DISPONIBILIDADES: Array<{ value: Disponibilidad; label: string }> = [
-  { value: 'en_uso', label: 'En uso' },
-  { value: 'en_reparacion', label: 'En reparación' },
-  { value: 'extraviado', label: 'Extraviado' },
-  { value: 'de_baja', label: 'De baja' },
-];
+const formatOptionLabel = (value: string) => {
+  if (!value) return 'Sin asignar';
+  return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+};
 
 const EMPTY_ITEM_FORM_VALUES: Partial<ItemFormData> = {
   articulo_id: undefined,
@@ -62,6 +54,8 @@ interface ItemFormContentProps {
   articulos: any[];
   ubicaciones: any[];
   responsables: any[];
+  estadoOptions: Array<{ value: string; label: string }>;
+  disponibilidadOptions: Array<{ value: string; label: string }>;
 }
 
 /**
@@ -76,7 +70,9 @@ function ItemFormContent({
   onClose,
   articulos,
   ubicaciones,
-  responsables 
+  responsables,
+  estadoOptions,
+  disponibilidadOptions
 }: ItemFormContentProps) {
   // Mutations
   const createMutation = useCreateItem();
@@ -246,7 +242,7 @@ function ItemFormContent({
               <SelectValue placeholder="Selecciona estado" />
             </SelectTrigger>
             <SelectContent>
-              {ESTADO_FISICO.map((e) => (
+              {estadoOptions.map((e) => (
                 <SelectItem key={e.value} value={e.value}>
                   {e.label}
                 </SelectItem>
@@ -269,7 +265,7 @@ function ItemFormContent({
               <SelectValue placeholder="Selecciona disponibilidad" />
             </SelectTrigger>
             <SelectContent>
-              {DISPONIBILIDADES.map((d) => (
+              {disponibilidadOptions.map((d) => (
                 <SelectItem key={d.value} value={d.value}>
                   {d.label}
                 </SelectItem>
@@ -307,6 +303,7 @@ interface ItemFormDialogProps {
   open: boolean;
   onClose: () => void;
   itemId?: number | null;
+  initialFilters?: any;
 }
 
 /**
@@ -314,7 +311,7 @@ interface ItemFormDialogProps {
  * Maneja SOLO la lógica de carga de datos y estado del diálogo.
  * Delega el renderizado del formulario a ItemFormContent.
  */
-export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
+export function ItemFormDialog({ open, onClose, itemId, initialFilters }: ItemFormDialogProps) {
   const isEditing = !!itemId;
 
   // Queries
@@ -323,6 +320,7 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
   const { data: articulosData, isLoading: isLoadingArticulos } = useArticulos();
   const { data: ubicacionesData, isLoading: isLoadingUbicaciones } = useUbicaciones();
   const { data: responsablesData, isLoading: isLoadingResponsables } = useResponsables();
+  const { data: filterOptions, isLoading: isLoadingFilterOptions } = useItemFilterOptions();
 
   const articulos = useMemo(
     () => sortArticulos(articulosData?.results ?? []),
@@ -337,9 +335,39 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
     [responsablesData]
   );
 
+  // Opciones dinámicas de filtros
+  const estadoOptions = useMemo(() => {
+    return (filterOptions?.estados || []).map(value => ({
+      value,
+      label: formatOptionLabel(value)
+    }));
+  }, [filterOptions]);
+
+  const disponibilidadOptions = useMemo(() => {
+    return (filterOptions?.disponibilidades || []).map(value => ({
+      value,
+      label: formatOptionLabel(value)
+    }));
+  }, [filterOptions]);
+
   // Preparar datos iniciales si estamos editando
   const getInitialData = (): ItemFormData | undefined => {
-    if (!item) return undefined;
+    if (!item) {
+      // Para items nuevos, si hay un filtro de ubicación inicial, pre-asignar su responsable
+      if (initialFilters?.ubicacion_id && ubicacionesData?.results) {
+        const ubicacionInicial = ubicacionesData.results.find(
+          u => u.id === initialFilters.ubicacion_id
+        );
+        if (ubicacionInicial?.responsable) {
+          return {
+            ...EMPTY_ITEM_FORM_VALUES,
+            ubicacion_id: ubicacionInicial.id,
+            responsable_id: ubicacionInicial.responsable,
+          } as ItemFormData;
+        }
+      }
+      return undefined;
+    }
     
     return {
       articulo_id: item.articulo.id,
@@ -357,8 +385,8 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
 
   // Determinar si todo está listo para renderizar
   const isDataReady = () => {
-    // Siempre necesitamos los catálogos
-    if (!articulosData?.results || !ubicacionesData?.results || !responsablesData?.results) {
+    // Siempre necesitamos los catálogos y las opciones de filtros
+    if (!articulosData?.results || !ubicacionesData?.results || !responsablesData?.results || !filterOptions) {
       return false;
     }
     
@@ -374,6 +402,7 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
     isLoadingArticulos || 
     isLoadingUbicaciones || 
     isLoadingResponsables || 
+    isLoadingFilterOptions ||
     (isEditing && isLoadingItem);
 
   // Precalcular datos iniciales para pasar al key
@@ -405,6 +434,8 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
             articulos={articulos}
             ubicaciones={ubicaciones}
             responsables={responsables}
+            estadoOptions={estadoOptions}
+            disponibilidadOptions={disponibilidadOptions}
           />
         )}
       </DialogContent>

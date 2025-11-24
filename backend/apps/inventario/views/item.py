@@ -101,14 +101,24 @@ class ItemInventarioViewSet(viewsets.ModelViewSet):
         """
         Retorna opciones únicas para filtros dinámicos basados en datos existentes.
         GET /items/filter-options/
+        
+        Incluye opciones de todos los catálogos para uniformidad total (CLAUDE.md).
         """
-        # Obtener valores distintos de la base de datos
+        # Obtener valores distintos de ItemInventario
         estados = ItemInventario.objects.values_list('estado', flat=True).distinct().order_by('estado')
         disponibilidades = ItemInventario.objects.values_list('disponibilidad', flat=True).distinct().order_by('disponibilidad')
+        marcas = ItemInventario.objects.exclude(marca__isnull=True).exclude(marca='').values_list('marca', flat=True).distinct().order_by('marca')
+        
+        # Obtener valores distintos de catálogos
+        tipos_ubicacion = Ubicacion.objects.values_list('tipo', flat=True).distinct().order_by('tipo')
+        cargos = Responsable.objects.exclude(cargo='').values_list('cargo', flat=True).distinct().order_by('cargo')
         
         return Response({
             'estados': list(estados),
-            'disponibilidades': list(disponibilidades)
+            'disponibilidades': list(disponibilidades),
+            'marcas': list(marcas),
+            'tipos_ubicacion': list(tipos_ubicacion),
+            'cargos': list(cargos),
         })
 
     @action(detail=False, methods=['post'], url_path='batch-update')

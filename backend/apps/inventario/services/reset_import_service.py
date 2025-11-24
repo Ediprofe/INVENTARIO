@@ -90,6 +90,9 @@ class ResetImportService:
             articulos_map = self._process_articulos(articulos_data)
             responsables_map = self._process_responsables(responsables_data, sedes_map)
             
+            # Asignar coordinadores y responsables ahora que todos los responsables existen
+            self._assign_coordinadores_responsables(sedes_map, ubicaciones_map, responsables_map)
+            
             self._process_items(
                 items_data,
                 sedes_map,
@@ -167,6 +170,7 @@ class ResetImportService:
             data.append({
                 'nombre': str(row_dict['Nombre*']).strip(),
                 'codigo': str(row_dict['Código*']).strip().upper(),
+                'coordinador_nombre': str(row_dict.get('Coordinador', '')).strip() if row_dict.get('Coordinador') else '',
                 'direccion': str(row_dict.get('Dirección', '')).strip() if row_dict.get('Dirección') else '',
                 'telefono': str(row_dict.get('Teléfono', '')).strip() if row_dict.get('Teléfono') else '',
                 'email': str(row_dict.get('Email', '')).strip() if row_dict.get('Email') else '',
@@ -204,6 +208,7 @@ class ResetImportService:
                 'nombre': str(row_dict['Nombre*']).strip(),
                 'codigo': str(row_dict['Código*']).strip().upper(),
                 'tipo': tipo,
+                'responsable_nombre': str(row_dict.get('Responsable Por Defecto', '')).strip() if row_dict.get('Responsable Por Defecto') else '',
                 'piso': int(row_dict['Piso']) if row_dict.get('Piso') else None,
                 'capacidad': int(row_dict['Capacidad']) if row_dict.get('Capacidad') else None,
                 'observaciones': str(row_dict.get('Observaciones', '')).strip() if row_dict.get('Observaciones') else '',
@@ -268,10 +273,10 @@ class ResetImportService:
                 label = str(row_dict['Tipo Documento']).strip()
                 tipo_doc = self._get_value_from_label('tipo_documento', label)
             
+            # Cargo: valores libres desde Excel (CLAUDE.md - uniformidad total)
             cargo = ''
             if row_dict.get('Cargo'):
-                label = str(row_dict['Cargo']).strip()
-                cargo = self._get_value_from_label('cargo_responsable', label)
+                cargo = str(row_dict['Cargo']).strip()
             
             data.append({
                 'nombre': nombre,
@@ -348,6 +353,9 @@ class ResetImportService:
         
     def _process_sedes(self, sedes_data: List[Dict]) -> Dict[str, Sede]:
         sedes_map = {}
+        # Almacenar temporalmente los nombres de coordinadores para asignarlos después
+        self._sedes_coordinadores = {}
+        
         for d in sedes_data:
             try:
                 sede, created = Sede.objects.update_or_create(
@@ -361,6 +369,8 @@ class ResetImportService:
                     }
                 )
                 sedes_map[sede.nombre] = sede
+                if d.get('coordinador_nombre'):
+                    self._sedes_coordinadores[sede.nombre] = d['coordinador_nombre']
                 if created: self.stats['sedes_creadas'] += 1
             except Exception as e:
                 self.errors.append(f"Error sede '{d['nombre']}': {str(e)}")
@@ -368,6 +378,9 @@ class ResetImportService:
 
     def _process_ubicaciones(self, data: List[Dict], sedes_map: Dict) -> Dict:
         ubic_map = {}
+        # Almacenar temporalmente los nombres de responsables para asignarlos después
+        self._ubicaciones_responsables = {}
+        
         for d in data:
             sede = sedes_map.get(d['sede_nombre'])
             if not sede:
@@ -387,6 +400,8 @@ class ResetImportService:
                     }
                 )
                 ubic_map[(sede.nombre, ubic.nombre)] = ubic
+                if d.get('responsable_nombre'):
+                    self._ubicaciones_responsables[(sede.nombre, ubic.nombre)] = d['responsable_nombre']
                 if created: self.stats['ubicaciones_creadas'] += 1
             except Exception as e:
                 self.errors.append(f"Error ubicación '{d['nombre']}': {str(e)}")
@@ -421,6 +436,62 @@ class ResetImportService:
                 self.errors.append(f"Error artículo '{d['nombre']}': {str(e)}")
         return art_map
 
+    def _assign_coordinadores_responsables(self, sedes_map: Dict, ubicaciones_map: Dict, responsables_map: Dict):
+        """
+        Asigna coordinadores a sedes y responsables por defecto a ubicaciones.
+        Debe ejecutarse después de crear todos los responsables.
+        """
+        # Asignar coordinadores a sedes
+        for sede_nombre, coordinador_nombre in getattr(self, '_sedes_coordinadores', {}).items():
+            sede = sedes_map.get(sede_nombre)
+            if not sede:
+                continue
+            
+            # Buscar responsable
+            coordinador = None
+            # Intentar buscar con sede
+            coordinador = responsables_map.get((coordinador_nombre, sede_nombre))
+            if not coordinador:
+                # Intentar buscar sin sede
+                coordinador = responsables_map.get((coordinador_nombre, ''))
+            if not coordinador:
+                # Buscar por nombre completo en la base de datos
+                coordinador = Responsable.objects.filter(
+                    nombre__icontains=coordinador_nombre.split()[0] if coordinador_nombre else ''
+                ).first()
+            
+            if coordinador:
+                sede.coordinador = coordinador
+                sede.save(update_fields=['coordinador'])
+            else:
+                self.errors.append(f"Coordinador '{coordinador_nombre}' no encontrado para sede '{sede_nombre}'")
+        
+        # Asignar responsables por defecto a ubicaciones
+        for ubic_key, responsable_nombre in getattr(self, '_ubicaciones_responsables', {}).items():
+            ubic = ubicaciones_map.get(ubic_key)
+            if not ubic:
+                continue
+            
+            sede_nombre, _ = ubic_key
+            # Buscar responsable
+            responsable = None
+            # Intentar buscar con sede
+            responsable = responsables_map.get((responsable_nombre, sede_nombre))
+            if not responsable:
+                # Intentar buscar sin sede
+                responsable = responsables_map.get((responsable_nombre, ''))
+            if not responsable:
+                # Buscar por nombre completo en la base de datos
+                responsable = Responsable.objects.filter(
+                    nombre__icontains=responsable_nombre.split()[0] if responsable_nombre else ''
+                ).first()
+            
+            if responsable:
+                ubic.responsable = responsable
+                ubic.save(update_fields=['responsable'])
+            else:
+                self.errors.append(f"Responsable '{responsable_nombre}' no encontrado para ubicación '{ubic.nombre}'")
+    
     def _process_responsables(self, data: List[Dict], sedes_map: Dict) -> Dict:
         resp_map = {}
         for d in data:

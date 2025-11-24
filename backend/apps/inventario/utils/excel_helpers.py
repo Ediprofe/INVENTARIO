@@ -72,16 +72,17 @@ def write_item_row(ws, row_num: int, item) -> None:
     ws.cell(row=row_num, column=7, value=item.sede.nombre)
     ws.cell(row=row_num, column=8, value=item.ubicacion.nombre)
     ws.cell(row=row_num, column=9, value=item.ubicacion.codigo)
-    ws.cell(row=row_num, column=10, value=item.responsable.nombre_completo if item.responsable else '')
-    ws.cell(row=row_num, column=11, value=item.responsable.documento if item.responsable else '')
-    ws.cell(row=row_num, column=12, value=item.marca or '')
-    ws.cell(row=row_num, column=13, value=item.serial or '')
-    ws.cell(row=row_num, column=14, value=item.estado)
-    ws.cell(row=row_num, column=15, value=item.disponibilidad)
-    ws.cell(row=row_num, column=16, value=item.descripcion or '')
-    ws.cell(row=row_num, column=17, value=item.observaciones or '')
-    ws.cell(row=row_num, column=18, value=item.created_at.strftime('%Y-%m-%d %H:%M'))
-    ws.cell(row=row_num, column=19, value=item.updated_at.strftime('%Y-%m-%d %H:%M'))
+    ws.cell(row=row_num, column=10, value=item.ubicacion.responsable.nombre_completo if item.ubicacion.responsable else '')
+    ws.cell(row=row_num, column=11, value=item.responsable.nombre_completo if item.responsable else '')
+    ws.cell(row=row_num, column=12, value=item.responsable.documento if item.responsable else '')
+    ws.cell(row=row_num, column=13, value=item.marca or '')
+    ws.cell(row=row_num, column=14, value=item.serial or '')
+    ws.cell(row=row_num, column=15, value=item.estado)
+    ws.cell(row=row_num, column=16, value=item.disponibilidad)
+    ws.cell(row=row_num, column=17, value=item.descripcion or '')
+    ws.cell(row=row_num, column=18, value=item.observaciones or '')
+    ws.cell(row=row_num, column=19, value=item.created_at.strftime('%Y-%m-%d %H:%M'))
+    ws.cell(row=row_num, column=20, value=item.updated_at.strftime('%Y-%m-%d %H:%M'))
 
 
 def write_template_example_row(ws) -> None:
@@ -107,7 +108,8 @@ def write_template_example_row(ws) -> None:
 # Constantes de columnas
 EXPORT_HEADERS = [
     'ID', 'Código Ítem', 'Placa', 'Artículo', 'Artículo Código', 
-    'Categoría', 'Sede', 'Ubicación', 'Ubicación Código', 'Responsable',
+    'Categoría', 'Sede', 'Ubicación', 'Ubicación Código', 
+    'Responsable Por Defecto Ubicación', 'Responsable',
     'Responsable Documento', 'Marca', 'Serial', 'Estado Físico', 
     'Disponibilidad', 'Descripción', 'Observaciones', 'Creado', 
     'Actualizado'

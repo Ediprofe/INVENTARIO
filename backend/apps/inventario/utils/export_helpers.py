@@ -116,35 +116,43 @@ def _add_data_validation(ws, column_letter: str, options: list, allow_blank: boo
 
 def _create_sedes_sheet_with_data(wb: Workbook, SedeModel):
     ws = wb.create_sheet('Sedes')
-    headers = ['Nombre*', 'Código*', 'Dirección', 'Teléfono', 'Email']
+    headers = ['Nombre*', 'Código*', 'Coordinador', 'Dirección', 'Teléfono', 'Email']
     _apply_header_style(ws, headers)
     
-    sedes = SedeModel.objects.all().order_by('nombre')
+    sedes = SedeModel.objects.select_related('coordinador').all().order_by('nombre')
     for row_num, obj in enumerate(sedes, 2):
         ws.cell(row=row_num, column=1, value=_sanitize_value(obj.nombre))
         ws.cell(row=row_num, column=2, value=_sanitize_value(obj.codigo))
-        ws.cell(row=row_num, column=3, value=_sanitize_value(obj.direccion))
-        ws.cell(row=row_num, column=4, value=_sanitize_value(obj.telefono))
-        ws.cell(row=row_num, column=5, value=_sanitize_value(obj.email))
+        
+        coordinador_nombre = obj.coordinador.nombre_completo if obj.coordinador else ""
+        ws.cell(row=row_num, column=3, value=_sanitize_value(coordinador_nombre))
+        
+        ws.cell(row=row_num, column=4, value=_sanitize_value(obj.direccion))
+        ws.cell(row=row_num, column=5, value=_sanitize_value(obj.telefono))
+        ws.cell(row=row_num, column=6, value=_sanitize_value(obj.email))
 
 def _create_ubicaciones_sheet_with_data(wb: Workbook, UbicacionModel):
     ws = wb.create_sheet('Ubicaciones')
-    headers = ['Sede (Nombre)*', 'Nombre*', 'Código*', 'Tipo*', 'Piso', 'Capacidad', 'Observaciones']
+    headers = ['Sede (Nombre)*', 'Nombre*', 'Código*', 'Tipo*', 'Responsable Por Defecto', 'Piso', 'Capacidad', 'Observaciones']
     _apply_header_style(ws, headers)
     
     # Validación Tipo
     tipos_labels = [_sanitize_value(choice[1]) for choice in TipoUbicacion.choices]
     _add_data_validation(ws, 'D', tipos_labels, allow_blank=False)
     
-    ubicaciones = UbicacionModel.objects.select_related('sede').all().order_by('sede__nombre', 'nombre')
+    ubicaciones = UbicacionModel.objects.select_related('sede', 'responsable').all().order_by('sede__nombre', 'nombre')
     for row_num, obj in enumerate(ubicaciones, 2):
         ws.cell(row=row_num, column=1, value=_sanitize_value(obj.sede.nombre))
         ws.cell(row=row_num, column=2, value=_sanitize_value(obj.nombre))
         ws.cell(row=row_num, column=3, value=_sanitize_value(obj.codigo))
         ws.cell(row=row_num, column=4, value=_sanitize_value(obj.tipo))
-        ws.cell(row=row_num, column=5, value=obj.piso if obj.piso is not None else "")
-        ws.cell(row=row_num, column=6, value=obj.capacidad if obj.capacidad is not None else "")
-        ws.cell(row=row_num, column=7, value=_sanitize_value(obj.observaciones))
+        
+        responsable_nombre = obj.responsable.nombre_completo if obj.responsable else ""
+        ws.cell(row=row_num, column=5, value=_sanitize_value(responsable_nombre))
+        
+        ws.cell(row=row_num, column=6, value=obj.piso if obj.piso is not None else "")
+        ws.cell(row=row_num, column=7, value=obj.capacidad if obj.capacidad is not None else "")
+        ws.cell(row=row_num, column=8, value=_sanitize_value(obj.observaciones))
 
 def _create_articulos_sheet_with_data(wb: Workbook, ArticuloModel):
     ws = wb.create_sheet('Articulos')

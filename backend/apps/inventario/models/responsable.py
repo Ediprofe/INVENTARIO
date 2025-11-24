@@ -49,11 +49,12 @@ class Responsable(TimeStampedModel):
     )
 
     cargo = models.CharField(
-        max_length=50,
-        choices=CargoResponsable.choices,
+        max_length=100,
+        # choices=CargoResponsable.choices,  # Permitir valores libres (CLAUDE.md)
         blank=True,
+        db_index=True,
         verbose_name="Cargo",
-        help_text="Cargo o rol en la institución"
+        help_text="Cargo o rol en la institución (valores libres desde Excel)"
     )
 
     telefono = models.CharField(

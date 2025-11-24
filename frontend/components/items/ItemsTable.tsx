@@ -253,6 +253,11 @@ export function ItemsTable({
             <CardTitle className="text-2xl font-bold tracking-tight text-gray-900">Inventario</CardTitle>
             <CardDescription className="mt-1 text-sm text-gray-500">
               Gestión general de activos y existencias
+              {data && (
+                <span className="ml-2 font-medium text-gray-700">
+                  • {data.count} {data.count === 1 ? 'registro' : 'registros'}
+                </span>
+              )}
             </CardDescription>
           </div>
           <div className="flex flex-wrap gap-2 items-center">

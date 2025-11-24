@@ -243,5 +243,9 @@ class ItemInventario(TimeStampedModel):
         if self.ubicacion and not self.sede_id:
             self.sede = self.ubicacion.sede
 
+        # Auto-asignar responsable por defecto de la ubicación si no se proporciona
+        if self.ubicacion and not self.responsable_id and self.ubicacion.responsable:
+            self.responsable = self.ubicacion.responsable
+
         self.full_clean()
         super().save(*args, **kwargs)

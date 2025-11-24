@@ -62,6 +62,16 @@ class Sede(TimeStampedModel):
         verbose_name="Email"
     )
 
+    coordinador = models.ForeignKey(
+        'Responsable',
+        on_delete=models.SET_NULL,
+        related_name='sedes_coordinadas',
+        blank=True,
+        null=True,
+        verbose_name="Coordinador de Sede",
+        help_text="Responsable coordinador de esta sede"
+    )
+
     activo = models.BooleanField(
         default=True,
         db_index=True,

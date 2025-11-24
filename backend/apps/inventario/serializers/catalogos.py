@@ -10,12 +10,14 @@ class SedeSerializer(serializers.ModelSerializer):
 
     total_ubicaciones = serializers.IntegerField(read_only=True, source='ubicaciones.count')
     total_items = serializers.SerializerMethodField()
+    coordinador_nombre = serializers.CharField(source='coordinador.nombre_completo', read_only=True)
 
     class Meta:
         model = Sede
         fields = [
             'id', 'codigo', 'nombre', 'direccion', 'telefono',
-            'email', 'activo', 'total_ubicaciones', 'total_items',
+            'email', 'coordinador', 'coordinador_nombre', 'activo', 
+            'total_ubicaciones', 'total_items',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
