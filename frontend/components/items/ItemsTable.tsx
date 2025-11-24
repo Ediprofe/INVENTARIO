@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useItems, useDeleteItem, useExportItems, useDownloadTemplate } from '@/lib/hooks';
+import { useItems, useDeleteItem, useExportItems, useDownloadTemplate, useItemFilterOptions, useExportFullDatabase } from '@/lib/hooks';
 import { useSedes, useUbicaciones, useResponsables, useArticulos } from '@/lib/hooks/useCatalogos';
 import type { IItemFilters, EstadoFisico, Disponibilidad, IItemList } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -36,18 +36,10 @@ import {
 } from '@/lib/catalogs';
 import { Filter, Search, SlidersHorizontal, X } from 'lucide-react'; // Import icons
 
-const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
-  { value: 'bueno', label: 'Bueno' },
-  { value: 'regular', label: 'Regular' },
-  { value: 'malo', label: 'Malo' },
-];
-
-const DISPONIBILIDADES: Array<{ value: Disponibilidad; label: string }> = [
-  { value: 'en_uso', label: 'En uso' },
-  { value: 'en_reparacion', label: 'En reparación' },
-  { value: 'extraviado', label: 'Extraviado' },
-  { value: 'de_baja', label: 'De baja' },
-];
+const formatOptionLabel = (value: string) => {
+  if (!value) return 'Sin asignar';
+  return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+};
 
 interface ItemsTableProps {
   onCreateClick?: () => void;
@@ -103,7 +95,23 @@ export function ItemsTable({
   const { data: ubicacionesData } = useUbicaciones();
   const { data: responsablesData } = useResponsables();
   const { data: articulosData } = useArticulos();
+  const { data: filterOptions } = useItemFilterOptions(); // Opciones dinámicas
   const deleteMutation = useDeleteItem();
+
+  // Opciones dinámicas de filtros
+  const estadoOptions = useMemo(() => {
+    return (filterOptions?.estados || []).map(value => ({
+      value,
+      label: formatOptionLabel(value)
+    }));
+  }, [filterOptions]);
+
+  const disponibilidadOptions = useMemo(() => {
+    return (filterOptions?.disponibilidades || []).map(value => ({
+      value,
+      label: formatOptionLabel(value)
+    }));
+  }, [filterOptions]);
 
   // Catálogos ordenados
   const articulosOptions = useMemo(
@@ -125,6 +133,7 @@ export function ItemsTable({
 
   // Excel mutations
   const exportMutation = useExportItems();
+  const exportFullMutation = useExportFullDatabase();
   const templateMutation = useDownloadTemplate();
 
   // Excel handlers
@@ -134,6 +143,15 @@ export function ItemsTable({
     } catch (err) {
       console.error('Error al exportar:', err);
       alert('Error al exportar ítems');
+    }
+  };
+
+  const handleFullExport = async () => {
+    try {
+      await exportFullMutation.mutateAsync();
+    } catch (err) {
+      console.error('Error al exportar base de datos completa:', err);
+      alert('Error al exportar base de datos completa');
     }
   };
 
@@ -263,7 +281,10 @@ export function ItemsTable({
                       Descargar Plantilla
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleExport} disabled={exportMutation.isPending}>
-                      Exportar Datos
+                      Exportar Datos (Vista Actual)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleFullExport} disabled={exportFullMutation.isPending}>
+                      Exportar Todo (Editable)
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={onResetImportClick}
@@ -390,7 +411,7 @@ export function ItemsTable({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
-                      {ESTADO_FISICO.map((e) => (
+                      {estadoOptions.map((e) => (
                         <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>
                       ))}
                     </SelectContent>
@@ -406,7 +427,7 @@ export function ItemsTable({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas</SelectItem>
-                      {DISPONIBILIDADES.map((d) => (
+                      {disponibilidadOptions.map((d) => (
                         <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
                       ))}
                     </SelectContent>
@@ -592,10 +613,12 @@ export function ItemsTable({
                                   ? 'bg-green-50 text-green-700 border-green-200'
                                   : item.estado === 'regular'
                                   ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                  : 'bg-red-50 text-red-700 border-red-200'
+                                  : item.estado === 'malo'
+                                  ? 'bg-red-50 text-red-700 border-red-200'
+                                  : 'bg-gray-50 text-gray-700 border-gray-200'
                               }`}
                             >
-                              {ESTADO_FISICO.find((e) => e.value === item.estado)?.label || item.estado}
+                              {formatOptionLabel(item.estado)}
                             </span>
                           </TableCell>
                           <TableCell>
@@ -605,10 +628,14 @@ export function ItemsTable({
                                   ? 'bg-blue-50 text-blue-700 border-blue-200'
                                   : item.disponibilidad === 'en_reparacion'
                                   ? 'bg-orange-50 text-orange-700 border-orange-200'
-                                  : 'bg-purple-50 text-purple-700 border-purple-200'
+                                  : item.disponibilidad === 'extraviado'
+                                  ? 'bg-red-50 text-red-700 border-red-200'
+                                  : item.disponibilidad === 'de_baja'
+                                  ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                  : 'bg-gray-50 text-gray-700 border-gray-200'
                               }`}
                             >
-                              {DISPONIBILIDADES.find((d) => d.value === item.disponibilidad)?.label || item.disponibilidad}
+                              {formatOptionLabel(item.disponibilidad)}
                             </span>
                           </TableCell>
                           <TableCell>

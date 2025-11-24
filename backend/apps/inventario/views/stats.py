@@ -128,11 +128,19 @@ class InventarioStatsViewSet(viewsets.ViewSet):
         items = items_queryset[start:end]
         serializer = ItemInventarioListSerializer(items, many=True)
 
+        # Obtener ubicaciones a cargo del responsable
+        ubicaciones_a_cargo = Ubicacion.objects.filter(
+            responsable=responsable,
+            activo=True
+        ).values('nombre', 'codigo', 'sede__nombre')
+
         return Response({
             'metadata': {
                 'responsable_id': responsable.id,
                 'responsable_nombre': responsable.nombre_completo,
+                'responsable_cargo': responsable.get_cargo_display() if responsable.cargo else None,
                 'sede_nombre': responsable.sede.nombre,
+                'ubicaciones_a_cargo': list(ubicaciones_a_cargo),
             },
             'resumen': list(resumen),
             'detalle': {

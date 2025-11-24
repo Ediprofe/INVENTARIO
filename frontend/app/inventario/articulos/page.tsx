@@ -1,26 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardNav } from '@/components/dashboard';
-import { useArticuloStats } from '@/lib/hooks';
+import { useArticuloStats, useItemFilterOptions } from '@/lib/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { EstadoFisico, Disponibilidad } from '@/types';
 
-const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
-  { value: 'bueno', label: 'Bueno' },
-  { value: 'regular', label: 'Regular' },
-  { value: 'malo', label: 'Malo' },
-];
-
-const DISPONIBILIDADES: Array<{ value: Disponibilidad; label: string }> = [
-  { value: 'en_uso', label: 'En uso' },
-  { value: 'en_reparacion', label: 'En reparación' },
-  { value: 'extraviado', label: 'Extraviado' },
-  { value: 'de_baja', label: 'De baja' },
-];
+const formatOptionLabel = (value: string) => {
+  if (!value) return 'Sin asignar';
+  return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+};
 
 /**
  * Página de Inventario por Artículos.
@@ -39,6 +31,16 @@ export default function InventarioPorArticulos() {
   const { data: stats, isLoading, isError } = useArticuloStats({
     disponibilidad: disponibilidadFilter,
   });
+
+  // Opciones dinámicas
+  const { data: filterOptions } = useItemFilterOptions();
+
+  const disponibilidadOptions = useMemo(() => {
+    return (filterOptions?.disponibilidades || []).map(value => ({
+      value,
+      label: formatOptionLabel(value)
+    }));
+  }, [filterOptions]);
 
   return (
     <>
@@ -64,7 +66,7 @@ export default function InventarioPorArticulos() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
-                {DISPONIBILIDADES.map((disp) => (
+                {disponibilidadOptions.map((disp) => (
                   <SelectItem key={disp.value} value={disp.value}>
                     {disp.label}
                   </SelectItem>
@@ -83,7 +85,7 @@ export default function InventarioPorArticulos() {
           <CardTitle>Inventario por Artículos</CardTitle>
           <CardDescription>
             Total de ítems de cada artículo por sede, desglosado por estado físico (Bueno/Regular/Malo)
-            {disponibilidadFilter && ` • Disponibilidad: ${DISPONIBILIDADES.find(d => d.value === disponibilidadFilter)?.label}`}
+            {disponibilidadFilter && ` • Disponibilidad: ${formatOptionLabel(disponibilidadFilter)}`}
           </CardDescription>
         </CardHeader>
         <CardContent>

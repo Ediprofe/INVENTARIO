@@ -98,10 +98,30 @@ export default function InventarioPorResponsables() {
                   <CardTitle className="text-xl text-blue-900">
                     {stats.metadata.responsable_nombre}
                   </CardTitle>
-                  <CardDescription className="text-blue-700/80 mt-2">
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">Sede Principal:</span> {stats.metadata.sede_nombre}
-                    </span>
+                  <CardDescription className="text-blue-700/80 mt-2 space-y-1">
+                    <div className="flex flex-wrap gap-x-6 gap-y-1">
+                      {stats.metadata.responsable_cargo && (
+                        <span className="flex items-center gap-2">
+                          <span className="font-semibold">Cargo:</span> {stats.metadata.responsable_cargo}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-2">
+                        <span className="font-semibold">Sede Principal:</span> {stats.metadata.sede_nombre}
+                      </span>
+                    </div>
+                    
+                    {stats.metadata.ubicaciones_a_cargo && stats.metadata.ubicaciones_a_cargo.length > 0 && (
+                      <div className="pt-2">
+                        <span className="font-semibold block mb-1">Ubicaciones a cargo:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {stats.metadata.ubicaciones_a_cargo.map((u, i) => (
+                            <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                              {u.nombre} ({u.codigo})
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </CardDescription>
                 </CardHeader>
               </Card>

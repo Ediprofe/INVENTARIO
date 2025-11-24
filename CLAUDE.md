@@ -1,11 +1,17 @@
 # Peticiones
 
-## Mejor organización de los filtros en ítems detallados y rediseño genreal de la experiencia de usuario
-![alt text](image-15.png)
+## No se muestran los estados físicos disponibles al abrir la acción "Editar"
+![alt text](image-21.png)
 
-Organizar mejor los filtros al buscar ítems detallados en la pestaña correspondiente donde esté, ya que está mal diseñado, es como difícil encontrar entre tanto filtro, hay campos que ocupan mucho espacio. De otro lado, no hay filtro para buscar por el campo "Descripción" ni por el campo "Observaciones", y que se puedan buscar con un texto libre, ya que no hay valores predecibles una lista para los registros en esos campos. Mira la manera de hacer esta experiencia para el usuario mucho más intuitiva, con buenas prácticas y manteniendo el código legible, pero de verdad, algo muy intuitivo para el usuario.
+Este elemento tiene el estado físico "Sin estado", el cual creo que no se espera desde el backend o no lo tiene predeterminado el modelo de Django...consulta bien y resuelve para que todos esos filtros en todos los campos de la tabla se muestren con base en los datos reales, y no en datos harcodeados o datos que se esperen a partir de un enum. Por favor mira cómo se trabaja el filtro de ese mismo campo pero desde la cabecera de la tabla, para que se aplique ese mismo comportamiento en el modal que se abre cuando se le da a la acción "Editar"
+![alt text](image-22.png)
 
-Dale un cambio de look que haga la interfaz de next js mucho más atractiva en términos generales. Doy cambida suelta a tu creatividad. Recuerda buenas prácticas y mantenibilidad.
+## Incluir el campo responsable por defecto de la ubicación del backend en el excel que se importa y exporta
+![alt text](image-20.png)
+![alt text](image-23.png)
+
+## Tabla con ítems detallados debe mostrar número de registros
+![alt text](image-19.png)
 
 
 

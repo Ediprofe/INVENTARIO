@@ -331,6 +331,39 @@ def download_reset_template(request):
         )
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def export_full_database(request):
+    """
+    Exporta la base de datos completa en formato compatible con la importación/reseteo.
+    Útil para backups y ediciones masivas offline.
+    """
+    from apps.inventario.utils.export_helpers import generate_full_export_workbook
+    
+    try:
+        wb = generate_full_export_workbook()
+        
+        # Preparar respuesta
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        filename = f'backup_completo_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        wb.save(response)
+        return response
+        
+    except Exception as e:
+        return Response(
+            {
+                'success': False,
+                'message': f'Error al exportar base de datos: {str(e)}',
+                'errors': [str(e)]
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 def _error_response(message: str, errors: list) -> Response:
     """
     Construye una respuesta de error estándar.

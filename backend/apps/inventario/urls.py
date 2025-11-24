@@ -15,6 +15,7 @@ from .views import (
     download_template,
     reset_import_excel,
     download_reset_template,
+    export_full_database,
 )
 
 app_name = 'inventario'
@@ -35,6 +36,7 @@ urlpatterns = [
     # Excel reset & import (reseteo completo + importación masiva)
     path('excel/reset-import/', reset_import_excel, name='items-reset-import'),
     path('excel/reset-template/', download_reset_template, name='items-reset-template'),
+    path('excel/export-full/', export_full_database, name='items-export-full'),
     # Router de ViewSets
     path('', include(router.urls)),
 ]

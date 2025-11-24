@@ -96,6 +96,21 @@ class ItemInventarioViewSet(viewsets.ModelViewSet):
             observaciones='Ítem dado de baja (soft delete)'
         )
 
+    @action(detail=False, methods=['get'], url_path='filter-options')
+    def filter_options(self, request):
+        """
+        Retorna opciones únicas para filtros dinámicos basados en datos existentes.
+        GET /items/filter-options/
+        """
+        # Obtener valores distintos de la base de datos
+        estados = ItemInventario.objects.values_list('estado', flat=True).distinct().order_by('estado')
+        disponibilidades = ItemInventario.objects.values_list('disponibilidad', flat=True).distinct().order_by('disponibilidad')
+        
+        return Response({
+            'estados': list(estados),
+            'disponibilidades': list(disponibilidades)
+        })
+
     @action(detail=False, methods=['post'], url_path='batch-update')
     def batch_update(self, request):
         """

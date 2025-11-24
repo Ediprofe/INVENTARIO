@@ -12,6 +12,7 @@ export const itemsKeys = {
   list: (filters: IItemFilters) => [...itemsKeys.lists(), filters] as const,
   details: () => [...itemsKeys.all, 'detail'] as const,
   detail: (id: number) => [...itemsKeys.details(), id] as const,
+  filterOptions: () => [...itemsKeys.all, 'filter-options'] as const,
 };
 
 /**
@@ -21,6 +22,17 @@ export function useItems(filters: IItemFilters = {}) {
   return useQuery<IPaginatedResponse<IItemList>>({
     queryKey: itemsKeys.list(filters),
     queryFn: () => ItemsAPI.list(filters),
+  });
+}
+
+/**
+ * Hook para obtener opciones de filtros dinámicos.
+ */
+export function useItemFilterOptions() {
+  return useQuery({
+    queryKey: itemsKeys.filterOptions(),
+    queryFn: () => ItemsAPI.getFilterOptions(),
+    staleTime: 5 * 60 * 1000, // 5 minutos de cache
   });
 }
 
@@ -122,8 +134,24 @@ export function useBatchUpdateItems() {
 }
 
 /**
- * Hook para cargar múltiples ítems por sus IDs.
+ * Hook para exportar base de datos completa.
  */
+export function useExportFullDatabase() {
+  return useMutation({
+    mutationFn: () => ItemsAPI.exportFullDatabase(),
+    onSuccess: (data) => {
+      // Descargar archivo automáticamente
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `backup_completo_${new Date().toISOString().split('T')[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    },
+  });
+}
+
 export function useMultipleItems(ids: number[]) {
   return useQuery({
     queryKey: [...itemsKeys.all, 'multiple', ids.sort().join(',')],

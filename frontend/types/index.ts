@@ -273,7 +273,13 @@ export interface IUbicacionStats {
 export interface IResponsableStatsMetadata {
   responsable_id: number;
   responsable_nombre: string;
+  responsable_cargo?: string;
   sede_nombre: string;
+  ubicaciones_a_cargo?: Array<{
+    nombre: string;
+    codigo: string;
+    sede__nombre: string;
+  }>;
 }
 
 export interface IResponsableResumen {
@@ -298,7 +304,7 @@ export interface ISedeInfo {
 export interface IArticuloStats {
   articulo_id: number;
   articulo_nombre: string;
-  totales_por_sede: Record<string, number>;
+  totales_por_sede: Record<string, { bueno: number; regular: number; malo: number; total: number }>;
   total_general: number;
 }
 

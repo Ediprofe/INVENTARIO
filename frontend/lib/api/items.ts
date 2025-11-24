@@ -71,4 +71,22 @@ export const ItemsAPI = {
     const response = await apiClient.post('/inventario/items/batch-update/', request);
     return response.data;
   },
+
+  /**
+   * Obtener opciones dinámicas para filtros.
+   */
+  getFilterOptions: async (): Promise<{ estados: string[]; disponibilidades: string[] }> => {
+    const response = await apiClient.get('/inventario/items/filter-options/');
+    return response.data;
+  },
+
+  /**
+   * Exportar base de datos completa (formato editable).
+   */
+  exportFullDatabase: async (): Promise<Blob> => {
+    const response = await apiClient.get('/inventario/excel/export-full/', {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 };
