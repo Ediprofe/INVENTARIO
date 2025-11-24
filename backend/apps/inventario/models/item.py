@@ -106,7 +106,7 @@ class ItemInventario(TimeStampedModel):
         blank=True,
         null=True,
         verbose_name="Serial",
-        help_text="Número de serie (único por artículo) - CLAUDE.md línea 176"
+        help_text="Número de serie"
     )
 
     # === ESTADO Y DISPONIBILIDAD ===
@@ -114,7 +114,7 @@ class ItemInventario(TimeStampedModel):
 
     estado = models.CharField(
         max_length=20,
-        choices=EstadoFisico.choices,
+        # choices=EstadoFisico.choices,  # Permitir valores libres (CLAUDE.md)
         default=EstadoFisico.BUENO,
         db_index=True,
         verbose_name="Estado Físico",
@@ -123,7 +123,7 @@ class ItemInventario(TimeStampedModel):
 
     disponibilidad = models.CharField(
         max_length=20,
-        choices=Disponibilidad.choices,
+        # choices=Disponibilidad.choices,  # Permitir valores libres (CLAUDE.md)
         default=Disponibilidad.EN_USO,
         db_index=True,
         verbose_name="Disponibilidad",
@@ -182,15 +182,7 @@ class ItemInventario(TimeStampedModel):
         ]
 
         # === CONSTRAINTS A NIVEL BD ===
-        constraints = [
-            # Serial único por artículo (CLAUDE.md línea 199-201)
-            # Permite null pero no permite duplicados para el mismo artículo
-            models.UniqueConstraint(
-                fields=['articulo', 'serial'],
-                condition=models.Q(serial__isnull=False) & ~models.Q(serial=''),
-                name='unique_serial_per_articulo'
-            ),
-        ]
+        constraints = []
 
     def __str__(self):
         return f"{self.codigo} - {self.articulo.nombre}"
@@ -213,18 +205,9 @@ class ItemInventario(TimeStampedModel):
                         'placa': f'La placa "{self.placa}" ya existe en otro ítem'
                     })
 
-        # Normalizar serial y validar unicidad por artículo (CLAUDE.md línea 199-201)
+        # Normalizar serial
         if self.serial:
             self.serial = self.serial.strip()
-            if self.serial and self.articulo:
-                duplicates = ItemInventario.objects.filter(
-                    articulo=self.articulo,
-                    serial=self.serial
-                ).exclude(pk=self.pk)
-                if duplicates.exists():
-                    raise ValidationError({
-                        'serial': f'El serial "{self.serial}" ya existe para este artículo'
-                    })
 
         # Validar sede coherente con ubicación
         if self.ubicacion:

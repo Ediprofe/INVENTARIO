@@ -37,12 +37,14 @@ class Responsable(TimeStampedModel):
         max_length=10,
         choices=TipoDocumento.choices,
         blank=True,
+        null=True,
         verbose_name="Tipo de Documento"
     )
 
     documento = models.CharField(
         max_length=20,
         blank=True,
+        null=True,
         verbose_name="Número de Documento"
     )
 

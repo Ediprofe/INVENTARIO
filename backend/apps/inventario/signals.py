@@ -24,8 +24,8 @@ def crear_historial_creacion(sender, instance, created, **kwargs):
                 'serial': instance.serial or '',
                 'ubicacion': instance.ubicacion.nombre,
                 'responsable': instance.responsable.nombre_completo if instance.responsable else None,
-                'estado': instance.get_estado_display(),
-                'disponibilidad': instance.get_disponibilidad_display(),
+                'estado': instance.estado,
+                'disponibilidad': instance.disponibilidad,
             },
             observaciones='Creación inicial del ítem'
         )
@@ -69,9 +69,9 @@ def detectar_cambios_item(sender, instance, **kwargs):
                 HistorialMovimiento.objects.create(
                     item=instance,
                     tipo_movimiento='cambio_estado',
-                    datos_anteriores={'estado': old_instance.get_estado_display()},
-                    datos_nuevos={'estado': instance.get_estado_display()},
-                    observaciones=f'Estado físico cambiado de {old_instance.get_estado_display()} a {instance.get_estado_display()}'
+                    datos_anteriores={'estado': old_instance.estado},
+                    datos_nuevos={'estado': instance.estado},
+                    observaciones=f'Estado físico cambiado de {old_instance.estado} a {instance.estado}'
                 )
 
             # Detectar cambio de disponibilidad
@@ -79,9 +79,9 @@ def detectar_cambios_item(sender, instance, **kwargs):
                 HistorialMovimiento.objects.create(
                     item=instance,
                     tipo_movimiento='cambio_estado',
-                    datos_anteriores={'disponibilidad': old_instance.get_disponibilidad_display()},
-                    datos_nuevos={'disponibilidad': instance.get_disponibilidad_display()},
-                    observaciones=f'Disponibilidad cambiada de {old_instance.get_disponibilidad_display()} a {instance.get_disponibilidad_display()}'
+                    datos_anteriores={'disponibilidad': old_instance.disponibilidad},
+                    datos_nuevos={'disponibilidad': instance.disponibilidad},
+                    observaciones=f'Disponibilidad cambiada de {old_instance.disponibilidad} a {instance.disponibilidad}'
                 )
 
         except ItemInventario.DoesNotExist:

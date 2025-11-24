@@ -78,8 +78,8 @@ class ItemInventarioViewSet(viewsets.ModelViewSet):
         """
         # Guardar datos anteriores para historial
         datos_anteriores = {
-            'disponibilidad': instance.get_disponibilidad_display(),
-            'estado': instance.get_estado_display()
+            'disponibilidad': instance.disponibilidad,
+            'estado': instance.estado
         }
         
         # Cambiar disponibilidad a 'de_baja' (soft delete)
@@ -234,32 +234,23 @@ class ItemInventarioViewSet(viewsets.ModelViewSet):
                 except Responsable.DoesNotExist:
                     raise ValidationError(f'Responsable con ID {responsable_id} no encontrado')
 
-            # Actualizar estado físico (según CLAUDE.md)
+            # Actualizar estado físico (según CLAUDE.md - flexible)
             if 'estado' in item_data:
                 estado = item_data['estado']
-                valid_estados = ['bueno', 'regular', 'malo']
-
-                if estado not in valid_estados:
-                    raise ValidationError(f'Estado físico inválido: {estado}. Opciones: bueno, regular, malo')
-
-                datos_anteriores['estado'] = item.get_estado_display()
+                # Validación estricta eliminada para permitir estados personalizados
+                
+                datos_anteriores['estado'] = item.estado
                 item.estado = estado
-                datos_nuevos['estado'] = item.get_estado_display()
+                datos_nuevos['estado'] = item.estado
 
-            # Actualizar disponibilidad (según CLAUDE.md)
+            # Actualizar disponibilidad (según CLAUDE.md - flexible)
             if 'disponibilidad' in item_data:
                 disponibilidad = item_data['disponibilidad']
-                valid_disponibilidades = ['en_uso', 'en_reparacion', 'extraviado', 'de_baja']
+                # Validación estricta eliminada para permitir disponibilidades personalizadas
 
-                if disponibilidad not in valid_disponibilidades:
-                    raise ValidationError(
-                        f'Disponibilidad inválida: {disponibilidad}. '
-                        f'Opciones: en_uso, en_reparacion, extraviado, de_baja'
-                    )
-
-                datos_anteriores['disponibilidad'] = item.get_disponibilidad_display()
+                datos_anteriores['disponibilidad'] = item.disponibilidad
                 item.disponibilidad = disponibilidad
-                datos_nuevos['disponibilidad'] = item.get_disponibilidad_display()
+                datos_nuevos['disponibilidad'] = item.disponibilidad
 
             # Actualizar placa (según CLAUDE.md - debe ser única)
             if 'placa' in item_data:

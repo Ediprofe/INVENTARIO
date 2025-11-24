@@ -123,11 +123,15 @@ class ResetImportService:
                 raise ValidationError(f"Falta la hoja requerida: '{required_sheet}'")
                 
     def _get_value_from_label(self, map_name: str, label: str) -> str:
-        """Convierte el label (ej: 'Aula') al value (ej: 'aula')."""
+        """
+        Convierte el label (ej: 'Aula') al value (ej: 'aula').
+        Si no encuentra match, retorna el valor original normalizado (para flexibilidad).
+        """
         if not label:
             return ''
         
-        label_lower = str(label).strip().lower()
+        label_clean = str(label).strip()
+        label_lower = label_clean.lower()
         
         # Intentar buscar en el mapa de labels
         value = self.maps[map_name].get(label_lower)
@@ -139,7 +143,9 @@ class ResetImportService:
         if label_lower in valid_values:
             return label_lower
             
-        return None
+        # Si no encuentra match, retornar el valor original (Flexibilidad total)
+        # Esto permite valores personalizados como "Aula de Música" o "Regular-Malo"
+        return label_clean
 
     def _parse_sedes_sheet(self) -> List[Dict[str, Any]]:
         sheet = self.workbook['Sedes']
@@ -189,16 +195,9 @@ class ResetImportService:
                 self.errors.append(f"Ubicaciones fila {row_idx}: 'Tipo' es obligatorio")
                 continue
             
-            # Mapear Label -> Value
+            # Mapear Label -> Value (o usar custom)
             tipo_label = str(row_dict['Tipo*']).strip()
             tipo = self._get_value_from_label('tipo_ubicacion', tipo_label)
-            
-            if not tipo:
-                valid_labels = list(self.maps['tipo_ubicacion'].keys())
-                self.errors.append(
-                    f"Ubicaciones fila {row_idx}: Tipo '{tipo_label}' no válido. "
-                )
-                continue
             
             data.append({
                 'sede_nombre': str(row_dict['Sede (Nombre)*']).strip(),
@@ -227,13 +226,9 @@ class ResetImportService:
                 self.errors.append(f"Articulos fila {row_idx}: 'Categoría' es obligatorio")
                 continue
             
-            # Mapear Label -> Value
+            # Mapear Label -> Value (o usar custom)
             cat_label = str(row_dict['Categoría*']).strip()
             categoria = self._get_value_from_label('categoria_articulo', cat_label)
-            
-            if not categoria:
-                self.errors.append(f"Articulos fila {row_idx}: Categoría '{cat_label}' no válida.")
-                continue
             
             data.append({
                 'nombre': str(row_dict['Nombre*']).strip(),
@@ -267,22 +262,16 @@ class ResetImportService:
                 nombre = partes[0]
                 apellido = ' '.join(partes[1:])
             
-            # Validar Enums
+            # Validar Enums (o custom)
             tipo_doc = ''
             if row_dict.get('Tipo Documento'):
                 label = str(row_dict['Tipo Documento']).strip()
                 tipo_doc = self._get_value_from_label('tipo_documento', label)
-                if not tipo_doc:
-                    self.errors.append(f"Responsables fila {row_idx}: Tipo Documento '{label}' no válido.")
-                    continue
             
             cargo = ''
             if row_dict.get('Cargo'):
                 label = str(row_dict['Cargo']).strip()
                 cargo = self._get_value_from_label('cargo_responsable', label)
-                if not cargo:
-                    self.errors.append(f"Responsables fila {row_idx}: Cargo '{label}' no válido.")
-                    continue
             
             data.append({
                 'nombre': nombre,
@@ -317,18 +306,12 @@ class ResetImportService:
                 self.errors.append(f"Items fila {row_idx}: 'Articulo (Nombre)' es obligatorio")
                 continue
                 
-            # Validar Enums
+            # Validar Enums (o custom)
             estado_label = str(row_dict.get('Estado Físico*', 'Bueno')).strip()
             estado = self._get_value_from_label('estado_fisico', estado_label)
-            if not estado:
-                self.errors.append(f"Items fila {row_idx}: Estado '{estado_label}' no válido.")
-                continue
                 
             disp_label = str(row_dict.get('Disponibilidad*', 'En uso')).strip()
             disponibilidad = self._get_value_from_label('disponibilidad', disp_label)
-            if not disponibilidad:
-                self.errors.append(f"Items fila {row_idx}: Disponibilidad '{disp_label}' no válido.")
-                continue
             
             data.append({
                 'sede_nombre': str(row_dict['Sede (Nombre)*']).strip(),
@@ -443,35 +426,70 @@ class ResetImportService:
         for d in data:
             sede = sedes_map.get(d['sede_nombre']) if d['sede_nombre'] else None
             
-            # Buscar si existe
             try:
                 defaults = {
-                    'tipo_documento': d['tipo_documento'],
-                    'documento': d['documento'],
+                    'tipo_documento': d['tipo_documento'] if d['tipo_documento'] else None,
+                    'documento': d['documento'] if d['documento'] else None,
                     'cargo': d['cargo'],
-                    'email': d['email'],
+                    'email': d['email'] if d['email'] else None,
                     'telefono': d['telefono'],
                     'activo': True,
                 }
-                
                 if sede:
-                    resp, created = Responsable.objects.update_or_create(
-                        nombre=d['nombre'],
-                        apellido=d['apellido'],
-                        sede=sede,
-                        defaults=defaults
-                    )
-                else:
-                    resp, created = Responsable.objects.update_or_create(
-                        nombre=d['nombre'],
-                        apellido=d['apellido'],
-                        sede__isnull=True,
-                        defaults=defaults
-                    )
+                    defaults['sede'] = sede
+
+                # Estrategia de deduplicación robusta (Email -> Documento -> Nombre)
+                resp = None
+
+                # 1. Buscar por Email (único globalmente)
+                if d['email']:
+                    resp = Responsable.objects.filter(email=d['email']).first()
                 
+                # 2. Buscar por Documento (único globalmente junto con tipo)
+                if not resp and d['documento'] and d['tipo_documento']:
+                    resp = Responsable.objects.filter(
+                        documento=d['documento'], 
+                        tipo_documento=d['tipo_documento']
+                    ).first()
+
+                # 3. Buscar por Nombre + Apellido (dentro de la misma sede o sin sede)
+                if not resp:
+                    query = Responsable.objects.filter(
+                        nombre=d['nombre'], 
+                        apellido=d['apellido']
+                    )
+                    if sede:
+                        query = query.filter(sede=sede)
+                    else:
+                        query = query.filter(sede__isnull=True)
+                    resp = query.first()
+
+                if resp:
+                    # Actualizar existente (último gana)
+                    for key, value in defaults.items():
+                        setattr(resp, key, value)
+                    # También actualizar nombre/apellido por si acaso cambió levemente
+                    resp.nombre = d['nombre']
+                    resp.apellido = d['apellido']
+                    resp.save()
+                    created = False
+                else:
+                    # Crear nuevo
+                    create_kwargs = {
+                        'nombre': d['nombre'],
+                        'apellido': d['apellido'],
+                        **defaults
+                    }
+                    if 'sede' not in create_kwargs:
+                        create_kwargs['sede'] = None
+                        
+                    resp = Responsable.objects.create(**create_kwargs)
+                    created = True
+
                 key = (d['nombre_completo'], d['sede_nombre'] or '')
                 resp_map[key] = resp
                 if created: self.stats['responsables_creados'] += 1
+
             except Exception as e:
                 self.errors.append(f"Error responsable '{d['nombre_completo']}': {str(e)}")
         return resp_map
@@ -508,7 +526,7 @@ class ResetImportService:
                         nombre=ubic_nombre,
                         defaults={
                             'codigo': codigo_ubic,
-                            'tipo': 'otro', # Default
+                            'tipo': 'otro', # Default for lazy creation (items sheet doesn't have type)
                             'activo': True
                         }
                     )
@@ -564,19 +582,43 @@ class ResetImportService:
                         if created:
                             self.stats['responsables_creados'] += 1
                 
+                # Limpieza inteligente de seriales (User Feedback: Seriales genéricos causan duplicados)
+                serial = d['serial']
+                if serial:
+                    serial_limpio = serial.upper().strip()
+                    # Si es un placeholder común, convertir a None para permitir múltiples ítems
+                    if any(x in serial_limpio for x in ['NO TIENE', 'NO SE VE', 'S/N', 'SIN SERIAL', 'NO APLICA', 'N/A', 'NINGUNO']):
+                        serial = None
+                    # Si parece ser un modelo en vez de un serial único (ej: "MODEL:PCS...")
+                    elif serial_limpio.startswith('MODEL:'):
+                        serial = None
+                
+                # Limpieza de Placa (para evitar error de unicidad con strings vacíos)
+                placa = d['placa']
+                if placa:
+                    placa_limpia = placa.upper().strip()
+                    if not placa_limpia or any(x in placa_limpia for x in ['NO TIENE', 'NO APLICA', 'S/P', 'SIN PLACA', 'N/A', 'NINGUNA']):
+                        placa = None
+                    else:
+                        placa = placa_limpia # Usar la versión limpia
+                else:
+                    placa = None
+
+                # Crear siempre un nuevo registro (ya no hay restricción de serial único)
                 ItemInventario.objects.create(
                     articulo=art,
                     ubicacion=ubic,
                     sede=sede,
                     responsable=resp,
-                    placa=d['placa'],
+                    placa=placa,
                     marca=d['marca'],
-                    serial=d['serial'],
+                    serial=serial,
                     estado=d['estado'],
                     disponibilidad=d['disponibilidad'],
                     descripcion=d['descripcion'],
                     observaciones=d['observaciones']
                 )
                 self.stats['items_creados'] += 1
+
             except Exception as e:
                 self.errors.append(f"Error creando ítem: {str(e)}")

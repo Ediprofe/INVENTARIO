@@ -16,9 +16,9 @@ class ItemInventarioFilter(django_filters.FilterSet):
     responsable = django_filters.NumberFilter(field_name='responsable__id')
     articulo = django_filters.NumberFilter(field_name='articulo__id')
 
-    # Filtros por estado físico y disponibilidad (CLAUDE.md)
-    estado = django_filters.ChoiceFilter(choices=ItemInventario._meta.get_field('estado').choices)
-    disponibilidad = django_filters.ChoiceFilter(choices=ItemInventario._meta.get_field('disponibilidad').choices)
+    # Filtros por estado físico y disponibilidad (CLAUDE.md - flexibles)
+    estado = django_filters.CharFilter(lookup_expr='icontains')
+    disponibilidad = django_filters.CharFilter(lookup_expr='icontains')
 
     # Filtros de búsqueda por texto (CLAUDE.md campos placa, marca, serial)
     placa = django_filters.CharFilter(lookup_expr='icontains')
@@ -49,7 +49,7 @@ class UbicacionFilter(django_filters.FilterSet):
 
     activo = django_filters.BooleanFilter()
     sede = django_filters.NumberFilter(field_name='sede__id')
-    tipo = django_filters.ChoiceFilter(choices=Ubicacion._meta.get_field('tipo').choices)
+    tipo = django_filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = Ubicacion

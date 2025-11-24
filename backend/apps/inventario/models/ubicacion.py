@@ -48,7 +48,7 @@ class Ubicacion(TimeStampedModel):
 
     tipo = models.CharField(
         max_length=50,
-        choices=TipoUbicacion.choices,
+        # choices=TipoUbicacion.choices,  # Permitir valores libres (CLAUDE.md)
         db_index=True,
         verbose_name="Tipo de Ubicación"
     )
