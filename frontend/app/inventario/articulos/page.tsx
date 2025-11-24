@@ -103,136 +103,130 @@ export default function InventarioPorArticulos() {
 
           {/* Matriz de Artículos x Sedes */}
           {!isLoading && !isError && stats && (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader className="sticky top-0 z-20 bg-white shadow-sm">
-                  <TableRow>
-                    <TableHead className="font-bold">Artículo</TableHead>
-                    {stats.sedes.map((sede) => (
-                      <TableHead key={sede.id} className="text-center">
-                        {sede.nombre}
+            <div className="rounded-md border-none shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-gray-50/80">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="pl-6 font-bold text-gray-700">Artículo</TableHead>
+                      {stats.sedes.map((sede) => (
+                        <TableHead key={sede.id} className="text-center font-semibold text-gray-700 min-w-[120px]">
+                          {sede.nombre}
+                        </TableHead>
+                      ))}
+                      <TableHead className="text-right pr-6 font-bold bg-gray-100/50 text-gray-800 w-[100px]">
+                        Total
                       </TableHead>
-                    ))}
-                    <TableHead className="text-right font-bold bg-gray-100 dark:bg-gray-900">
-                      Total General
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {stats.articulos.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={stats.sedes.length + 2}
-                        className="text-center text-gray-500"
-                      >
-                        No hay datos de inventario
-                      </TableCell>
                     </TableRow>
-                  ) : (
-                    stats.articulos.map((articulo) => (
-                      <TableRow key={articulo.articulo_id}>
-                        <TableCell className="font-medium">
-                          <div className="whitespace-normal break-words">
-                            {articulo.articulo_nombre}
-                          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {stats.articulos.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={stats.sedes.length + 2}
+                          className="text-center py-12 text-gray-500"
+                        >
+                          No hay datos de inventario disponibles
                         </TableCell>
-                        {stats.sedes.map((sede) => {
-                          const totales = articulo.totales_por_sede[sede.codigo];
-                          if (!totales || totales.total === 0) {
+                      </TableRow>
+                    ) : (
+                      stats.articulos.map((articulo) => (
+                        <TableRow key={articulo.articulo_id} className="hover:bg-gray-50/50 transition-colors">
+                          <TableCell className="pl-6 font-medium text-gray-900">
+                            <div className="whitespace-normal break-words max-w-[200px] sm:max-w-xs">
+                              {articulo.articulo_nombre}
+                            </div>
+                          </TableCell>
+                          {stats.sedes.map((sede) => {
+                            const totales = articulo.totales_por_sede[sede.codigo];
+                            if (!totales || totales.total === 0) {
+                              return (
+                                <TableCell key={sede.id} className="text-center text-gray-300">
+                                  -
+                                </TableCell>
+                              );
+                            }
                             return (
-                              <TableCell key={sede.id} className="text-center text-gray-400">
-                                -
+                              <TableCell key={sede.id} className="text-center p-2">
+                                <div className="flex flex-col items-center justify-center gap-1 min-h-[40px]">
+                                  <div className="flex gap-1">
+                                    {totales.bueno > 0 && (
+                                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-[10px] font-bold text-green-700 ring-1 ring-green-600/20" title={`${totales.bueno} Buenos`}>
+                                        {totales.bueno}
+                                      </span>
+                                    )}
+                                    {totales.regular > 0 && (
+                                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-yellow-100 text-[10px] font-bold text-yellow-700 ring-1 ring-yellow-600/20" title={`${totales.regular} Regulares`}>
+                                        {totales.regular}
+                                      </span>
+                                    )}
+                                    {totales.malo > 0 && (
+                                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-100 text-[10px] font-bold text-red-700 ring-1 ring-red-600/20" title={`${totales.malo} Malos`}>
+                                        {totales.malo}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-xs font-semibold text-gray-700">
+                                    {totales.total}
+                                  </span>
+                                </div>
                               </TableCell>
                             );
-                          }
+                          })}
+                          <TableCell className="text-right pr-6 font-bold bg-gray-50/30 text-gray-900">
+                            {articulo.total_general}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                    
+                    {/* Fila de totales por sede */}
+                    {stats.articulos.length > 0 && (
+                      <TableRow className="bg-gray-100/80 font-semibold border-t-2 border-gray-200">
+                        <TableCell className="pl-6 text-gray-800">Total General</TableCell>
+                        {stats.sedes.map((sede) => {
+                          // Sumar todos los estados para esta sede
+                          const totalBueno = stats.articulos.reduce(
+                            (sum, articulo) => sum + (articulo.totales_por_sede[sede.codigo]?.bueno || 0),
+                            0
+                          );
+                          const totalRegular = stats.articulos.reduce(
+                            (sum, articulo) => sum + (articulo.totales_por_sede[sede.codigo]?.regular || 0),
+                            0
+                          );
+                          const totalMalo = stats.articulos.reduce(
+                            (sum, articulo) => sum + (articulo.totales_por_sede[sede.codigo]?.malo || 0),
+                            0
+                          );
+                          const totalSede = totalBueno + totalRegular + totalMalo;
+                          
                           return (
-                            <TableCell key={sede.id} className="text-center">
-                              <div className="flex flex-col gap-1 items-center">
-                                {totales.bueno > 0 && (
-                                  <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">
-                                    {totales.bueno} B
-                                  </span>
-                                )}
-                                {totales.regular > 0 && (
-                                  <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-800">
-                                    {totales.regular} R
-                                  </span>
-                                )}
-                                {totales.malo > 0 && (
-                                  <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">
-                                    {totales.malo} M
-                                  </span>
-                                )}
-                                <span className="text-xs text-gray-500 font-medium mt-1">
-                                  Total: {totales.total}
-                                </span>
-                              </div>
+                            <TableCell key={sede.id} className="text-center py-3">
+                              {totalSede === 0 ? (
+                                <span className="text-gray-400">-</span>
+                              ) : (
+                                <div className="flex flex-col items-center gap-1">
+                                  <span className="text-sm font-bold text-gray-900">{totalSede}</span>
+                                  <div className="flex gap-0.5 text-[9px] text-gray-500 uppercase tracking-tighter">
+                                    {totalBueno > 0 && <span className="text-green-700">{totalBueno}B</span>}
+                                    {(totalBueno > 0 && (totalRegular > 0 || totalMalo > 0)) && <span>·</span>}
+                                    {totalRegular > 0 && <span className="text-yellow-700">{totalRegular}R</span>}
+                                    {(totalRegular > 0 && totalMalo > 0) && <span>·</span>}
+                                    {totalMalo > 0 && <span className="text-red-700">{totalMalo}M</span>}
+                                  </div>
+                                </div>
+                              )}
                             </TableCell>
                           );
                         })}
-                        <TableCell className="text-right font-semibold bg-gray-50">
-                          {articulo.total_general}
+                        <TableCell className="text-right pr-6 bg-gray-200/50 text-gray-900 text-lg">
+                          {stats.articulos.reduce((sum, articulo) => sum + articulo.total_general, 0)}
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                  
-                  {/* Fila de totales por sede */}
-                  {stats.articulos.length > 0 && (
-                    <TableRow className="bg-gray-100 font-semibold">
-                      <TableCell>Total por Sede</TableCell>
-                      {stats.sedes.map((sede) => {
-                        // Sumar todos los estados para esta sede
-                        const totalBueno = stats.articulos.reduce(
-                          (sum, articulo) => sum + (articulo.totales_por_sede[sede.codigo]?.bueno || 0),
-                          0
-                        );
-                        const totalRegular = stats.articulos.reduce(
-                          (sum, articulo) => sum + (articulo.totales_por_sede[sede.codigo]?.regular || 0),
-                          0
-                        );
-                        const totalMalo = stats.articulos.reduce(
-                          (sum, articulo) => sum + (articulo.totales_por_sede[sede.codigo]?.malo || 0),
-                          0
-                        );
-                        const totalSede = totalBueno + totalRegular + totalMalo;
-                        
-                        return (
-                          <TableCell key={sede.id} className="text-center">
-                            {totalSede === 0 ? (
-                              <span className="text-gray-400">-</span>
-                            ) : (
-                              <div className="flex flex-col gap-1 items-center">
-                                {totalBueno > 0 && (
-                                  <span className="inline-flex items-center rounded-full bg-green-200 px-2 py-0.5 text-xs font-bold text-green-900">
-                                    {totalBueno} B
-                                  </span>
-                                )}
-                                {totalRegular > 0 && (
-                                  <span className="inline-flex items-center rounded-full bg-yellow-200 px-2 py-0.5 text-xs font-bold text-yellow-900">
-                                    {totalRegular} R
-                                  </span>
-                                )}
-                                {totalMalo > 0 && (
-                                  <span className="inline-flex items-center rounded-full bg-red-200 px-2 py-0.5 text-xs font-bold text-red-900">
-                                    {totalMalo} M
-                                  </span>
-                                )}
-                                <span className="text-xs font-bold mt-1">
-                                  Total: {totalSede}
-                                </span>
-                              </div>
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                      <TableCell className="text-right bg-gray-200">
-                        {stats.articulos.reduce((sum, articulo) => sum + articulo.total_general, 0)}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </CardContent>

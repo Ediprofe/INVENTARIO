@@ -93,48 +93,54 @@ export default function InventarioPorResponsables() {
           ) : stats ? (
             <>
               {/* Información del Responsable */}
-              <Card className="mb-6">
+              <Card className="mb-6 border-none shadow-sm bg-blue-50/50">
                 <CardHeader>
-                  <CardTitle>
+                  <CardTitle className="text-xl text-blue-900">
                     {stats.metadata.responsable_nombre}
                   </CardTitle>
-                  <CardDescription>
-                    Sede: {stats.metadata.sede_nombre}
+                  <CardDescription className="text-blue-700/80 mt-2">
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">Sede Principal:</span> {stats.metadata.sede_nombre}
+                    </span>
                   </CardDescription>
                 </CardHeader>
               </Card>
 
               {/* Tabla Resumen */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Resumen de Asignaciones</CardTitle>
-                  <CardDescription>Totalizado por artículo y ubicación</CardDescription>
+              <Card className="mb-6 border-none shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Resumen de Asignaciones</CardTitle>
+                  <CardDescription>Distribución de ítems por artículo y ubicación</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table className="w-full table-fixed">
-                      <TableHeader className="sticky top-0 z-20 bg-white shadow-sm">
-                        <TableRow>
-                          <TableHead>Artículo</TableHead>
-                          <TableHead>Ubicación</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
+                <CardContent className="px-0">
+                  <div className="border-y overflow-x-auto">
+                    <Table className="w-full">
+                      <TableHeader className="bg-gray-50/80">
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="pl-6 font-semibold text-gray-700">Artículo</TableHead>
+                          <TableHead className="font-semibold text-gray-700">Ubicación</TableHead>
+                          <TableHead className="text-right pr-6 font-semibold text-gray-700 w-[100px]">Total</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {stats.resumen.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={3} className="text-center text-gray-500">
+                            <TableCell colSpan={3} className="text-center py-8 text-gray-500">
                               Este responsable no tiene ítems asignados
                             </TableCell>
                           </TableRow>
                         ) : (
                           stats.resumen.map((item, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-medium">{item.articulo__nombre}</TableCell>
-                              <TableCell>
-                                {item.ubicacion__nombre} ({item.ubicacion__codigo})
+                            <TableRow key={index} className="hover:bg-gray-50/50">
+                              <TableCell className="pl-6 font-medium text-gray-900">{item.articulo__nombre}</TableCell>
+                              <TableCell className="text-gray-600">
+                                {item.ubicacion__nombre} <span className="text-gray-400 text-xs">({item.ubicacion__codigo})</span>
                               </TableCell>
-                              <TableCell className="text-right font-semibold">{item.total}</TableCell>
+                              <TableCell className="text-right pr-6">
+                                <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  {item.total}
+                                </span>
+                              </TableCell>
                             </TableRow>
                           ))
                         )}

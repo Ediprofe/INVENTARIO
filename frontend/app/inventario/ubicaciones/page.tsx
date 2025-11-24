@@ -143,47 +143,55 @@ export default function InventarioPorUbicaciones() {
           ) : stats ? (
             <>
               {/* Información de la Ubicación */}
-              <Card className="mb-6">
+              <Card className="mb-6 border-none shadow-sm bg-blue-50/50">
                 <CardHeader>
-                  <CardTitle>
-                    {stats.metadata.ubicacion_codigo} - {stats.metadata.ubicacion_nombre}
+                  <CardTitle className="text-xl text-blue-900">
+                    {stats.metadata.ubicacion_nombre} <span className="text-blue-600 font-normal">({stats.metadata.ubicacion_codigo})</span>
                   </CardTitle>
-                  <CardDescription>
-                    Sede: {stats.metadata.sede_nombre}
+                  <CardDescription className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-blue-700/80 mt-2">
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">Sede:</span> {stats.metadata.sede_nombre}
+                    </span>
                     {stats.metadata.responsable_nombre && (
-                      <> • Responsable: {stats.metadata.responsable_nombre}</>
+                      <span className="flex items-center gap-2">
+                        <span className="font-semibold">Responsable:</span> {stats.metadata.responsable_nombre}
+                      </span>
                     )}
                   </CardDescription>
                 </CardHeader>
               </Card>
 
               {/* Tabla Resumen */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Resumen de Inventario</CardTitle>
-                  <CardDescription>Totalizado por artículo</CardDescription>
+              <Card className="mb-6 border-none shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Resumen de Inventario</CardTitle>
+                  <CardDescription>Distribución de artículos en esta ubicación</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table className="w-full table-fixed">
-                      <TableHeader className="sticky top-0 z-20 bg-white shadow-sm">
-                        <TableRow>
-                          <TableHead>Artículo</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
+                <CardContent className="px-0">
+                  <div className="border-y overflow-x-auto">
+                    <Table className="w-full">
+                      <TableHeader className="bg-gray-50/80">
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="pl-6 font-semibold text-gray-700">Artículo</TableHead>
+                          <TableHead className="text-right pr-6 font-semibold text-gray-700 w-[100px]">Total</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {stats.resumen.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={2} className="text-center text-gray-500">
-                              No hay ítems en esta ubicación
+                            <TableCell colSpan={2} className="text-center py-8 text-gray-500">
+                              No hay ítems registrados en esta ubicación
                             </TableCell>
                           </TableRow>
                         ) : (
                           stats.resumen.map((item, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-medium">{item.articulo__nombre}</TableCell>
-                              <TableCell className="text-right font-semibold">{item.total}</TableCell>
+                            <TableRow key={index} className="hover:bg-gray-50/50">
+                              <TableCell className="pl-6 font-medium text-gray-900">{item.articulo__nombre}</TableCell>
+                              <TableCell className="text-right pr-6">
+                                <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  {item.total}
+                                </span>
+                              </TableCell>
                             </TableRow>
                           ))
                         )}
