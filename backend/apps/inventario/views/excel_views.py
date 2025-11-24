@@ -17,6 +17,7 @@ import openpyxl
 from apps.inventario.models import ItemInventario
 from apps.inventario.filters import ItemInventarioFilter
 from apps.inventario.services import ExcelImportService, ImportValidationError
+from apps.inventario.services.reset_import_service import ResetImportService
 from apps.inventario.utils.excel_helpers import (
     apply_header_styles,
     adjust_column_widths,
@@ -202,6 +203,132 @@ def download_template(request):
     
     wb.save(response)
     return response
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reset_import_excel(request):
+    """
+    Resetea el inventario completo e importa desde Excel multi-hoja.
+    
+    Esta vista ejecuta un proceso transaccional que:
+    1. Elimina todos los ítems del inventario existente
+    2. Crea/actualiza catálogos desde las hojas del Excel
+    3. Importa los nuevos ítems
+    
+    El archivo debe contener 5 hojas:
+    - Items: Datos del inventario principal
+    - Sedes: Catálogo de sedes
+    - Ubicaciones: Catálogo de ubicaciones
+    - Articulos: Catálogo de artículos
+    - Responsables: Catálogo de responsables
+    
+    Request:
+        POST con multipart/form-data
+        Parámetro: file (archivo .xlsx)
+    
+    Response (éxito - 200):
+        {
+            "success": true,
+            "stats": {
+                "items_eliminados": 100,
+                "items_creados": 150,
+                "sedes_creadas": 2,
+                "ubicaciones_creadas": 10,
+                "articulos_creados": 50,
+                "responsables_creados": 20
+            },
+            "errors": []
+        }
+    
+    Response (error - 400/500):
+        {
+            "success": false,
+            "message": "Descripción del error",
+            "errors": ["error1", "error2"]
+        }
+    """
+    # Validar que se envió un archivo
+    if 'file' not in request.FILES:
+        return Response(
+            {
+                'success': False,
+                'message': 'No se proporcionó ningún archivo',
+                'errors': ['Archivo no encontrado']
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    excel_file = request.FILES['file']
+    
+    # Validar extensión
+    if not excel_file.name.endswith('.xlsx'):
+        return Response(
+            {
+                'success': False,
+                'message': 'El archivo debe ser formato Excel (.xlsx)',
+                'errors': ['Formato de archivo inválido. Solo se acepta .xlsx']
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Procesar reseteo e importación
+    try:
+        service = ResetImportService(excel_file)
+        result = service.execute()
+        
+        return Response(result, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {
+                'success': False,
+                'message': f'Error al procesar archivo: {str(e)}',
+                'errors': [str(e)]
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def download_reset_template(request):
+    """
+    Descarga plantilla Excel multi-hoja para reseteo e importación completa.
+    
+    La plantilla incluye 5 hojas con:
+    - Encabezados descriptivos
+    - 10 registros de ejemplo en cada hoja
+    - Validaciones y buenas prácticas integradas
+    
+    Response:
+        Archivo Excel: plantilla_reseteo_inventario.xlsx
+    """
+    from apps.inventario.utils.reset_template_generator import generate_reset_template
+    
+    try:
+        wb = generate_reset_template()
+        
+        # Preparar respuesta
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = (
+            'attachment; filename="plantilla_reseteo_inventario.xlsx"'
+        )
+        
+        wb.save(response)
+        return response
+        
+    except Exception as e:
+        return Response(
+            {
+                'success': False,
+                'message': f'Error al generar plantilla: {str(e)}',
+                'errors': [str(e)]
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 def _error_response(message: str, errors: list) -> Response:

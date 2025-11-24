@@ -18,6 +18,19 @@ export interface ImportResult {
   }>;
 }
 
+export interface ResetImportResult {
+  success: boolean;
+  stats: {
+    items_eliminados: number;
+    items_creados: number;
+    sedes_creadas: number;
+    ubicaciones_creadas: number;
+    articulos_creados: number;
+    responsables_creados: number;
+  };
+  errors: string[];
+}
+
 export const ExcelAPI = {
   /**
    * Importar ítems desde archivo Excel.
@@ -52,6 +65,34 @@ export const ExcelAPI = {
    */
   downloadTemplate: async (): Promise<Blob> => {
     const response = await apiClient.get('/inventario/excel/template/', {
+      responseType: 'blob',
+    });
+
+    return response.data;
+  },
+
+  /**
+   * Resetear e importar inventario completo desde Excel multi-hoja.
+   */
+  resetImport: async (file: File): Promise<ResetImportResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post('/inventario/excel/reset-import/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 300000, // 5 minutos de timeout para operaciones muy masivas
+    });
+
+    return response.data;
+  },
+
+  /**
+   * Descargar plantilla de reseteo e importación completa.
+   */
+  downloadResetTemplate: async (): Promise<Blob> => {
+    const response = await apiClient.get('/inventario/excel/reset-template/', {
       responseType: 'blob',
     });
 

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { 
   ItemsTable, 
   ItemFormDialog, 
-  ImportDialog, 
+  ImportDialog,
+  ResetImportDialog,
   BatchEditDialog,
   BulkCreateDialog,
   FloatingBatchEditButton
@@ -14,6 +15,7 @@ import { DashboardNav } from '@/components/dashboard';
 export default function Home() {
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [resetImportDialogOpen, setResetImportDialogOpen] = useState(false);
   const [batchEditDialogOpen, setBatchEditDialogOpen] = useState(false);
   const [bulkCreateDialogOpen, setBulkCreateDialogOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
@@ -31,6 +33,10 @@ export default function Home() {
 
   const handleImportClick = () => {
     setImportDialogOpen(true);
+  };
+
+  const handleResetImportClick = () => {
+    setResetImportDialogOpen(true);
   };
 
   const handleBatchEditClick = (selectedIds: number[]) => {
@@ -51,6 +57,10 @@ export default function Home() {
     setImportDialogOpen(false);
   };
 
+  const handleResetImportDialogClose = () => {
+    setResetImportDialogOpen(false);
+  };
+
   const handleBatchEditDialogClose = () => {
     setBatchEditDialogOpen(false);
     setSelectedItemIds([]);
@@ -68,6 +78,7 @@ export default function Home() {
         onCreateClick={handleCreateClick}
         onEditClick={handleEditClick}
         onImportClick={handleImportClick}
+        onResetImportClick={handleResetImportClick}
         onBatchEditClick={handleBatchEditClick}
         onBulkCreateClick={handleBulkCreateClick}
       />
@@ -81,6 +92,10 @@ export default function Home() {
       <ImportDialog 
         open={importDialogOpen} 
         onClose={handleImportDialogClose} 
+      />
+      <ResetImportDialog 
+        open={resetImportDialogOpen} 
+        onClose={handleResetImportDialogClose} 
       />
       <BatchEditDialog 
         open={batchEditDialogOpen} 

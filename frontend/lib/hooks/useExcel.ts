@@ -44,3 +44,32 @@ export function useDownloadTemplate() {
     },
   });
 }
+
+/**
+ * Hook para resetear e importar inventario completo.
+ */
+export function useResetImport() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) => ExcelAPI.resetImport(file),
+    onSuccess: () => {
+      // Invalidar todas las queries relacionadas con inventario
+      queryClient.invalidateQueries({ queryKey: itemsKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ['catalogos'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+    },
+  });
+}
+
+/**
+ * Hook para descargar plantilla de reseteo e importación completa.
+ */
+export function useDownloadResetTemplate() {
+  return useMutation({
+    mutationFn: () => ExcelAPI.downloadResetTemplate(),
+    onSuccess: (blob) => {
+      downloadBlob(blob, 'plantilla_reseteo_inventario.xlsx');
+    },
+  });
+}

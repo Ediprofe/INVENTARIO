@@ -13,6 +13,8 @@ from .excel_views import (
     import_items_excel,
     export_items_excel,
     download_template,
+    reset_import_excel,
+    download_reset_template,
 )
 from .stats import InventarioStatsViewSet
 
@@ -25,5 +27,7 @@ __all__ = [
     'import_items_excel',
     'export_items_excel',
     'download_template',
+    'reset_import_excel',
+    'download_reset_template',
     'InventarioStatsViewSet',
 ]

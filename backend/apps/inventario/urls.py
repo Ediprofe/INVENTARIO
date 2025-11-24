@@ -13,6 +13,8 @@ from .views import (
     import_items_excel,
     export_items_excel,
     download_template,
+    reset_import_excel,
+    download_reset_template,
 )
 
 app_name = 'inventario'
@@ -30,6 +32,9 @@ urlpatterns = [
     path('excel/import/', import_items_excel, name='items-import'),
     path('excel/export/', export_items_excel, name='items-export'),
     path('excel/template/', download_template, name='items-template'),
+    # Excel reset & import (reseteo completo + importación masiva)
+    path('excel/reset-import/', reset_import_excel, name='items-reset-import'),
+    path('excel/reset-template/', download_reset_template, name='items-reset-template'),
     # Router de ViewSets
     path('', include(router.urls)),
 ]

@@ -42,6 +42,7 @@ interface ItemsTableProps {
   onCreateClick?: () => void;
   onEditClick?: (itemId: number) => void;
   onImportClick?: () => void;
+  onResetImportClick?: () => void;
   onBatchEditClick?: (selectedIds: number[]) => void;
   onBulkCreateClick?: () => void;
 }
@@ -49,7 +50,8 @@ interface ItemsTableProps {
 export function ItemsTable({ 
   onCreateClick, 
   onEditClick, 
-  onImportClick, 
+  onImportClick,
+  onResetImportClick,
   onBatchEditClick,
   onBulkCreateClick 
 }: ItemsTableProps) {
@@ -180,6 +182,14 @@ export function ItemsTable({
             </Button>
             <Button variant="outline" size="sm" onClick={onImportClick}>
               Importar
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={onResetImportClick}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              🔄 Resetear e Importar
             </Button>
             <Button variant="outline" size="sm" onClick={handleExport} disabled={exportMutation.isPending}>
               {exportMutation.isPending ? 'Exportando...' : 'Exportar'}
