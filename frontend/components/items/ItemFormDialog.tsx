@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { itemSchema, type ItemFormData } from '@/lib/schemas';
@@ -18,6 +19,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  formatArticuloLabel,
+  formatUbicacionLabel,
+  formatResponsableLabel,
+  sortArticulos,
+  sortUbicaciones,
+  sortResponsables,
+} from '@/lib/catalogs';
 
 const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
   { value: 'bueno', label: 'Bueno' },
@@ -31,6 +40,19 @@ const DISPONIBILIDADES: Array<{ value: Disponibilidad; label: string }> = [
   { value: 'extraviado', label: 'Extraviado' },
   { value: 'de_baja', label: 'De baja' },
 ];
+
+const EMPTY_ITEM_FORM_VALUES: Partial<ItemFormData> = {
+  articulo_id: undefined,
+  ubicacion_id: undefined,
+  responsable_id: null,
+  placa: '',
+  marca: '',
+  serial: '',
+  estado: 'bueno',
+  disponibilidad: 'en_uso',
+  descripcion: '',
+  observaciones: '',
+};
 
 interface ItemFormContentProps {
   initialData?: ItemFormData;
@@ -66,21 +88,19 @@ function ItemFormContent({
     formState: { errors, isSubmitting },
     setValue,
     watch,
+    reset,
   } = useForm<ItemFormData>({
     resolver: zodResolver(itemSchema),
-    defaultValues: initialData || {
-      articulo_id: undefined,
-      ubicacion_id: undefined,
-      responsable_id: null,
-      placa: '',
-      marca: '',
-      serial: '',
-      estado: 'bueno',
-      disponibilidad: 'en_uso',
-      descripcion: '',
-      observaciones: '',
-    },
+    defaultValues: initialData || EMPTY_ITEM_FORM_VALUES,
   });
+
+  useEffect(() => {
+    // Solo resetear si initialData cambia explicitamente después del montaje inicial
+    // (Aunque con el key en el padre, esto es menos crítico pero buena práctica si initialData se actualizara en vivo)
+    if (initialData) {
+      reset(initialData);
+    }
+  }, [initialData, reset]);
 
   const onSubmit = async (data: ItemFormData) => {
     try {
@@ -125,7 +145,7 @@ function ItemFormContent({
           <SelectContent>
             {articulos.map((articulo) => (
               <SelectItem key={articulo.id} value={articulo.id.toString()}>
-                {articulo.nombre} ({articulo.codigo})
+                {formatArticuloLabel(articulo)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -158,7 +178,7 @@ function ItemFormContent({
           <SelectContent>
             {ubicaciones.map((ubicacion) => (
               <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                {ubicacion.nombre} ({typeof ubicacion.sede === 'object' ? ubicacion.sede.nombre : ubicacion.sede})
+                {formatUbicacionLabel(ubicacion)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -182,7 +202,7 @@ function ItemFormContent({
           <SelectContent>
             {responsables.map((responsable) => (
               <SelectItem key={responsable.id} value={responsable.id.toString()}>
-                {responsable.nombre_completo} ({responsable.cargo})
+                {formatResponsableLabel(responsable)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -304,6 +324,19 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
   const { data: ubicacionesData, isLoading: isLoadingUbicaciones } = useUbicaciones();
   const { data: responsablesData, isLoading: isLoadingResponsables } = useResponsables();
 
+  const articulos = useMemo(
+    () => sortArticulos(articulosData?.results ?? []),
+    [articulosData]
+  );
+  const ubicaciones = useMemo(
+    () => sortUbicaciones(ubicacionesData?.results ?? []),
+    [ubicacionesData]
+  );
+  const responsables = useMemo(
+    () => sortResponsables(responsablesData?.results ?? []),
+    [responsablesData]
+  );
+
   // Preparar datos iniciales si estamos editando
   const getInitialData = (): ItemFormData | undefined => {
     if (!item) return undefined;
@@ -343,6 +376,9 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
     isLoadingResponsables || 
     (isEditing && isLoadingItem);
 
+  // Precalcular datos iniciales para pasar al key
+  const initialData = isEditing ? getInitialData() : undefined;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -361,13 +397,14 @@ export function ItemFormDialog({ open, onClose, itemId }: ItemFormDialogProps) {
           </div>
         ) : (
           <ItemFormContent 
-            initialData={isEditing ? getInitialData() : undefined}
+            key={itemId ? `edit-${itemId}` : 'create'}
+            initialData={initialData}
             isEditing={isEditing}
             itemId={itemId || undefined}
             onClose={onClose}
-            articulos={articulosData?.results || []}
-            ubicaciones={ubicacionesData?.results || []}
-            responsables={responsablesData?.results || []}
+            articulos={articulos}
+            ubicaciones={ubicaciones}
+            responsables={responsables}
           />
         )}
       </DialogContent>

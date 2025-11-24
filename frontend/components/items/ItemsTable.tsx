@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useItems, useDeleteItem, useExportItems, useDownloadTemplate } from '@/lib/hooks';
 import { useSedes, useUbicaciones, useResponsables, useArticulos } from '@/lib/hooks/useCatalogos';
 import type { IItemFilters, EstadoFisico, Disponibilidad, IItemList } from '@/types';
@@ -24,6 +24,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  sortArticulos,
+  sortResponsables,
+  sortUbicaciones,
+  sortSedes,
+  formatArticuloLabel,
+  formatResponsableLabel,
+  formatUbicacionLabel,
+  formatSedeLabel,
+} from '@/lib/catalogs';
 
 const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
   { value: 'bueno', label: 'Bueno' },
@@ -61,13 +71,11 @@ export function ItemsTable({
   hiddenFilters = [],
   showDataManagementActions = true
 }: ItemsTableProps) {
-  // Filtros state - con disponibilidad "en_uso" por defecto según CLAUDE.md línea 203
-  // Se combina con initialFilters
+  // Filtros state sin forzar valores que no provienen del backend
   const [filters, setFilters] = useState<IItemFilters>({
     page: 1,
     page_size: 50,
     ordering: '-created_at',
-    disponibilidad: 'en_uso',
     ...initialFilters
   });
 
@@ -92,6 +100,24 @@ export function ItemsTable({
   const { data: responsablesData } = useResponsables();
   const { data: articulosData } = useArticulos();
   const deleteMutation = useDeleteItem();
+
+  // Catálogos ordenados para mantener consistencia visual y evitar listas incompletas
+  const articulosOptions = useMemo(
+    () => sortArticulos(articulosData?.results ?? []),
+    [articulosData]
+  );
+  const responsablesOptions = useMemo(
+    () => sortResponsables(responsablesData?.results ?? []),
+    [responsablesData]
+  );
+  const ubicacionesOptions = useMemo(
+    () => sortUbicaciones(ubicacionesData?.results ?? []),
+    [ubicacionesData]
+  );
+  const sedesOptions = useMemo(
+    () => sortSedes(sedesData?.results ?? []),
+    [sedesData]
+  );
 
   // Excel mutations
   const exportMutation = useExportItems();
@@ -294,9 +320,9 @@ export function ItemsTable({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
-                    {articulosData?.results.map((articulo) => (
+                    {articulosOptions.map((articulo) => (
                       <SelectItem key={articulo.id} value={articulo.id.toString()}>
-                        {articulo.nombre}
+                        {formatArticuloLabel(articulo)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -318,9 +344,9 @@ export function ItemsTable({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
-                    {responsablesData?.results.map((responsable) => (
+                    {responsablesOptions.map((responsable) => (
                       <SelectItem key={responsable.id} value={responsable.id.toString()}>
-                        {responsable.nombre}
+                        {formatResponsableLabel(responsable)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -342,9 +368,9 @@ export function ItemsTable({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas</SelectItem>
-                    {ubicacionesData?.results.map((ubicacion) => (
+                    {ubicacionesOptions.map((ubicacion) => (
                       <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                        {ubicacion.nombre} ({ubicacion.codigo})
+                        {formatUbicacionLabel(ubicacion)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -366,9 +392,9 @@ export function ItemsTable({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas</SelectItem>
-                    {sedesData?.results.map((sede) => (
+                    {sedesOptions.map((sede) => (
                       <SelectItem key={sede.id} value={sede.id.toString()}>
-                        {sede.nombre}
+                        {formatSedeLabel(sede)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -460,15 +486,14 @@ export function ItemsTable({
                     <TableHead className="w-[10%]">Artículo</TableHead>
                     <TableHead className="w-[8%]">Placa</TableHead>
                     <TableHead className="w-[9%]">Ubicación</TableHead>
-                    {/* Campos adicionales solicitados en CLAUDE.md */}
-                    <TableHead className="w-[12%]">Descripción</TableHead>
-                    <TableHead className="w-[12%]">Observaciones</TableHead>
                     <TableHead className="w-[9%]">Sede</TableHead>
                     <TableHead className="w-[10%]">Responsable</TableHead>
-                    <TableHead className="w-[7%]">Marca</TableHead>
-                    <TableHead className="w-[8%]">Serial</TableHead>
                     <TableHead className="w-[6%]">Estado</TableHead>
                     <TableHead className="w-[6%]">Disp.</TableHead>
+                    <TableHead className="w-[12%]">Descripción</TableHead>
+                    <TableHead className="w-[12%]">Observaciones</TableHead>
+                    <TableHead className="w-[7%]">Marca</TableHead>
+                    <TableHead className="w-[8%]">Serial</TableHead>
                     <TableHead className="w-[4%] text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -502,29 +527,11 @@ export function ItemsTable({
                             {item.ubicacion_nombre}
                           </div>
                         </TableCell>
-                        {/* Nuevos Campos */}
-                        <TableCell>
-                          <div className="truncate text-xs text-gray-600" title={item.descripcion || ''}>
-                            {item.descripcion || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="truncate text-xs text-gray-600" title={item.observaciones || ''}>
-                            {item.observaciones || '-'}
-                          </div>
-                        </TableCell>
-                        
                         <TableCell>
                           <div className="truncate text-sm" title={item.sede_nombre}>{item.sede_nombre}</div>
                         </TableCell>
                         <TableCell>
                           <div className="truncate text-sm" title={item.responsable_nombre}>{item.responsable_nombre || '-'}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="truncate text-sm" title={item.marca || ''}>{item.marca || '-'}</div>
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          <div className="truncate" title={item.serial || ''}>{item.serial || '-'}</div>
                         </TableCell>
                         <TableCell>
                           <span
@@ -553,6 +560,22 @@ export function ItemsTable({
                           >
                             {DISPONIBILIDADES.find((d) => d.value === item.disponibilidad)?.label || item.disponibilidad}
                           </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="truncate text-xs text-gray-600" title={item.descripcion || ''}>
+                            {item.descripcion || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="truncate text-xs text-gray-600" title={item.observaciones || ''}>
+                            {item.observaciones || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="truncate text-sm" title={item.marca || ''}>{item.marca || '-'}</div>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <div className="truncate" title={item.serial || ''}>{item.serial || '-'}</div>
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>

@@ -1,12 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BatchEditSpreadsheet, type BatchEditRow } from './BatchEditSpreadsheet';
 import { useMultipleItems, useBulkUpdateItems } from '@/lib/hooks/useItems';
 import { useUbicaciones, useResponsables } from '@/lib/hooks/useCatalogos';
 import type { IItemUpdateData } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  sortUbicaciones,
+  sortResponsables,
+} from '@/lib/catalogs';
 
 interface BatchEditSpreadsheetDialogProps {
   open: boolean;
@@ -27,9 +31,18 @@ export function BatchEditSpreadsheetDialog({
     errors: Array<{ id: number; error: string }>;
   } | null>(null);
 
-  const { data: ubicacionesData } = useUbicaciones({ page_size: 1000 });
-  const { data: responsablesData } = useResponsables({ page_size: 1000 });
+  const { data: ubicacionesData } = useUbicaciones();
+  const { data: responsablesData } = useResponsables();
   const bulkUpdateMutation = useBulkUpdateItems();
+
+  const ubicaciones = useMemo(
+    () => sortUbicaciones(ubicacionesData?.results ?? []),
+    [ubicacionesData]
+  );
+  const responsables = useMemo(
+    () => sortResponsables(responsablesData?.results ?? []),
+    [responsablesData]
+  );
 
   // Cargar datos de los ítems seleccionados usando el nuevo hook
   const { data: items, isLoading } = useMultipleItems(selectedIds);
@@ -142,8 +155,8 @@ export function BatchEditSpreadsheetDialog({
             onSave={handleSave}
             onCancel={handleCancel}
             highlightedId={highlightedId}
-            ubicaciones={ubicacionesData?.results}
-            responsables={responsablesData?.results}
+            ubicaciones={ubicaciones}
+            responsables={responsables}
           />
         )}
       </DialogContent>

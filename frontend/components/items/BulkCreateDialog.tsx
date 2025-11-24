@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,6 +21,15 @@ import { useArticulos, useUbicaciones, useSedes, useResponsables } from '@/lib/h
 import { useCreateItem } from '@/lib/hooks/useItems';
 import type { IItemCreateData } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  formatArticuloLabel,
+  formatSedeLabel,
+  formatUbicacionLabel,
+  sortArticulos,
+  sortSedes,
+  sortUbicaciones,
+  sortResponsables,
+} from '@/lib/catalogs';
 
 const bulkCreateSchema = z.object({
   articulo_id: z.number({
@@ -56,24 +65,29 @@ export function BulkCreateDialog({ open, onClose }: BulkCreateDialogProps) {
     errors: Array<{ index: number; error: string }>;
   } | null>(null);
 
-  // Queries - Con page_size grande para obtener todos los registros
-  const { data: articulosData, isLoading: isLoadingArticulos } = useArticulos({ 
-    activo: true, 
-    page_size: 1000 
-  });
-  const { data: sedesData, isLoading: isLoadingSedes } = useSedes({ 
-    activo: true, 
-    page_size: 100 
-  });
-  const { data: ubicacionesData, isLoading: isLoadingUbicaciones } = useUbicaciones({ 
-    activo: true, 
-    page_size: 1000 
-  });
-  const { data: responsablesData, isLoading: isLoadingResponsables } = useResponsables({ 
-    activo: true, 
-    page_size: 1000 
-  });
+  // Queries - se obtienen todos los registros para mantener filtros consistentes con el backend
+  const { data: articulosData, isLoading: isLoadingArticulos } = useArticulos();
+  const { data: sedesData, isLoading: isLoadingSedes } = useSedes();
+  const { data: ubicacionesData, isLoading: isLoadingUbicaciones } = useUbicaciones();
+  const { data: responsablesData, isLoading: isLoadingResponsables } = useResponsables();
   const createMutation = useCreateItem();
+
+  const articulosOptions = useMemo(
+    () => sortArticulos(articulosData?.results ?? []),
+    [articulosData]
+  );
+  const sedesOptions = useMemo(
+    () => sortSedes(sedesData?.results ?? []),
+    [sedesData]
+  );
+  const ubicacionesOptions = useMemo(
+    () => sortUbicaciones(ubicacionesData?.results ?? []),
+    [ubicacionesData]
+  );
+  const responsablesOptions = useMemo(
+    () => sortResponsables(responsablesData?.results ?? []),
+    [responsablesData]
+  );
 
   // Form
   const {
@@ -100,10 +114,8 @@ export function BulkCreateDialog({ open, onClose }: BulkCreateDialogProps) {
 
   // Filtrar ubicaciones por sede seleccionada
   const filteredUbicaciones = 
-    sede_id && ubicacionesData?.results 
-      ? ubicacionesData.results.filter((ubicacion) => {
-          // La API devuelve sede como número directo, no como objeto
-          // También manejar el caso donde sede puede ser null
+    sede_id && ubicacionesOptions.length > 0
+      ? ubicacionesOptions.filter((ubicacion) => {
           if (!ubicacion.sede) return false;
           const ubicacionSedeId = typeof ubicacion.sede === 'object' ? ubicacion.sede.id : ubicacion.sede;
           return ubicacionSedeId === sede_id || ubicacionSedeId === Number(sede_id);
@@ -245,9 +257,9 @@ export function BulkCreateDialog({ open, onClose }: BulkCreateDialogProps) {
                     <SelectValue placeholder="Selecciona un artículo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {articulosData?.results.map((articulo) => (
+                    {articulosOptions.map((articulo) => (
                       <SelectItem key={articulo.id} value={articulo.id.toString()}>
-                        {articulo.nombre} ({articulo.codigo})
+                        {formatArticuloLabel(articulo)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -293,9 +305,9 @@ export function BulkCreateDialog({ open, onClose }: BulkCreateDialogProps) {
                     <SelectValue placeholder="Selecciona una sede" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sedesData?.results.map((sede) => (
+                    {sedesOptions.map((sede) => (
                       <SelectItem key={sede.id} value={sede.id.toString()}>
-                        {sede.nombre} ({sede.codigo})
+                        {formatSedeLabel(sede)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -337,7 +349,7 @@ export function BulkCreateDialog({ open, onClose }: BulkCreateDialogProps) {
                     ) : (
                       filteredUbicaciones.map((ubicacion) => (
                         <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                          {ubicacion.nombre} ({ubicacion.codigo})
+                          {formatUbicacionLabel(ubicacion)}
                         </SelectItem>
                       ))
                     )}
@@ -376,8 +388,8 @@ export function BulkCreateDialog({ open, onClose }: BulkCreateDialogProps) {
               items={rows}
               onSave={handleSpreadsheetSave}
               onCancel={handleSpreadsheetCancel}
-              ubicaciones={ubicacionesData?.results}
-              responsables={responsablesData?.results}
+              ubicaciones={ubicacionesOptions}
+              responsables={responsablesOptions}
             />
           </>
         )}

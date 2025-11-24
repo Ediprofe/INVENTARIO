@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardNav } from '@/components/dashboard';
 import { useSedes, useUbicaciones, useUbicacionStats } from '@/lib/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BatchEditDialog, ItemFormDialog, ItemsTable, ResetImportDialog } from '@/components/items';
 import { ExcelAPI } from '@/lib/api/excel';
+import {
+  sortSedes,
+  sortUbicaciones,
+  formatSedeLabel,
+  formatUbicacionLabel,
+} from '@/lib/catalogs';
 
 export default function InventarioPorUbicaciones() {
   const [sedeSeleccionada, setSedeSeleccionada] = useState<number | null>(null);
@@ -24,10 +30,19 @@ export default function InventarioPorUbicaciones() {
   // Queries
   const { data: sedesData } = useSedes();
   const { data: ubicacionesData } = useUbicaciones(
-    sedeSeleccionada ? { sede: sedeSeleccionada, activo: true, page_size: 1000 } : undefined
+    sedeSeleccionada ? { sede: sedeSeleccionada } : undefined
   );
   // Stats solo para el resumen
   const { data: stats, isLoading: isLoadingStats } = useUbicacionStats(ubicacionSeleccionada);
+
+  const sedesOptions = useMemo(
+    () => sortSedes(sedesData?.results ?? []),
+    [sedesData]
+  );
+  const ubicacionesOptions = useMemo(
+    () => sortUbicaciones(ubicacionesData?.results ?? []),
+    [ubicacionesData]
+  );
 
   const handleSedeChange = (value: string) => {
     const sedeId = value === 'all' ? null : parseInt(value);
@@ -88,9 +103,9 @@ export default function InventarioPorUbicaciones() {
                   <SelectValue placeholder="Selecciona una sede" />
                 </SelectTrigger>
                 <SelectContent>
-                  {sedesData?.results.map((sede) => (
+                  {sedesOptions.map((sede) => (
                     <SelectItem key={sede.id} value={sede.id.toString()}>
-                      {sede.nombre}
+                      {formatSedeLabel(sede)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -108,9 +123,9 @@ export default function InventarioPorUbicaciones() {
                   <SelectValue placeholder="Selecciona una ubicación" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ubicacionesData?.results.map((ubicacion) => (
+                  {ubicacionesOptions.map((ubicacion) => (
                     <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                      {ubicacion.codigo} - {ubicacion.nombre}
+                      {formatUbicacionLabel(ubicacion)}
                     </SelectItem>
                   ))}
                 </SelectContent>

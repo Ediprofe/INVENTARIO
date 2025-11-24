@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import type { EstadoFisico, Disponibilidad, IUbicacion, IResponsable } from '@/types';
+import { formatUbicacionLabel, formatResponsableLabel } from '@/lib/catalogs';
 
 const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
   { value: 'bueno', label: 'Bueno' },
@@ -212,14 +213,11 @@ export function BatchEditSpreadsheet({
                     <SelectValue placeholder="Cambiar..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {ubicaciones.map((ubicacion) => {
-                      const sedeInfo = typeof ubicacion.sede === 'object' ? ubicacion.sede.nombre : '';
-                      return (
-                        <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                          {ubicacion.nombre} {sedeInfo && `- ${sedeInfo}`}
-                        </SelectItem>
-                      );
-                    })}
+                    {ubicaciones.map((ubicacion) => (
+                      <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
+                        {formatUbicacionLabel(ubicacion)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -238,14 +236,11 @@ export function BatchEditSpreadsheet({
                     <SelectValue placeholder="Cambiar..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {responsables.map((responsable) => {
-                      const sedeInfo = typeof responsable.sede === 'object' ? responsable.sede.codigo : '';
-                      return (
-                        <SelectItem key={responsable.id} value={responsable.id.toString()}>
-                          {responsable.nombre_completo} {sedeInfo && `(${sedeInfo})`}
-                        </SelectItem>
-                      );
-                    })}
+                    {responsables.map((responsable) => (
+                      <SelectItem key={responsable.id} value={responsable.id.toString()}>
+                        {formatResponsableLabel(responsable)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

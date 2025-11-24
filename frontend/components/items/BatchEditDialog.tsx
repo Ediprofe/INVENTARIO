@@ -17,6 +17,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  formatResponsableLabel,
+  formatSedeLabel,
+  formatUbicacionLabel,
+  sortResponsables,
+  sortSedes,
+  sortUbicaciones,
+} from '@/lib/catalogs';
 
 const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
   { value: 'bueno', label: 'Bueno' },
@@ -75,21 +83,34 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
   const [result, setResult] = useState<IBatchUpdateResponse | null>(null);
 
   // Queries
-  const { data: sedesData } = useSedes({ activo: true, page_size: 1000 });
-  const { data: ubicacionesData } = useUbicaciones({ page_size: 1000, activo: true });
-  const { data: responsablesData } = useResponsables({ page_size: 1000, activo: true });
+  const { data: sedesData } = useSedes();
+  const { data: ubicacionesData } = useUbicaciones();
+  const { data: responsablesData } = useResponsables();
   const batchUpdateMutation = useBatchUpdateItems();
+
+  const sedesOptions = useMemo(
+    () => sortSedes(sedesData?.results ?? []),
+    [sedesData]
+  );
+  const ubicacionesOptions = useMemo(
+    () => sortUbicaciones(ubicacionesData?.results ?? []),
+    [ubicacionesData]
+  );
+  const responsablesOptions = useMemo(
+    () => sortResponsables(responsablesData?.results ?? []),
+    [responsablesData]
+  );
 
   // Filter ubicaciones by selected sede
   const filteredUbicaciones = useMemo(() => {
-    if (!ubicacionesData?.results) return [];
-    if (!selectedSedeId) return ubicacionesData.results;
+    if (ubicacionesOptions.length === 0) return [];
+    if (!selectedSedeId) return ubicacionesOptions;
     
-    return ubicacionesData.results.filter((ubicacion) => {
+    return ubicacionesOptions.filter((ubicacion) => {
       const sedeId = typeof ubicacion.sede === 'object' ? ubicacion.sede.id : ubicacion.sede;
       return sedeId.toString() === selectedSedeId;
     });
-  }, [ubicacionesData, selectedSedeId]);
+  }, [ubicacionesOptions, selectedSedeId]);
 
   const handleToggleField = (field: keyof typeof updateFields) => {
     setUpdateFields((prev) => ({ ...prev, [field]: !prev[field] }));
@@ -241,9 +262,9 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                           <SelectValue placeholder="Seleccionar sede destino" />
                         </SelectTrigger>
                         <SelectContent>
-                          {sedesData?.results.map((sede) => (
+                          {sedesOptions.map((sede) => (
                             <SelectItem key={sede.id} value={sede.id.toString()}>
-                              {sede.nombre} ({sede.codigo})
+                              {formatSedeLabel(sede)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -279,16 +300,11 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                                 : 'No hay ubicaciones disponibles'}
                           </div>
                         ) : (
-                          filteredUbicaciones.map((ubicacion) => {
-                            const sedeInfo = typeof ubicacion.sede === 'object' && ubicacion.sede
-                              ? ubicacion.sede.codigo 
-                              : '';
-                            return (
-                              <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                                {ubicacion.nombre} {sedeInfo && `(${sedeInfo})`}
-                              </SelectItem>
-                            );
-                          })
+                          filteredUbicaciones.map((ubicacion) => (
+                            <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
+                              {formatUbicacionLabel(ubicacion)}
+                            </SelectItem>
+                          ))
                         )}
                       </SelectContent>
                     </Select>
@@ -318,16 +334,11 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                     <SelectValue placeholder="Seleccionar responsable" />
                   </SelectTrigger>
                   <SelectContent>
-                    {responsablesData?.results.map((responsable) => {
-                      const sedeInfo = typeof responsable.sede === 'object' && responsable.sede
-                        ? responsable.sede.codigo 
-                        : '';
-                      return (
-                        <SelectItem key={responsable.id} value={responsable.id.toString()}>
-                          {responsable.nombre_completo} {sedeInfo && `(${sedeInfo})`}
-                        </SelectItem>
-                      );
-                    })}
+                    {responsablesOptions.map((responsable) => (
+                      <SelectItem key={responsable.id} value={responsable.id.toString()}>
+                        {formatResponsableLabel(responsable)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               )}

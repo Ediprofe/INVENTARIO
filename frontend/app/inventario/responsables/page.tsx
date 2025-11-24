@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardNav } from '@/components/dashboard';
 import { useResponsables, useResponsableStats } from '@/lib/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BatchEditDialog, ItemFormDialog, ItemsTable, ResetImportDialog } from '@/components/items';
 import { ExcelAPI } from '@/lib/api/excel';
+import { sortResponsables, formatResponsableLabel } from '@/lib/catalogs';
 
 export default function InventarioPorResponsables() {
   const [responsableSeleccionado, setResponsableSeleccionado] = useState<number | null>(null);
@@ -22,6 +23,10 @@ export default function InventarioPorResponsables() {
 
   // Queries
   const { data: responsablesData } = useResponsables();
+  const responsablesOptions = useMemo(
+    () => sortResponsables(responsablesData?.results ?? []),
+    [responsablesData]
+  );
   const { data: stats, isLoading: isLoadingStats } = useResponsableStats(responsableSeleccionado);
 
   const handleResponsableChange = (value: string) => {
@@ -69,9 +74,9 @@ export default function InventarioPorResponsables() {
                 <SelectValue placeholder="Selecciona un responsable" />
               </SelectTrigger>
               <SelectContent>
-                {responsablesData?.results.map((resp) => (
+                {responsablesOptions.map((resp) => (
                   <SelectItem key={resp.id} value={resp.id.toString()}>
-                    {resp.nombre_completo}
+                    {formatResponsableLabel(resp)}
                   </SelectItem>
                 ))}
               </SelectContent>
