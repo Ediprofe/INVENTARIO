@@ -324,6 +324,8 @@ export interface IItemFilters {
   placa?: string;
   marca?: string;
   serial?: string;
+  descripcion?: string;
+  observaciones?: string;
   created_after?: string;
   created_before?: string;
   ordering?: string;

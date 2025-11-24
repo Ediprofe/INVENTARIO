@@ -34,6 +34,7 @@ import {
   formatUbicacionLabel,
   formatSedeLabel,
 } from '@/lib/catalogs';
+import { Filter, Search, SlidersHorizontal, X } from 'lucide-react'; // Import icons
 
 const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
   { value: 'bueno', label: 'Bueno' },
@@ -71,13 +72,16 @@ export function ItemsTable({
   hiddenFilters = [],
   showDataManagementActions = true
 }: ItemsTableProps) {
-  // Filtros state sin forzar valores que no provienen del backend
+  // Filtros state
   const [filters, setFilters] = useState<IItemFilters>({
     page: 1,
     page_size: 50,
     ordering: '-created_at',
     ...initialFilters
   });
+
+  // Mostrar/ocultar filtros avanzados
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Selected items state
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -101,7 +105,7 @@ export function ItemsTable({
   const { data: articulosData } = useArticulos();
   const deleteMutation = useDeleteItem();
 
-  // Catálogos ordenados para mantener consistencia visual y evitar listas incompletas
+  // Catálogos ordenados
   const articulosOptions = useMemo(
     () => sortArticulos(articulosData?.results ?? []),
     [articulosData]
@@ -149,6 +153,15 @@ export function ItemsTable({
       [key]: value || undefined,
       page: 1, // Reset to first page on filter change
     }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      page: 1,
+      page_size: 50,
+      ordering: '-created_at',
+      ...initialFilters // Mantener filtros iniciales obligatorios
+    });
   };
 
   const handleDelete = async (id: number, codigo: string) => {
@@ -206,425 +219,466 @@ export function ItemsTable({
   // Check if all items on current page are selected
   const allSelected = data ? data.results.length > 0 && data.results.every((item) => selectedIds.includes(item.id)) : false;
 
+  // Count active filters (excluding pagination and sorting)
+  const activeFiltersCount = Object.keys(filters).filter(k => 
+    !['page', 'page_size', 'ordering', 'search'].includes(k) && 
+    filters[k as keyof IItemFilters] !== undefined &&
+    // No contar filtros iniciales ocultos si son iguales
+    (!initialFilters || filters[k as keyof IItemFilters] !== initialFilters[k as keyof IItemFilters])
+  ).length;
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
+    <Card className="border-none shadow-sm">
+      <CardHeader className="pb-4 px-6 pt-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <CardTitle>Ítems de Inventario</CardTitle>
-            <CardDescription>
-              {data && `Mostrando ${startItem}-${endItem} de ${data.count} ítems`}
+            <CardTitle className="text-2xl font-bold tracking-tight text-gray-900">Inventario</CardTitle>
+            <CardDescription className="mt-1 text-sm text-gray-500">
+              Gestión general de activos y existencias
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             {selectedIds.length > 0 && (
-              <Button variant="default" size="sm" onClick={handleBatchEdit}>
-                Editar Rápido ({selectedIds.length})
+              <Button variant="default" size="sm" onClick={handleBatchEdit} className="bg-blue-600 hover:bg-blue-700">
+                Editar Selección ({selectedIds.length})
               </Button>
             )}
             
             {showDataManagementActions && (
-              <>
-                <Button variant="outline" size="sm" onClick={handleDownloadTemplate} disabled={templateMutation.isPending}>
-                  {templateMutation.isPending ? 'Descargando...' : 'Plantilla'}
-                </Button>
-                <Button variant="outline" size="sm" onClick={onImportClick}>
-                  Importar
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={onResetImportClick}
-                  className="bg-orange-600 hover:bg-orange-700"
-                >
-                  🔄 Resetear e Importar
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleExport} disabled={exportMutation.isPending}>
-                  {exportMutation.isPending ? 'Exportando...' : 'Exportar'}
-                </Button>
-                <Button variant="outline" size="sm" onClick={onBulkCreateClick}>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={onBulkCreateClick} className="hidden sm:flex">
                   Alta Masiva
                 </Button>
-              </>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Más Acciones
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={onImportClick}>
+                      Importar Excel
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownloadTemplate} disabled={templateMutation.isPending}>
+                      Descargar Plantilla
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExport} disabled={exportMutation.isPending}>
+                      Exportar Datos
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={onResetImportClick}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      Resetear e Importar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             )}
             
-            <Button onClick={onCreateClick}>Crear Ítem</Button>
+            <Button onClick={onCreateClick} size="sm" className="bg-black text-white hover:bg-gray-800">
+              + Nuevo Ítem
+            </Button>
           </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        {/* Filtros */}
-        <div className="mb-6 space-y-4">
-          {/* Primera fila: Búsqueda global */}
-          <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="search" className="font-semibold">
-                Búsqueda General
-              </Label>
-              <Input
-                id="search"
-                placeholder="Buscar por Placa, Artículo o Serial..."
-                value={filters.search || ''}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-              />
-              <p className="text-xs text-gray-500">
-                {data && filters.search && `${data.count} coincidencias encontradas`}
-              </p>
+
+        {/* Barra de Búsqueda y Filtros */}
+        <div className="mt-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              placeholder="Buscar por Placa, Artículo, Serial..."
+              className="pl-9 bg-gray-50 border-gray-200 focus:bg-white transition-colors w-full"
+              value={filters.search || ''}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+            />
+          </div>
+          <Button 
+            variant={showAdvancedFilters ? "secondary" : "outline"} 
+            size="sm" 
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="gap-2 border-gray-200 min-w-[110px]"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Filtros
+            {activeFiltersCount > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-600 rounded-full">
+                {activeFiltersCount}
+              </span>
+            )}
+          </Button>
+          {activeFiltersCount > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleClearFilters}
+              className="text-gray-500 hover:text-red-600"
+            >
+              <X className="h-4 w-4 mr-1" /> Limpiar
+            </Button>
+          )}
+        </div>
+
+        {/* Panel de Filtros Avanzados */}
+        {showAdvancedFilters && (
+          <div className="mt-4 p-4 bg-gray-50/80 rounded-lg border border-gray-100 animate-in slide-in-from-top-2 duration-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              
+              {/* Grupo: Ubicación */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Ubicación</h4>
+                {!hiddenFilters.includes('sede') && (
+                  <Select
+                    value={filters.sede?.toString()}
+                    onValueChange={(value) => handleFilterChange('sede', value === 'all' ? undefined : parseInt(value))}
+                  >
+                    <SelectTrigger className="bg-white h-9 text-sm">
+                      <SelectValue placeholder="Todas las sedes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      {sedesOptions.map((sede) => (
+                        <SelectItem key={sede.id} value={sede.id.toString()}>{formatSedeLabel(sede)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {!hiddenFilters.includes('ubicacion') && (
+                  <Select
+                    value={filters.ubicacion?.toString()}
+                    onValueChange={(value) => handleFilterChange('ubicacion', value === 'all' ? undefined : parseInt(value))}
+                  >
+                    <SelectTrigger className="bg-white h-9 text-sm">
+                      <SelectValue placeholder="Todas las ubicaciones" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      {ubicacionesOptions.map((ubicacion) => (
+                        <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>{formatUbicacionLabel(ubicacion)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {!hiddenFilters.includes('responsable') && (
+                  <Select
+                    value={filters.responsable?.toString()}
+                    onValueChange={(value) => handleFilterChange('responsable', value === 'all' ? undefined : parseInt(value))}
+                  >
+                    <SelectTrigger className="bg-white h-9 text-sm">
+                      <SelectValue placeholder="Todos los responsables" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {responsablesOptions.map((responsable) => (
+                        <SelectItem key={responsable.id} value={responsable.id.toString()}>{formatResponsableLabel(responsable)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              {/* Grupo: Estado */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</h4>
+                {!hiddenFilters.includes('estado') && (
+                  <Select
+                    value={filters.estado}
+                    onValueChange={(value) => handleFilterChange('estado', value === 'all' ? undefined : value as EstadoFisico)}
+                  >
+                    <SelectTrigger className="bg-white h-9 text-sm">
+                      <SelectValue placeholder="Cualquier estado físico" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {ESTADO_FISICO.map((e) => (
+                        <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {!hiddenFilters.includes('disponibilidad') && (
+                  <Select
+                    value={filters.disponibilidad}
+                    onValueChange={(value) => handleFilterChange('disponibilidad', value === 'all' ? undefined : value as Disponibilidad)}
+                  >
+                    <SelectTrigger className="bg-white h-9 text-sm">
+                      <SelectValue placeholder="Cualquier disponibilidad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      {DISPONIBILIDADES.map((d) => (
+                        <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              {/* Grupo: Identificadores Específicos */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Identificación</h4>
+                {!hiddenFilters.includes('articulo') && (
+                  <Select
+                    value={filters.articulo?.toString()}
+                    onValueChange={(value) => handleFilterChange('articulo', value === 'all' ? undefined : parseInt(value))}
+                  >
+                    <SelectTrigger className="bg-white h-9 text-sm">
+                      <SelectValue placeholder="Tipo de Artículo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {articulosOptions.map((articulo) => (
+                        <SelectItem key={articulo.id} value={articulo.id.toString()}>{formatArticuloLabel(articulo)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {!hiddenFilters.includes('placa') && (
+                  <Input 
+                    placeholder="Placa exacta..." 
+                    className="bg-white h-9 text-sm"
+                    value={filters.placa || ''}
+                    onChange={(e) => handleFilterChange('placa', e.target.value)}
+                  />
+                )}
+                {!hiddenFilters.includes('serial') && (
+                  <Input 
+                    placeholder="Serial exacto..." 
+                    className="bg-white h-9 text-sm"
+                    value={filters.serial || ''}
+                    onChange={(e) => handleFilterChange('serial', e.target.value)}
+                  />
+                )}
+              </div>
+
+              {/* Grupo: Detalles (NUEVO) */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Detalles</h4>
+                <Input 
+                  placeholder="Buscar en descripción..." 
+                  className="bg-white h-9 text-sm"
+                  value={filters.descripcion || ''}
+                  onChange={(e) => handleFilterChange('descripcion', e.target.value)}
+                />
+                <Input 
+                  placeholder="Buscar en observaciones..." 
+                  className="bg-white h-9 text-sm"
+                  value={filters.observaciones || ''}
+                  onChange={(e) => handleFilterChange('observaciones', e.target.value)}
+                />
+                <Input 
+                  placeholder="Marca..." 
+                  className="bg-white h-9 text-sm"
+                  value={filters.marca || ''}
+                  onChange={(e) => handleFilterChange('marca', e.target.value)}
+                />
+              </div>
+
             </div>
           </div>
+        )}
+      </CardHeader>
 
-          {/* Segunda fila: Filtros específicos por campo */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {!hiddenFilters.includes('placa') && (
-              <div className="space-y-2">
-                <Label htmlFor="placa" className="font-semibold">
-                  Placa
-                </Label>
-                <Input
-                  id="placa"
-                  placeholder="Buscar por placa específica..."
-                  value={filters.placa || ''}
-                  onChange={(e) => handleFilterChange('placa', e.target.value)}
-                />
-              </div>
-            )}
-
-            {!hiddenFilters.includes('serial') && (
-              <div className="space-y-2">
-                <Label htmlFor="serial" className="font-semibold">
-                  Serial
-                </Label>
-                <Input
-                  id="serial"
-                  placeholder="Buscar por serial específico..."
-                  value={filters.serial || ''}
-                  onChange={(e) => handleFilterChange('serial', e.target.value)}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Tercera fila: Selectores de catálogos */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            {!hiddenFilters.includes('articulo') && (
-              <div className="space-y-2">
-                <Label htmlFor="articulo" className="font-semibold">
-                  Artículo
-                </Label>
-                <Select
-                  value={filters.articulo?.toString()}
-                  onValueChange={(value) => handleFilterChange('articulo', value === 'all' ? undefined : parseInt(value))}
-                >
-                  <SelectTrigger id="articulo">
-                    <SelectValue placeholder="Todos los artículos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {articulosOptions.map((articulo) => (
-                      <SelectItem key={articulo.id} value={articulo.id.toString()}>
-                        {formatArticuloLabel(articulo)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {!hiddenFilters.includes('responsable') && (
-              <div className="space-y-2">
-                <Label htmlFor="responsable" className="font-semibold">
-                  Responsable
-                </Label>
-                <Select
-                  value={filters.responsable?.toString()}
-                  onValueChange={(value) => handleFilterChange('responsable', value === 'all' ? undefined : parseInt(value))}
-                >
-                  <SelectTrigger id="responsable">
-                    <SelectValue placeholder="Todos los responsables" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {responsablesOptions.map((responsable) => (
-                      <SelectItem key={responsable.id} value={responsable.id.toString()}>
-                        {formatResponsableLabel(responsable)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {!hiddenFilters.includes('ubicacion') && (
-              <div className="space-y-2">
-                <Label htmlFor="ubicacion" className="font-semibold">
-                  Ubicación
-                </Label>
-                <Select
-                  value={filters.ubicacion?.toString()}
-                  onValueChange={(value) => handleFilterChange('ubicacion', value === 'all' ? undefined : parseInt(value))}
-                >
-                  <SelectTrigger id="ubicacion">
-                    <SelectValue placeholder="Todas las ubicaciones" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {ubicacionesOptions.map((ubicacion) => (
-                      <SelectItem key={ubicacion.id} value={ubicacion.id.toString()}>
-                        {formatUbicacionLabel(ubicacion)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {!hiddenFilters.includes('sede') && (
-              <div className="space-y-2">
-                <Label htmlFor="sede" className="font-semibold">
-                  Sede
-                </Label>
-                <Select
-                  value={filters.sede?.toString()}
-                  onValueChange={(value) => handleFilterChange('sede', value === 'all' ? undefined : parseInt(value))}
-                >
-                  <SelectTrigger id="sede">
-                    <SelectValue placeholder="Todas las sedes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {sedesOptions.map((sede) => (
-                      <SelectItem key={sede.id} value={sede.id.toString()}>
-                        {formatSedeLabel(sede)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          {/* Cuarta fila: Estado y Disponibilidad */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {!hiddenFilters.includes('estado') && (
-              <div className="space-y-2">
-                <Label htmlFor="estado" className="font-semibold">
-                  Estado Físico
-                </Label>
-                <Select
-                  value={filters.estado}
-                  onValueChange={(value) => handleFilterChange('estado', value === 'all' ? undefined : value as EstadoFisico)}
-                >
-                  <SelectTrigger id="estado">
-                    <SelectValue placeholder="Todos los estados" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {ESTADO_FISICO.map((estado) => (
-                      <SelectItem key={estado.value} value={estado.value}>
-                        {estado.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {!hiddenFilters.includes('disponibilidad') && (
-              <div className="space-y-2">
-                <Label htmlFor="disponibilidad" className="font-semibold">
-                  Disponibilidad
-                </Label>
-                <Select
-                  value={filters.disponibilidad}
-                  onValueChange={(value) => handleFilterChange('disponibilidad', value === 'all' ? undefined : value as Disponibilidad)}
-                >
-                  <SelectTrigger id="disponibilidad">
-                    <SelectValue placeholder="Todas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {DISPONIBILIDADES.map((disp) => (
-                      <SelectItem key={disp.value} value={disp.value}>
-                        {disp.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-        </div>
-
+      <CardContent className="px-0 sm:px-6">
         {/* Loading state */}
         {isLoading && (
-          <div className="py-8 text-center text-gray-500">
-            Cargando ítems...
+          <div className="flex flex-col items-center justify-center py-12 text-gray-500 space-y-3">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-sm font-medium">Cargando inventario...</p>
           </div>
         )}
 
         {/* Error state */}
         {isError && (
-          <div className="py-8 text-center text-red-600">
-            Error al cargar ítems: {error instanceof Error ? error.message : 'Error desconocido'}
+          <div className="mx-6 my-4 p-4 bg-red-50 border border-red-100 rounded-lg flex items-center gap-3 text-red-700">
+            <div className="bg-red-100 p-2 rounded-full">
+              <X className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Error al cargar datos</p>
+              <p className="text-xs opacity-90">{error instanceof Error ? error.message : 'Error de conexión'}</p>
+            </div>
           </div>
         )}
 
         {/* Table */}
         {!isLoading && !isError && data && (
           <>
-            <div className="rounded-md border overflow-x-auto">
-              <Table className="w-full table-fixed min-w-[1200px]">
-                <TableHeader className="sticky top-0 z-20 bg-white shadow-sm">
-                  <TableRow>
-                    <TableHead className="w-[3%]">
-                      <Checkbox
-                        checked={allSelected}
-                        onCheckedChange={handleSelectAll}
-                        aria-label="Seleccionar todos"
-                      />
-                    </TableHead>
-                    <TableHead className="w-[10%]">Artículo</TableHead>
-                    <TableHead className="w-[8%]">Placa</TableHead>
-                    <TableHead className="w-[9%]">Ubicación</TableHead>
-                    <TableHead className="w-[9%]">Sede</TableHead>
-                    <TableHead className="w-[10%]">Responsable</TableHead>
-                    <TableHead className="w-[6%]">Estado</TableHead>
-                    <TableHead className="w-[6%]">Disp.</TableHead>
-                    <TableHead className="w-[12%]">Descripción</TableHead>
-                    <TableHead className="w-[12%]">Observaciones</TableHead>
-                    <TableHead className="w-[7%]">Marca</TableHead>
-                    <TableHead className="w-[8%]">Serial</TableHead>
-                    <TableHead className="w-[4%] text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.results.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={13} className="text-center text-gray-500">
-                        No se encontraron ítems
-                      </TableCell>
+            <div className="border-y sm:border rounded-none sm:rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table className="w-full min-w-[1200px]">
+                  <TableHeader className="bg-gray-50/50">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="w-[40px] pl-4">
+                        <Checkbox
+                          checked={allSelected}
+                          onCheckedChange={handleSelectAll}
+                          aria-label="Seleccionar todos"
+                        />
+                      </TableHead>
+                      <TableHead className="w-[12%] font-semibold text-gray-700">Artículo</TableHead>
+                      <TableHead className="w-[8%] font-semibold text-gray-700">Placa</TableHead>
+                      <TableHead className="w-[10%] font-semibold text-gray-700">Ubicación</TableHead>
+                      <TableHead className="w-[9%] font-semibold text-gray-700">Sede</TableHead>
+                      <TableHead className="w-[10%] font-semibold text-gray-700">Responsable</TableHead>
+                      <TableHead className="w-[7%] font-semibold text-gray-700">Estado</TableHead>
+                      <TableHead className="w-[7%] font-semibold text-gray-700">Disp.</TableHead>
+                      <TableHead className="w-[12%] font-semibold text-gray-700">Descripción</TableHead>
+                      <TableHead className="w-[12%] font-semibold text-gray-700">Observaciones</TableHead>
+                      <TableHead className="w-[7%] font-semibold text-gray-700">Marca</TableHead>
+                      <TableHead className="w-[8%] font-semibold text-gray-700">Serial</TableHead>
+                      <TableHead className="w-[50px] text-right pr-4">Acciones</TableHead>
                     </TableRow>
-                  ) : (
-                    data.results.map((item: IItemList) => (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={selectedIds.includes(item.id)}
-                            onCheckedChange={(checked) => handleSelectItem(item.id, checked)}
-                            aria-label={`Seleccionar ${item.codigo}`}
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <div className="truncate text-sm cursor-help" title={item.articulo_nombre}>
-                            {item.articulo_nombre}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="truncate text-sm" title={item.placa || ''}>{item.placa || '-'}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="truncate text-sm cursor-help" title={`${item.ubicacion_nombre} (${item.ubicacion_codigo})`}>
-                            {item.ubicacion_nombre}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="truncate text-sm" title={item.sede_nombre}>{item.sede_nombre}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="truncate text-sm" title={item.responsable_nombre}>{item.responsable_nombre || '-'}</div>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${
-                              item.estado === 'bueno'
-                                ? 'bg-green-100 text-green-800'
-                                : item.estado === 'regular'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}
-                          >
-                            {ESTADO_FISICO.find((e) => e.value === item.estado)?.label || item.estado}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${
-                              item.disponibilidad === 'en_uso'
-                                ? 'bg-blue-100 text-blue-800'
-                                : item.disponibilidad === 'en_reparacion'
-                                ? 'bg-orange-100 text-orange-800'
-                                : item.disponibilidad === 'extraviado'
-                                ? 'bg-purple-100 text-purple-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {DISPONIBILIDADES.find((d) => d.value === item.disponibilidad)?.label || item.disponibilidad}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="truncate text-xs text-gray-600" title={item.descripcion || ''}>
-                            {item.descripcion || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="truncate text-xs text-gray-600" title={item.observaciones || ''}>
-                            {item.observaciones || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="truncate text-sm" title={item.marca || ''}>{item.marca || '-'}</div>
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          <div className="truncate" title={item.serial || ''}>{item.serial || '-'}</div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <span className="sr-only">Abrir menú</span>
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <circle cx="12" cy="12" r="1" />
-                                  <circle cx="12" cy="5" r="1" />
-                                  <circle cx="12" cy="19" r="1" />
-                                </svg>
+                  </TableHeader>
+                  <TableBody>
+                    {data.results.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={13} className="h-32 text-center">
+                          <div className="flex flex-col items-center justify-center text-gray-500">
+                            <Search className="h-8 w-8 mb-2 opacity-20" />
+                            <p>No se encontraron ítems con los filtros actuales</p>
+                            {activeFiltersCount > 0 && (
+                              <Button variant="link" onClick={handleClearFilters} className="mt-1 h-auto p-0 text-blue-600">
+                                Limpiar filtros
                               </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => onEditClick?.(item.id)}>
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDelete(item.id, item.codigo)}
-                                disabled={deleteMutation.isPending}
-                                className="text-red-600"
-                              >
-                                Eliminar
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      data.results.map((item: IItemList) => (
+                        <TableRow key={item.id} className="group hover:bg-gray-50/50 transition-colors">
+                          <TableCell className="pl-4">
+                            <Checkbox
+                              checked={selectedIds.includes(item.id)}
+                              onCheckedChange={(checked) => handleSelectItem(item.id, checked)}
+                              aria-label={`Seleccionar ${item.codigo}`}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium text-gray-900">
+                            <div className="truncate text-sm" title={item.articulo_nombre}>
+                              {item.articulo_nombre}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-mono text-xs bg-gray-100 px-2 py-1 rounded inline-block text-gray-700">
+                              {item.placa || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="truncate text-sm text-gray-600" title={`${item.ubicacion_nombre} (${item.ubicacion_codigo})`}>
+                              {item.ubicacion_nombre}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="truncate text-sm text-gray-500" title={item.sede_nombre}>{item.sede_nombre}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="truncate text-sm text-gray-600 flex items-center gap-1" title={item.responsable_nombre}>
+                              {item.responsable_nombre ? (
+                                <>
+                                  <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+                                  {item.responsable_nombre}
+                                </>
+                              ) : (
+                                <span className="text-gray-400 italic">Sin asignar</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-medium border ${
+                                item.estado === 'bueno'
+                                  ? 'bg-green-50 text-green-700 border-green-200'
+                                  : item.estado === 'regular'
+                                  ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                  : 'bg-red-50 text-red-700 border-red-200'
+                              }`}
+                            >
+                              {ESTADO_FISICO.find((e) => e.value === item.estado)?.label || item.estado}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-medium border ${
+                                item.disponibilidad === 'en_uso'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                  : item.disponibilidad === 'en_reparacion'
+                                  ? 'bg-orange-50 text-orange-700 border-orange-200'
+                                  : 'bg-purple-50 text-purple-700 border-purple-200'
+                              }`}
+                            >
+                              {DISPONIBILIDADES.find((d) => d.value === item.disponibilidad)?.label || item.disponibilidad}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="truncate text-xs text-gray-500 max-w-[150px]" title={item.descripcion || ''}>
+                              {item.descripcion || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="truncate text-xs text-gray-500 max-w-[150px]" title={item.observaciones || ''}>
+                              {item.observaciones || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="truncate text-sm text-gray-600" title={item.marca || ''}>{item.marca || '-'}</div>
+                          </TableCell>
+                          <TableCell className="text-xs font-mono text-gray-500">
+                            <div className="truncate" title={item.serial || ''}>{item.serial || '-'}</div>
+                          </TableCell>
+                          <TableCell className="text-right pr-4">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100 data-[state=open]:bg-gray-100">
+                                  <span className="sr-only">Abrir menú</span>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="text-gray-500"
+                                  >
+                                    <circle cx="12" cy="12" r="1" />
+                                    <circle cx="12" cy="5" r="1" />
+                                    <circle cx="12" cy="19" r="1" />
+                                  </svg>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem onClick={() => onEditClick?.(item.id)}>
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDelete(item.id, item.codigo)}
+                                  disabled={deleteMutation.isPending}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  Eliminar
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-gray-700">
-                  Mostrando {startItem}-{endItem} de {data.count} ítems (Página {currentPage} de {totalPages})
+              <div className="mt-4 flex items-center justify-between px-2">
+                <div className="text-sm text-gray-500">
+                  Página <span className="font-medium text-gray-900">{currentPage}</span> de <span className="font-medium text-gray-900">{totalPages}</span>
+                  <span className="hidden sm:inline text-gray-400 mx-2">•</span>
+                  <span className="hidden sm:inline text-gray-500">{data.count} resultados</span>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -632,6 +686,7 @@ export function ItemsTable({
                     size="sm"
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
+                    className="h-8 w-24"
                   >
                     Anterior
                   </Button>
@@ -640,6 +695,7 @@ export function ItemsTable({
                     size="sm"
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
+                    className="h-8 w-24"
                   >
                     Siguiente
                   </Button>

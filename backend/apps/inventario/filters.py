@@ -20,10 +20,12 @@ class ItemInventarioFilter(django_filters.FilterSet):
     estado = django_filters.CharFilter(lookup_expr='icontains')
     disponibilidad = django_filters.CharFilter(lookup_expr='icontains')
 
-    # Filtros de búsqueda por texto (CLAUDE.md campos placa, marca, serial)
+    # Filtros de búsqueda por texto (CLAUDE.md campos placa, marca, serial, descripcion, observaciones)
     placa = django_filters.CharFilter(lookup_expr='icontains')
     marca = django_filters.CharFilter(lookup_expr='icontains')
     serial = django_filters.CharFilter(lookup_expr='icontains')
+    descripcion = django_filters.CharFilter(lookup_expr='icontains')
+    observaciones = django_filters.CharFilter(lookup_expr='icontains')
 
     # Filtros por fecha de creación
     created_after = django_filters.DateTimeFilter(field_name='created_at', lookup_expr='gte')
@@ -31,7 +33,11 @@ class ItemInventarioFilter(django_filters.FilterSet):
 
     class Meta:
         model = ItemInventario
-        fields = ['sede', 'ubicacion', 'responsable', 'articulo', 'estado', 'disponibilidad', 'placa', 'marca', 'serial']
+        fields = [
+            'sede', 'ubicacion', 'responsable', 'articulo', 
+            'estado', 'disponibilidad', 
+            'placa', 'marca', 'serial', 'descripcion', 'observaciones'
+        ]
 
 
 class SedeFilter(django_filters.FilterSet):

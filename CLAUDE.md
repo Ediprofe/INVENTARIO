@@ -1,12 +1,11 @@
 # Peticiones
 
-## No se rellenan los campos al dar acción "Editar"
-Al darle en la acción "Editar" del campo acciones, en cualquiera de las pestañas donde aparece la tabla de ítems detallados, no aparecen previamente rellenos los campos "Artículo", "Ubicación" y "Responsable" con los valores que tiene actualmente. Este problema ya lo han intentado varios agente spero creo que es un tema de prácticas recomendadas en react.js. Puedes por favor analizarlo a profundidad, encontrar las causas y resolverlo
-![alt text](image-14.png)
+## Mejor organización de los filtros en ítems detallados y rediseño genreal de la experiencia de usuario
+![alt text](image-15.png)
 
+Organizar mejor los filtros al buscar ítems detallados en la pestaña correspondiente donde esté, ya que está mal diseñado, es como difícil encontrar entre tanto filtro, hay campos que ocupan mucho espacio. De otro lado, no hay filtro para buscar por el campo "Descripción" ni por el campo "Observaciones", y que se puedan buscar con un texto libre, ya que no hay valores predecibles una lista para los registros en esos campos. Mira la manera de hacer esta experiencia para el usuario mucho más intuitiva, con buenas prácticas y manteniendo el código legible, pero de verdad, algo muy intuitivo para el usuario.
 
-## Next.js debe ser fiel a Django Rest Framework
-Por favor cambia el orden en que se presentan los campos en la tabla de ítems detallada, que aparece en las pestañas "Tabla General", "Por Ubicación" y "Por Responsable", con buenas prácticas y bajo una sola lógica, para que el orden en que se presenten los campos sea, de izquierda a derecha: Artículo, Placa, Ubicación, Sede, Responsable, Estado, Disponibilidad, Descripción, Observaciones, Marca, Serial y Acciones.
+Dale un cambio de look que haga la interfaz de next js mucho más atractiva en términos generales. Doy cambida suelta a tu creatividad. Recuerda buenas prácticas y mantenibilidad.
 
 
 
