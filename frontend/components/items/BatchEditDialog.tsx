@@ -54,6 +54,7 @@ interface BatchEditDialogProps {
  * - Responsable
  * - Estado Físico
  * - Disponibilidad
+ * - Observaciones
  */
 export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogProps) {
   // State for which fields to update
@@ -62,6 +63,7 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
     responsable: false,
     estado: false,
     disponibilidad: false,
+    observaciones: false,
   });
 
   // State for field values
@@ -70,6 +72,7 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
     responsable_id: '',
     estado: '' as EstadoFisico | '',
     disponibilidad: '' as Disponibilidad | '',
+    observaciones: '',
   });
 
   // State for sede selection (used when changing ubicacion)
@@ -144,6 +147,9 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
       if (updateFields.disponibilidad && formData.disponibilidad) {
         item.disponibilidad = formData.disponibilidad as Disponibilidad;
       }
+      if (updateFields.observaciones && formData.observaciones) {
+        item.observaciones = formData.observaciones;
+      }
 
       return item;
     });
@@ -166,12 +172,14 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
       responsable: false,
       estado: false,
       disponibilidad: false,
+      observaciones: false,
     });
     setFormData({
       ubicacion_id: '',
       responsable_id: '',
       estado: '',
       disponibilidad: '',
+      observaciones: '',
     });
     setSelectedSedeId('');
     setChangeSede(false);
@@ -403,6 +411,33 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                     ))}
                   </SelectContent>
                 </Select>
+              )}
+            </div>
+
+            {/* Observaciones field */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="update-observaciones"
+                  checked={updateFields.observaciones}
+                  onCheckedChange={() => handleToggleField('observaciones')}
+                />
+                <Label htmlFor="update-observaciones" className="font-semibold">
+                  Actualizar Observaciones
+                </Label>
+              </div>
+              {updateFields.observaciones && (
+                <div className="pl-6">
+                  <Label htmlFor="observaciones" className="text-sm">
+                    Texto que se aplicará a todos los ítems seleccionados
+                  </Label>
+                  <textarea
+                    id="observaciones"
+                    className="mt-1 w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={formData.observaciones}
+                    onChange={(e) => handleFieldChange('observaciones', e.target.value)}
+                  />
+                </div>
               )}
             </div>
           </div>
