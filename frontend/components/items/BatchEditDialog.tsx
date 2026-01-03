@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useBatchUpdateItems } from '@/lib/hooks/useItems';
+import { useBatchUpdateItems, useItemFilterOptions } from '@/lib/hooks/useItems';
 import { useUbicaciones, useResponsables, useSedes } from '@/lib/hooks/useCatalogos';
-import type { EstadoFisico, Disponibilidad, IBatchUpdateItem, IBatchUpdateResponse } from '@/types';
+import type { IBatchUpdateItem, IBatchUpdateResponse } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -25,25 +25,14 @@ import {
   sortSedes,
   sortUbicaciones,
 } from '@/lib/catalogs';
-
-const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
-  { value: 'bueno', label: 'Bueno' },
-  { value: 'regular', label: 'Regular' },
-  { value: 'malo', label: 'Malo' },
-];
-
-const DISPONIBILIDADES: Array<{ value: Disponibilidad; label: string }> = [
-  { value: 'en_uso', label: 'En uso' },
-  { value: 'en_reparacion', label: 'En reparación' },
-  { value: 'extraviado', label: 'Extraviado' },
-  { value: 'de_baja', label: 'De baja' },
-];
+import { toSelectOptions, DEFAULT_ESTADO_OPTIONS, DEFAULT_DISPONIBILIDAD_OPTIONS } from '@/lib/options';
 
 interface BatchEditDialogProps {
   open: boolean;
   onClose: () => void;
   selectedIds: number[];
 }
+
 
 /**
  * Diálogo de edición masiva simplificado.
@@ -70,8 +59,8 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
   const [formData, setFormData] = useState({
     ubicacion_id: '',
     responsable_id: '',
-    estado: '' as EstadoFisico | '',
-    disponibilidad: '' as Disponibilidad | '',
+    estado: '',
+    disponibilidad: '',
     observaciones: '',
   });
 
@@ -89,7 +78,22 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
   const { data: sedesData } = useSedes();
   const { data: ubicacionesData } = useUbicaciones();
   const { data: responsablesData } = useResponsables();
+  const { data: filterOptions } = useItemFilterOptions();
   const batchUpdateMutation = useBatchUpdateItems();
+
+  // Opciones dinámicas del backend (con fallback)
+  const estadoOptions = useMemo(
+    () => filterOptions?.estados?.length 
+      ? toSelectOptions(filterOptions.estados) 
+      : DEFAULT_ESTADO_OPTIONS,
+    [filterOptions]
+  );
+  const disponibilidadOptions = useMemo(
+    () => filterOptions?.disponibilidades?.length 
+      ? toSelectOptions(filterOptions.disponibilidades) 
+      : DEFAULT_DISPONIBILIDAD_OPTIONS,
+    [filterOptions]
+  );
 
   const sedesOptions = useMemo(
     () => sortSedes(sedesData?.results ?? []),
@@ -142,10 +146,10 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
         item.responsable_id = parseInt(formData.responsable_id);
       }
       if (updateFields.estado && formData.estado) {
-        item.estado = formData.estado as EstadoFisico;
+        item.estado = formData.estado;
       }
       if (updateFields.disponibilidad && formData.disponibilidad) {
-        item.disponibilidad = formData.disponibilidad as Disponibilidad;
+        item.disponibilidad = formData.disponibilidad;
       }
       if (updateFields.observaciones && formData.observaciones) {
         item.observaciones = formData.observaciones;
@@ -373,7 +377,7 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                     <SelectValue placeholder="Seleccionar estado físico" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ESTADO_FISICO.map((estado) => (
+                    {estadoOptions.map((estado) => (
                       <SelectItem key={estado.value} value={estado.value}>
                         {estado.label}
                       </SelectItem>
@@ -404,7 +408,7 @@ export function BatchEditDialog({ open, onClose, selectedIds }: BatchEditDialogP
                     <SelectValue placeholder="Seleccionar disponibilidad" />
                   </SelectTrigger>
                   <SelectContent>
-                    {DISPONIBILIDADES.map((disp) => (
+                    {disponibilidadOptions.map((disp) => (
                       <SelectItem key={disp.value} value={disp.value}>
                         {disp.label}
                       </SelectItem>

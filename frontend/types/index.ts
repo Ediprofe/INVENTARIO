@@ -59,6 +59,7 @@ export interface IUbicacion {
   nombre: string;
   tipo: string;
   sede: ISede | number; // Puede ser objeto o ID dependiendo del serializer
+  sede_nombre?: string; // Campo calculado del backend para renderizado
   responsable: number | null; // ID del responsable por defecto
   responsable_nombre: string | null; // Nombre del responsable (read-only)
   piso: number | null;
@@ -81,6 +82,7 @@ export interface IResponsable {
   email: string;
   telefono: string;
   sede: ISede;
+  sede_nombre?: string; // Campo calculado del backend para renderizado
   activo: boolean;
   total_items: number;
   created_at: string;
@@ -159,8 +161,8 @@ export interface IItemCreateData {
   placa?: string;
   marca?: string;
   serial?: string;
-  estado: EstadoFisico;
-  disponibilidad: Disponibilidad;
+  estado: string; // Dinámico: permite cualquier estado del backend
+  disponibilidad: string; // Dinámico: permite cualquier disponibilidad del backend
   descripcion?: string;
   observaciones?: string;
 }
@@ -171,8 +173,8 @@ export interface IBatchUpdateItem {
   id: number;
   ubicacion_id?: number;
   responsable_id?: number;
-  estado?: EstadoFisico;
-  disponibilidad?: Disponibilidad;
+  estado?: string; // Dinámico: permite cualquier estado del backend
+  disponibilidad?: string; // Dinámico: permite cualquier disponibilidad del backend
   placa?: string;
   marca?: string;
   serial?: string;
@@ -343,6 +345,7 @@ export interface IItemFilters {
 }
 
 export interface ISedeFilters {
+  [key: string]: string | number | boolean | undefined; // Index signature para compatibilidad con FilterRecord
   page?: number;
   page_size?: number;
   search?: string;
@@ -351,6 +354,7 @@ export interface ISedeFilters {
 }
 
 export interface IUbicacionFilters {
+  [key: string]: string | number | boolean | undefined; // Index signature para compatibilidad con FilterRecord
   page?: number;
   page_size?: number;
   search?: string;
@@ -361,6 +365,7 @@ export interface IUbicacionFilters {
 }
 
 export interface IResponsableFilters {
+  [key: string]: string | number | boolean | undefined; // Index signature para compatibilidad con FilterRecord
   page?: number;
   page_size?: number;
   search?: string;
@@ -370,6 +375,7 @@ export interface IResponsableFilters {
 }
 
 export interface IArticuloFilters {
+  [key: string]: string | number | boolean | undefined; // Index signature para compatibilidad con FilterRecord
   page?: number;
   page_size?: number;
   search?: string;

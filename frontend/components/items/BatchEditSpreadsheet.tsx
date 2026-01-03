@@ -8,21 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import type { EstadoFisico, Disponibilidad, IUbicacion, IResponsable } from '@/types';
+import type { IUbicacion, IResponsable } from '@/types';
 import { formatUbicacionLabel, formatResponsableLabel } from '@/lib/catalogs';
-
-const ESTADO_FISICO: Array<{ value: EstadoFisico; label: string }> = [
-  { value: 'bueno', label: 'Bueno' },
-  { value: 'regular', label: 'Regular' },
-  { value: 'malo', label: 'Malo' },
-];
-
-const DISPONIBILIDADES: Array<{ value: Disponibilidad; label: string }> = [
-  { value: 'en_uso', label: 'En uso' },
-  { value: 'en_reparacion', label: 'En reparación' },
-  { value: 'extraviado', label: 'Extraviado' },
-  { value: 'de_baja', label: 'De baja' },
-];
+import { DEFAULT_ESTADO_OPTIONS, DEFAULT_DISPONIBILIDAD_OPTIONS } from '@/lib/options';
 
 export interface BatchEditRow {
   id?: number; // undefined para nuevos ítems
@@ -31,12 +19,17 @@ export interface BatchEditRow {
   placa: string;
   marca: string;
   serial: string;
-  estado: EstadoFisico;
-  disponibilidad: Disponibilidad;
+  estado: string;
+  disponibilidad: string;
   ubicacion_id?: number;
   responsable_id?: number | null;
   descripcion: string;
   observaciones: string;
+}
+
+interface SelectOption {
+  value: string;
+  label: string;
 }
 
 interface BatchEditSpreadsheetProps {
@@ -46,6 +39,8 @@ interface BatchEditSpreadsheetProps {
   highlightedId?: number; // ID del ítem que activó el modal (resaltado pero no seleccionado)
   ubicaciones?: IUbicacion[];
   responsables?: IResponsable[];
+  estadoOptions?: SelectOption[];
+  disponibilidadOptions?: SelectOption[];
 }
 
 export function BatchEditSpreadsheet({
@@ -55,6 +50,8 @@ export function BatchEditSpreadsheet({
   highlightedId,
   ubicaciones = [],
   responsables = [],
+  estadoOptions = DEFAULT_ESTADO_OPTIONS,
+  disponibilidadOptions = DEFAULT_DISPONIBILIDAD_OPTIONS,
 }: BatchEditSpreadsheetProps) {
   const [selectedCount, setSelectedCount] = useState(0);
   const [showResponsableDialog, setShowResponsableDialog] = useState(false);
@@ -171,12 +168,12 @@ export function BatchEditSpreadsheet({
             {/* Cambiar estado */}
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-600">Estado:</span>
-              <Select onValueChange={(value) => handleBatchUpdateField('estado', value as EstadoFisico)}>
+              <Select onValueChange={(value) => handleBatchUpdateField('estado', value)}>
                 <SelectTrigger className="h-8 w-32">
                   <SelectValue placeholder="Cambiar..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {ESTADO_FISICO.map((e) => (
+                  {estadoOptions.map((e) => (
                     <SelectItem key={e.value} value={e.value}>
                       {e.label}
                     </SelectItem>
@@ -189,13 +186,13 @@ export function BatchEditSpreadsheet({
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-600">Disponibilidad:</span>
               <Select
-                onValueChange={(value) => handleBatchUpdateField('disponibilidad', value as Disponibilidad)}
+                onValueChange={(value) => handleBatchUpdateField('disponibilidad', value)}
               >
                 <SelectTrigger className="h-8 w-40">
                   <SelectValue placeholder="Cambiar..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {DISPONIBILIDADES.map((d) => (
+                  {disponibilidadOptions.map((d) => (
                     <SelectItem key={d.value} value={d.value}>
                       {d.label}
                     </SelectItem>
@@ -352,13 +349,13 @@ export function BatchEditSpreadsheet({
                   <TableCell>
                     <Select
                       value={item.estado}
-                      onValueChange={(value) => setValue(`items.${index}.estado`, value as EstadoFisico)}
+                      onValueChange={(value) => setValue(`items.${index}.estado`, value)}
                     >
                       <SelectTrigger className="h-8 text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {ESTADO_FISICO.map((e) => (
+                        {estadoOptions.map((e) => (
                           <SelectItem key={e.value} value={e.value}>
                             {e.label}
                           </SelectItem>
@@ -372,14 +369,14 @@ export function BatchEditSpreadsheet({
                     <Select
                       value={item.disponibilidad}
                       onValueChange={(value) =>
-                        setValue(`items.${index}.disponibilidad`, value as Disponibilidad)
+                        setValue(`items.${index}.disponibilidad`, value)
                       }
                     >
                       <SelectTrigger className="h-8 text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {DISPONIBILIDADES.map((d) => (
+                        {disponibilidadOptions.map((d) => (
                           <SelectItem key={d.value} value={d.value}>
                             {d.label}
                           </SelectItem>
