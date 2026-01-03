@@ -3,6 +3,3 @@ DJANGO_ENV = "production"
 
 [phases.build]
 cmds = ["python manage.py collectstatic --noinput"]
-
-[phases.release]
-cmds = ["python manage.py migrate --noinput"]
