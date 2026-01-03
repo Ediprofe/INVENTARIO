@@ -1,0 +1,8 @@
+[variables]
+DJANGO_SETTINGS_MODULE = "config.settings.production"
+
+[phases.build]
+cmds = ["python manage.py collectstatic --noinput"]
+
+[phases.release]
+cmds = ["python manage.py migrate --noinput"]
