@@ -3,20 +3,31 @@ Settings para entorno de producción.
 """
 from .base import *
 
+import dj_database_url
+
 DEBUG = False
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 # Database
+# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT', default='5432'),
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL', default=''),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+}
+
+# Static files storage
+# http://whitenoise.evans.io/en/stable/django.html#gzip-static-files
+STORAGES = {
+    "default": {
+        "ENGINE": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "ENGINE": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
 }
 
 # CORS

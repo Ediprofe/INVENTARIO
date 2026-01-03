@@ -3,6 +3,10 @@
 # Production server
 gunicorn==23.0.0
 
+# Database and Static Files
+dj-database-url==2.3.0
+whitenoise==6.8.2
+
 # Excel processing
 pandas==2.2.3
 openpyxl==3.1.5
