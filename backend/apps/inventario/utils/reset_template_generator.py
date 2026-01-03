@@ -10,6 +10,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.worksheet.table import Table, TableStyleInfo
 from apps.inventario.models.choices import (
     TipoUbicacion,
     CategoriaArticulo,
@@ -109,6 +110,62 @@ def _add_data_validation(ws, column_letter: str, options: list, allow_blank: boo
     ws.add_data_validation(dv)
 
 
+def _auto_adjust_columns(ws, headers: list, max_width: int = 50):
+    """Ajusta automáticamente el ancho de las columnas basado en el contenido."""
+    for col_num, header in enumerate(headers, 1):
+        column_letter = get_column_letter(col_num)
+        max_length = len(str(header))
+        
+        # Revisar todas las celdas de la columna para encontrar el contenido más largo
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=col_num, max_col=col_num):
+            for cell in row:
+                if cell.value:
+                    # Contar líneas si hay saltos de línea
+                    cell_value = str(cell.value)
+                    lines = cell_value.split('\n')
+                    max_line_length = max(len(line) for line in lines) if lines else 0
+                    max_length = max(max_length, max_line_length)
+        
+        # Ajustar ancho con un margen adicional, limitado al máximo
+        adjusted_width = min(max_length + 2, max_width)
+        ws.column_dimensions[column_letter].width = adjusted_width
+
+
+def _apply_wrap_text_to_cells(ws):
+    """Aplica wrap_text a todas las celdas de datos (excluyendo encabezados)."""
+    for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
+        for cell in row:
+            cell.alignment = Alignment(wrap_text=True, vertical='top')
+
+
+def _convert_to_table(ws, table_name: str, headers: list, data_row_count: int):
+    """Convierte un rango de celdas en una tabla de Excel con formato."""
+    if data_row_count == 0:
+        # Si no hay datos, solo crear tabla con encabezados
+        end_row = 1
+    else:
+        end_row = data_row_count + 1  # +1 porque la fila 1 es encabezado
+    
+    end_column = get_column_letter(len(headers))
+    table_ref = f"A1:{end_column}{end_row}"
+    
+    # Crear tabla
+    table = Table(displayName=table_name, ref=table_ref)
+    
+    # Aplicar estilo de tabla
+    style = TableStyleInfo(
+        name="TableStyleMedium9",  # Estilo azul similar al encabezado actual
+        showFirstColumn=False,
+        showLastColumn=False,
+        showRowStripes=True,
+        showColumnStripes=False
+    )
+    table.tableStyleInfo = style
+    
+    # Agregar tabla a la hoja
+    ws.add_table(table)
+
+
 def _create_sedes_sheet(wb: Workbook):
     """
     Crea la hoja 'Sedes' con datos de ejemplo.
@@ -127,6 +184,11 @@ def _create_sedes_sheet(wb: Workbook):
     for row_num, row_data in enumerate(example_data, 2):
         for col_num, value in enumerate(row_data, 1):
             ws.cell(row=row_num, column=col_num, value=value)
+    
+    # Aplicar formato de tabla, wrap text y autoajuste
+    _apply_wrap_text_to_cells(ws)
+    _auto_adjust_columns(ws, headers)
+    _convert_to_table(ws, 'TablaSedes', headers, len(example_data))
 
 
 def _create_ubicaciones_sheet(wb: Workbook):
@@ -150,6 +212,11 @@ def _create_ubicaciones_sheet(wb: Workbook):
     for row_num, row_data in enumerate(example_data, 2):
         for col_num, value in enumerate(row_data, 1):
             ws.cell(row=row_num, column=col_num, value=value)
+    
+    # Aplicar formato de tabla, wrap text y autoajuste
+    _apply_wrap_text_to_cells(ws)
+    _auto_adjust_columns(ws, headers)
+    _convert_to_table(ws, 'TablaUbicaciones', headers, len(example_data))
 
 
 def _create_articulos_sheet(wb: Workbook):
@@ -173,6 +240,11 @@ def _create_articulos_sheet(wb: Workbook):
     for row_num, row_data in enumerate(example_data, 2):
         for col_num, value in enumerate(row_data, 1):
             ws.cell(row=row_num, column=col_num, value=value)
+    
+    # Aplicar formato de tabla, wrap text y autoajuste
+    _apply_wrap_text_to_cells(ws)
+    _auto_adjust_columns(ws, headers)
+    _convert_to_table(ws, 'TablaArticulos', headers, len(example_data))
 
 
 def _create_responsables_sheet(wb: Workbook):
@@ -210,6 +282,11 @@ def _create_responsables_sheet(wb: Workbook):
     for row_num, row_data in enumerate(example_data, 2):
         for col_num, value in enumerate(row_data, 1):
             ws.cell(row=row_num, column=col_num, value=value)
+    
+    # Aplicar formato de tabla, wrap text y autoajuste
+    _apply_wrap_text_to_cells(ws)
+    _auto_adjust_columns(ws, headers)
+    _convert_to_table(ws, 'TablaResponsables', headers, len(example_data))
 
 
 def _create_items_sheet(wb: Workbook):
@@ -249,3 +326,8 @@ def _create_items_sheet(wb: Workbook):
     for row_num, row_data in enumerate(example_data, 2):
         for col_num, value in enumerate(row_data, 1):
             ws.cell(row=row_num, column=col_num, value=value)
+    
+    # Aplicar formato de tabla, wrap text y autoajuste
+    _apply_wrap_text_to_cells(ws)
+    _auto_adjust_columns(ws, headers)
+    _convert_to_table(ws, 'TablaItems', headers, len(example_data))
