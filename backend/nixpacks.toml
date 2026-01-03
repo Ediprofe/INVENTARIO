@@ -1,5 +1,5 @@
 [variables]
-DJANGO_SETTINGS_MODULE = "config.settings.production"
+DJANGO_ENV = "production"
 
 [phases.build]
 cmds = ["python manage.py collectstatic --noinput"]
