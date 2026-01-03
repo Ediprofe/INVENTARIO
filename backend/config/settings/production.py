@@ -31,7 +31,8 @@ STORAGES = {
 }
 
 # CORS
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='').split(',')
+_cors_origins = config('CORS_ALLOWED_ORIGINS', default='')
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(',') if o.strip()]
 
 # Security
 SECURE_SSL_REDIRECT = True
