@@ -16,7 +16,7 @@ from .item import (
 )
 
 __all__ = [
-    # Cat�logos
+    # CatÃ¡logos
     'SedeSerializer',
     'UbicacionSerializer',
     'ResponsableSerializer',
